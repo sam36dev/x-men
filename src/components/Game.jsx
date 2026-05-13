@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
 import { attackPlayer, submitRoll, leaveRoom } from '../roomService'
-import { clearSession } from '../session'
 import { characters } from '../data/characters'
 import './Game.css'
 
@@ -44,16 +43,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const [result, setResult] = useState(null)
   const [confirmLeave, setConfirmLeave] = useState(false)
   const prevBattleRef = useRef(null)
-  const loadedRef = useRef(false)
 
   useEffect(() => {
     const r = ref(db, `rooms/${roomCode}`)
-    onValue(r, snap => {
-      const data = snap.val()
-      if (!data) { onLeave(); return }
-      loadedRef.current = true
-      setRoom(data)
-    })
+    onValue(r, snap => setRoom(snap.val()))
     return () => off(r)
   }, [roomCode])
 
@@ -116,7 +109,6 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const deadPlayers = players.filter(p => p.id !== playerId && !p.alive)
 
   async function handleLeave() {
-    clearSession()
     await leaveRoom(roomCode, playerId)
     onLeave()
   }

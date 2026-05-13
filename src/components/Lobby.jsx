@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
 import { selectCharacter, startGame, leaveRoom } from '../roomService'
-import { clearSession } from '../session'
 import { characters } from '../data/characters'
 import './Lobby.css'
 
@@ -44,7 +43,6 @@ export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
   const takenIds = players.map(p => p.characterId).filter(Boolean)
 
   async function handleLeave() {
-    clearSession()
     await leaveRoom(roomCode, playerId)
     onLeave()
   }

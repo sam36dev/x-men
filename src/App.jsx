@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getPlayerId } from './firebase'
-import { saveSession, getSession, clearSession } from './session'
 import Home from './components/Home'
 import Lobby from './components/Lobby'
 import Game from './components/Game'
@@ -10,27 +9,54 @@ import './App.css'
 
 const playerId = getPlayerId()
 
+function parseUrl() {
+  const path = window.location.pathname
+  const game  = path.match(/^\/game\/([A-Z0-9]{6})$/i)
+  const lobby = path.match(/^\/lobby\/([A-Z0-9]{6})$/i)
+  if (game)  return { screen: 'game',  roomCode: game[1].toUpperCase() }
+  if (lobby) return { screen: 'lobby', roomCode: lobby[1].toUpperCase() }
+  return { screen: 'home', roomCode: null }
+}
+
+function pushUrl(screen, roomCode) {
+  const path =
+    screen === 'game'  ? `/game/${roomCode}`  :
+    screen === 'lobby' ? `/lobby/${roomCode}` : '/'
+  if (window.location.pathname !== path) history.pushState({}, '', path)
+}
+
 export default function App() {
-  const saved = getSession()
-  const [screen, setScreen] = useState(saved?.screen || 'home')
-  const [roomCode, setRoomCode] = useState(saved?.roomCode || null)
+  const initial = parseUrl()
+  const [screen,       setScreen]       = useState(initial.screen)
+  const [roomCode,     setRoomCode]     = useState(initial.roomCode)
   const [selectedCard, setSelectedCard] = useState(null)
 
+  // Sync URL → state when user hits Back/Forward
+  useEffect(() => {
+    function onPop() {
+      const { screen, roomCode } = parseUrl()
+      setScreen(screen)
+      setRoomCode(roomCode)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
   function enterRoom(code) {
-    saveSession(code, 'lobby')
     setRoomCode(code)
     setScreen('lobby')
+    pushUrl('lobby', code)
   }
 
   function goToGame() {
-    saveSession(roomCode, 'game')
     setScreen('game')
+    pushUrl('game', roomCode)
   }
 
-  // Called only on automatic redirects (room deleted, etc.) — keeps session intact
   function goHome() {
     setRoomCode(null)
     setScreen('home')
+    pushUrl('home', null)
   }
 
   return (
