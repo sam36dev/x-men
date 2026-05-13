@@ -32,7 +32,6 @@ export async function joinRoom(code, playerId, playerName) {
   const snap = await get(ref(db, `rooms/${code}`))
   if (!snap.exists()) throw new Error('Sala não encontrada')
   const room = snap.val()
-  if (room.status !== 'lobby') throw new Error('Jogo já em andamento')
   const count = Object.keys(room.players || {}).length
   if (count >= 8) throw new Error('Sala cheia (máximo 8 jogadores)')
   await update(ref(db, `rooms/${code}/players/${playerId}`), {

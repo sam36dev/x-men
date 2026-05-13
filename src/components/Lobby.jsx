@@ -29,7 +29,7 @@ export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
       const data = snap.val()
       if (!data) { onLeave(); return }
       setRoom(data)
-      if (data.status === 'playing') onGameStart()
+      if (data.status === 'playing' && data.players?.[playerId]?.characterId) onGameStart()
     })
     return () => off(r)
   }, [roomCode])
@@ -124,13 +124,17 @@ export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
         </div>
       )}
 
-      {isHost && allReady && (
+      {room.status === 'playing' && !me?.characterId && (
+        <p className="lobby-wait">⚔️ Jogo em andamento — escolha seu personagem para entrar!</p>
+      )}
+
+      {room.status !== 'playing' && isHost && allReady && (
         <button className="lobby-start-btn" onClick={() => startGame(roomCode)}>
           ⚔️ Iniciar Jogo
         </button>
       )}
 
-      {isHost && !allReady && (
+      {room.status !== 'playing' && isHost && !allReady && (
         <p className="lobby-wait">
           {players.length < 2
             ? 'Aguardando mais jogadores entrarem…'
@@ -138,7 +142,7 @@ export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
         </p>
       )}
 
-      {!isHost && (
+      {room.status !== 'playing' && !isHost && (
         <p className="lobby-wait">Aguardando o host iniciar o jogo…</p>
       )}
     </div>
