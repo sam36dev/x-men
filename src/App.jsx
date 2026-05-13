@@ -12,17 +12,17 @@ const SESSION_KEY = 'xmen_session'
 
 function getSaved() {
   try {
-    const s = sessionStorage.getItem(SESSION_KEY)
+    const s = localStorage.getItem(SESSION_KEY)
     return s ? JSON.parse(s) : null
   } catch { return null }
 }
 
 function saveSession(roomCode, screen) {
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode, screen }))
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode, screen }))
 }
 
 function clearSession() {
-  sessionStorage.removeItem(SESSION_KEY)
+  localStorage.removeItem(SESSION_KEY)
 }
 
 export default function App() {

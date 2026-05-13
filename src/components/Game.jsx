@@ -49,8 +49,8 @@ export default function Game({ roomCode, playerId, onLeave }) {
     const r = ref(db, `rooms/${roomCode}`)
     onValue(r, snap => {
       const data = snap.val()
-      if (loadedRef.current && !data) { onLeave(); return }
-      if (data) loadedRef.current = true
+      if (!data) { onLeave(); return }
+      loadedRef.current = true
       setRoom(data)
     })
     return () => off(r)
