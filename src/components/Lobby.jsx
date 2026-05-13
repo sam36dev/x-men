@@ -5,8 +5,23 @@ import { selectCharacter, startGame, leaveRoom } from '../roomService'
 import { characters } from '../data/characters'
 import './Lobby.css'
 
+function ConfirmModal({ onConfirm, onCancel }) {
+  return (
+    <div className="confirm-overlay">
+      <div className="confirm-modal">
+        <p className="confirm-modal__text">Tem certeza que quer sair da sala?</p>
+        <div className="confirm-modal__btns">
+          <button className="confirm-modal__btn confirm-modal__btn--leave" onClick={onConfirm}>Sair</button>
+          <button className="confirm-modal__btn confirm-modal__btn--cancel" onClick={onCancel}>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
   const [room, setRoom] = useState(null)
+  const [confirmLeave, setConfirmLeave] = useState(false)
 
   useEffect(() => {
     const r = ref(db, `rooms/${roomCode}`)
@@ -34,8 +49,15 @@ export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
 
   return (
     <div className="lobby-page">
+      {confirmLeave && (
+        <ConfirmModal
+          onConfirm={handleLeave}
+          onCancel={() => setConfirmLeave(false)}
+        />
+      )}
+
       <div className="lobby-topbar">
-        <button className="lobby-back" onClick={handleLeave}>← Sair</button>
+        <button className="lobby-back" onClick={() => setConfirmLeave(true)}>← Sair</button>
         <div className="lobby-code-wrap">
           <span className="lobby-code-label">Código</span>
           <span className="lobby-code">{roomCode}</span>

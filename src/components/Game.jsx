@@ -5,6 +5,20 @@ import { attackPlayer, submitRoll, leaveRoom } from '../roomService'
 import { characters } from '../data/characters'
 import './Game.css'
 
+function ConfirmModal({ onConfirm, onCancel }) {
+  return (
+    <div className="confirm-overlay">
+      <div className="confirm-modal">
+        <p className="confirm-modal__text">Tem certeza que quer sair? Você perderá todos os dados da partida.</p>
+        <div className="confirm-modal__btns">
+          <button className="confirm-modal__btn confirm-modal__btn--leave" onClick={onConfirm}>Sair</button>
+          <button className="confirm-modal__btn confirm-modal__btn--cancel" onClick={onCancel}>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
 function face(n, d) { return d === 6 ? FACES[n - 1] : n }
 
@@ -26,12 +40,19 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const [room, setRoom] = useState(null)
   const [myRoll, setMyRoll] = useState(null)
   const [rolling, setRolling] = useState(false)
-  const [result, setResult] = useState(null) // shown after battle resolves
+  const [result, setResult] = useState(null)
+  const [confirmLeave, setConfirmLeave] = useState(false)
   const prevBattleRef = useRef(null)
+  const loadedRef = useRef(false)
 
   useEffect(() => {
     const r = ref(db, `rooms/${roomCode}`)
-    onValue(r, snap => setRoom(snap.val()))
+    onValue(r, snap => {
+      const data = snap.val()
+      if (loadedRef.current && !data) { onLeave(); return }
+      if (data) loadedRef.current = true
+      setRoom(data)
+    })
     return () => off(r)
   }, [roomCode])
 
@@ -93,12 +114,24 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const alivePlayers = players.filter(p => p.id !== playerId && p.alive)
   const deadPlayers = players.filter(p => p.id !== playerId && !p.alive)
 
+  async function handleLeave() {
+    await leaveRoom(roomCode, playerId)
+    onLeave()
+  }
+
   return (
     <div className="game-page">
+      {confirmLeave && (
+        <ConfirmModal
+          onConfirm={handleLeave}
+          onCancel={() => setConfirmLeave(false)}
+        />
+      )}
+
       {/* Top bar */}
       <div className="game-topbar">
         <span className="game-room">SALA: <strong>{roomCode}</strong></span>
-        <button className="game-leave" onClick={async () => { await leaveRoom(roomCode, playerId); onLeave() }}>
+        <button className="game-leave" onClick={() => setConfirmLeave(true)}>
           Sair
         </button>
       </div>

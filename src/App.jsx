@@ -8,15 +8,44 @@ import CardDetail from './components/CardDetail'
 import './App.css'
 
 const playerId = getPlayerId()
+const SESSION_KEY = 'xmen_session'
+
+function getSaved() {
+  try {
+    const s = sessionStorage.getItem(SESSION_KEY)
+    return s ? JSON.parse(s) : null
+  } catch { return null }
+}
+
+function saveSession(roomCode, screen) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode, screen }))
+}
+
+function clearSession() {
+  sessionStorage.removeItem(SESSION_KEY)
+}
 
 export default function App() {
-  const [screen, setScreen] = useState('home')
-  const [roomCode, setRoomCode] = useState(null)
+  const saved = getSaved()
+  const [screen, setScreen] = useState(saved?.screen || 'home')
+  const [roomCode, setRoomCode] = useState(saved?.roomCode || null)
   const [selectedCard, setSelectedCard] = useState(null)
 
   function enterRoom(code) {
+    saveSession(code, 'lobby')
     setRoomCode(code)
     setScreen('lobby')
+  }
+
+  function goToGame() {
+    saveSession(roomCode, 'game')
+    setScreen('game')
+  }
+
+  function leaveToHome() {
+    clearSession()
+    setRoomCode(null)
+    setScreen('home')
   }
 
   return (
@@ -32,15 +61,15 @@ export default function App() {
         <Lobby
           roomCode={roomCode}
           playerId={playerId}
-          onGameStart={() => setScreen('game')}
-          onLeave={() => setScreen('home')}
+          onGameStart={goToGame}
+          onLeave={leaveToHome}
         />
       )}
       {screen === 'game' && (
         <Game
           roomCode={roomCode}
           playerId={playerId}
-          onLeave={() => setScreen('home')}
+          onLeave={leaveToHome}
         />
       )}
       {screen === 'cards' && !selectedCard && (
