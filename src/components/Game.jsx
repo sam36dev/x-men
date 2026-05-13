@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
 import { attackPlayer, submitRoll, leaveRoom } from '../roomService'
+import { clearSession } from '../session'
 import { characters } from '../data/characters'
 import './Game.css'
 
@@ -115,6 +116,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const deadPlayers = players.filter(p => p.id !== playerId && !p.alive)
 
   async function handleLeave() {
+    clearSession()
     await leaveRoom(roomCode, playerId)
     onLeave()
   }

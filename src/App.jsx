@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { getPlayerId } from './firebase'
+import { saveSession, getSession, clearSession } from './session'
 import Home from './components/Home'
 import Lobby from './components/Lobby'
 import Game from './components/Game'
@@ -8,25 +9,9 @@ import CardDetail from './components/CardDetail'
 import './App.css'
 
 const playerId = getPlayerId()
-const SESSION_KEY = 'xmen_session'
-
-function getSaved() {
-  try {
-    const s = localStorage.getItem(SESSION_KEY)
-    return s ? JSON.parse(s) : null
-  } catch { return null }
-}
-
-function saveSession(roomCode, screen) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode, screen }))
-}
-
-function clearSession() {
-  localStorage.removeItem(SESSION_KEY)
-}
 
 export default function App() {
-  const saved = getSaved()
+  const saved = getSession()
   const [screen, setScreen] = useState(saved?.screen || 'home')
   const [roomCode, setRoomCode] = useState(saved?.roomCode || null)
   const [selectedCard, setSelectedCard] = useState(null)
@@ -42,8 +27,8 @@ export default function App() {
     setScreen('game')
   }
 
-  function leaveToHome() {
-    clearSession()
+  // Called only on automatic redirects (room deleted, etc.) — keeps session intact
+  function goHome() {
     setRoomCode(null)
     setScreen('home')
   }
@@ -62,14 +47,14 @@ export default function App() {
           roomCode={roomCode}
           playerId={playerId}
           onGameStart={goToGame}
-          onLeave={leaveToHome}
+          onLeave={goHome}
         />
       )}
       {screen === 'game' && (
         <Game
           roomCode={roomCode}
           playerId={playerId}
-          onLeave={leaveToHome}
+          onLeave={goHome}
         />
       )}
       {screen === 'cards' && !selectedCard && (
