@@ -65,7 +65,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
           : attackerRoll < defenderRoll ? attackerId : null
         setResult({ attackerRoll, defenderRoll, damage, loserId, attackerId, defenderId })
         setMyRoll(null)
-        setTimeout(() => setResult(null), 3000)
+        setTimeout(() => setResult(null), 3500)
       }
     }
     if (!cur) setMyRoll(null)
@@ -182,7 +182,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
       })()}
 
       {/* Battle panel */}
-      {isInBattle && battle && !battle.resolved && (
+      {isInBattle && battle && (
         <div className="battle-panel">
           <h3 className="battle-panel__title">
             {isAttacker ? '⚔️ Você está atacando!' : '🛡️ Você foi atacado!'}

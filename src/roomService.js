@@ -109,6 +109,5 @@ async function _resolveBattle(code, battle) {
     })
   }
 
-  // Clear battle after players have seen the result
-  setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 3500)
+  setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 4000)
 }
