@@ -283,24 +283,36 @@
 .gdie__q { font-family: 'Bangers', cursive; font-size: 1.5rem; color: rgba(255,255,255,0.2); }
 
 .battle-roll-btn {
-  padding: 0.35rem 0.65rem;
-  border-radius: 6px;
-  background: transparent;
-  border: 1.5px solid var(--c, #FFD700);
-  color: var(--c, #FFD700);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  background: var(--c, #FFD700);
+  border: none;
+  color: #111;
   font-family: 'Oswald', sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   width: 100%;
   transition: all 0.15s;
+  box-shadow: 0 0 12px var(--c, #FFD700), 0 2px 8px rgba(0,0,0,0.4);
+  animation: roll-pulse 1s ease-in-out infinite;
+}
+
+@keyframes roll-pulse {
+  0%, 100% { box-shadow: 0 0 8px var(--c, #FFD700); }
+  50% { box-shadow: 0 0 18px var(--c, #FFD700), 0 0 30px var(--c, #FFD70055); }
 }
 
 .battle-roll-btn:active:not(:disabled) {
-  background: rgba(255,255,255,0.08);
   transform: scale(0.95);
+  box-shadow: none;
+}
+
+.battle-roll-btn:disabled {
+  opacity: 0.5;
+  animation: none;
 }
 
 /* Opponents */
