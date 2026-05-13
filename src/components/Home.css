@@ -1,0 +1,183 @@
+.home-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  background: radial-gradient(ellipse at top, #12122a 0%, #0a0a1a 65%);
+  gap: 0;
+}
+
+.home-logo {
+  display: flex;
+  align-items: baseline;
+  gap: 0.1em;
+  margin-bottom: 0.1rem;
+}
+
+.home-logo__x {
+  font-family: 'Bangers', cursive;
+  font-size: 5rem;
+  color: #FFD700;
+  line-height: 1;
+  text-shadow:
+    0 0 24px rgba(255, 215, 0, 0.8),
+    0 0 48px rgba(255, 215, 0, 0.3),
+    2px 2px 0 #000;
+}
+
+.home-logo__men {
+  font-family: 'Bangers', cursive;
+  font-size: 2.4rem;
+  color: #fff;
+  letter-spacing: 0.1em;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.home-subtitle {
+  font-family: 'Bangers', cursive;
+  font-size: 1rem;
+  letter-spacing: 0.5em;
+  color: rgba(255,255,255,0.4);
+  font-weight: 400;
+  margin-bottom: 0.25rem;
+}
+
+.home-tagline {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.72rem;
+  color: rgba(255, 215, 0, 0.5);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+}
+
+.home-card {
+  width: 100%;
+  max-width: 340px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.home-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.home-input:focus {
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.home-input--code {
+  text-align: center;
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+}
+
+.home-input::placeholder {
+  color: rgba(255,255,255,0.25);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+.home-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.home-hint {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.4);
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.home-btn {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-btn--primary {
+  background: #FFD700;
+  color: #000;
+  border: none;
+}
+
+.home-btn--primary:active:not(:disabled) {
+  background: #e6c200;
+  transform: scale(0.97);
+}
+
+.home-btn--secondary {
+  background: transparent;
+  color: #FFD700;
+  border: 2px solid #FFD700;
+}
+
+.home-btn--secondary:active:not(:disabled) {
+  background: rgba(255, 215, 0, 0.1);
+  transform: scale(0.97);
+}
+
+.home-btn--ghost {
+  background: transparent;
+  color: rgba(255,255,255,0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.8rem;
+}
+
+.home-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.home-error {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  color: #ff6666;
+  text-align: center;
+  letter-spacing: 0.03em;
+}
+
+.home-cards-link {
+  margin-top: 1.5rem;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.3);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-cards-link:active {
+  color: rgba(255,255,255,0.6);
+}

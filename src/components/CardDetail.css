@@ -1,0 +1,324 @@
+.detail-page {
+  min-height: 100dvh;
+  background: radial-gradient(ellipse at top, #12122a 0%, #0a0a1a 60%);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.detail-page--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Top navigation bar */
+.detail-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1rem 0.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(10, 10, 26, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.back-btn {
+  background: none;
+  color: rgba(255, 215, 0, 0.8);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.back-btn:active {
+  background: rgba(255, 215, 0, 0.1);
+  transform: scale(0.95);
+}
+
+.detail-topbar__brand {
+  font-family: 'Bangers', cursive;
+  font-size: 1.3rem;
+  color: white;
+  letter-spacing: 0.05em;
+}
+
+.detail-topbar__x {
+  color: #FFD700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+.detail-topbar__num {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.05em;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* Card wrapper — centers and constrains the card */
+.card-wrap {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: 2rem;
+}
+
+/* The actual trading card */
+.trading-card {
+  width: 100%;
+  max-width: 360px;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Shimmer / holographic effect */
+.card-shimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.04) 50%,
+    transparent 60%
+  );
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Card top bar */
+.card-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.8rem;
+  background: rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 2;
+}
+
+.card-type-badge {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.card-num {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.05em;
+}
+
+/* Image */
+.card-img-area {
+  position: relative;
+  aspect-ratio: 3/2;
+  overflow: hidden;
+  background: #000;
+}
+
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+}
+
+.card-img-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-img-fallback__letter {
+  font-family: 'Bangers', cursive;
+  font-size: 8rem;
+  color: currentColor;
+  opacity: 0.8;
+  text-shadow: 0 0 40px currentColor;
+  position: relative;
+  z-index: 1;
+}
+
+.card-img-fallback__glow {
+  position: absolute;
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.25;
+}
+
+.card-img-vignette {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  pointer-events: none;
+}
+
+/* Name section */
+.card-name-section {
+  padding: 0.75rem 1rem 0.6rem;
+  border-bottom: 1px solid;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.card-name {
+  font-family: 'Bangers', cursive;
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.15rem;
+  text-shadow: 0 0 20px currentColor;
+}
+
+.card-alias {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  font-weight: 400;
+  margin-bottom: 0.2rem;
+}
+
+.card-team {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Generic section */
+.card-section {
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.card-section--dice {
+  background: rgba(0, 0, 0, 0.35);
+  padding-bottom: 1rem;
+}
+
+.card-section__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+/* HP bar */
+.card-hp-value {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ff6666;
+}
+
+.hp-bar-track {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s ease;
+}
+
+.card-section--flash {
+  animation: dmg-flash 0.5s ease;
+}
+
+@keyframes dmg-flash {
+  0%   { background: rgba(255, 50, 50, 0.35); }
+  100% { background: rgba(0, 0, 0, 0.2); }
+}
+
+/* Divider */
+.card-divider {
+  height: 1px;
+  opacity: 0.6;
+}
+
+/* Powers */
+.powers-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.powers-list__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: 'Roboto', sans-serif;
+}
+
+.powers-list__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Border glow */
+.card-border-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 16px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.08),
+    0 0 0 1px var(--glow, #FFD700),
+    0 0 20px -4px var(--glow, #FFD700);
+  opacity: 0.5;
+  z-index: 3;
+}

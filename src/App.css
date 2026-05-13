@@ -1,0 +1,9 @@
+.app {
+  min-height: 100dvh;
+  background: #0a0a1a;
+  transition: opacity 0.3s ease;
+}
+
+.app--fading {
+  opacity: 0;
+}
