@@ -25,10 +25,10 @@ function face(n, d) { return d === 6 ? FACES[n - 1] : n }
 function DiceFace({ value, diceType, color, rolling }) {
   return (
     <div
-      className={`gdie ${rolling ? 'gdie--rolling' : ''} ${value !== null && !rolling ? 'gdie--landed' : ''}`}
-      style={{ borderColor: value !== null ? color + 'aa' : undefined }}
+      className={`gdie ${rolling ? 'gdie--rolling' : ''} ${value != null && !rolling ? 'gdie--landed' : ''}`}
+      style={{ borderColor: value != null ? color + 'aa' : undefined }}
     >
-      {value !== null
+      {value != null
         ? <span className={diceType === 6 ? 'gdie__sym--uni' : 'gdie__sym'}>{face(value, diceType)}</span>
         : <span className="gdie__q">?</span>
       }
@@ -197,7 +197,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
             <div className="battle-panel__side">
               <span className="battle-panel__label">Você · D{myChar?.diceType}</span>
               <DiceFace value={myBattleRoll ?? myRoll} diceType={myChar?.diceType ?? 6} color={myChar?.color ?? '#FFD700'} rolling={rolling} />
-              {myBattleRoll === null && myRoll === null && (
+              {myBattleRoll == null && myRoll === null && (
                 <button
                   className="battle-roll-btn"
                   style={{ '--c': myChar?.color }}
@@ -219,7 +219,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 color={battleOpponentChar?.color ?? '#888'}
                 rolling={false}
               />
-              {oppBattleRoll === null && (
+              {oppBattleRoll == null && (
                 <span className="battle-panel__waiting">aguardando…</span>
               )}
             </div>

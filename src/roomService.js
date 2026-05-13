@@ -55,8 +55,6 @@ export async function attackPlayer(code, attackerId, defenderId) {
   await set(ref(db, `rooms/${code}/battle`), {
     attackerId,
     defenderId,
-    attackerRoll: null,
-    defenderRoll: null,
     resolved: false,
   })
 }
@@ -78,7 +76,7 @@ export async function submitRoll(code, playerId, roll) {
   const afterSnap = await get(battleRef)
   const after = afterSnap.val()
   if (!after || after.resolved) return
-  if (after.attackerRoll !== null && after.defenderRoll !== null) {
+  if (after.attackerRoll != null && after.defenderRoll != null) {
     await _resolveBattle(code, after)
   }
 }
@@ -90,7 +88,7 @@ async function _resolveBattle(code, battle) {
   let mine = false
   await runTransaction(battleRef, (cur) => {
     if (!cur || cur.resolved) return undefined
-    if (cur.attackerRoll === null || cur.defenderRoll === null) return undefined
+    if (cur.attackerRoll == null || cur.defenderRoll == null) return undefined
     mine = true
     return { ...cur, resolved: true }
   })
