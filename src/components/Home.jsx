@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createRoom, joinRoom } from '../roomService'
+import { db } from '../firebase'
 import './Home.css'
 
 export default function Home({ playerId, onEnterRoom, onViewCards }) {
@@ -10,6 +11,7 @@ export default function Home({ playerId, onEnterRoom, onViewCards }) {
   const [loading, setLoading] = useState(false)
 
   async function handleCreate() {
+    if (!db) return setError('Firebase não configurado — veja o README')
     if (!name.trim()) return setError('Digite seu nome')
     setLoading(true); setError('')
     try {
@@ -23,6 +25,7 @@ export default function Home({ playerId, onEnterRoom, onViewCards }) {
   }
 
   async function handleJoin() {
+    if (!db) return setError('Firebase não configurado — veja o README')
     if (!name.trim()) return setError('Digite seu nome')
     const code = joinCode.trim().toUpperCase()
     if (code.length !== 6) return setError('Código deve ter 6 caracteres')

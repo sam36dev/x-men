@@ -10,7 +10,7 @@
 
 .game-page {
   min-height: 100dvh;
-  background: radial-gradient(ellipse at top, #12122a 0%, #0a0a1a 65%);
+  background: radial-gradient(ellipse at top, #0d1e3d 0%, #070e1a 65%);
   display: flex;
   flex-direction: column;
   padding-bottom: 2rem;
@@ -22,8 +22,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  background: rgba(10,10,26,0.92);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(7, 14, 26, 0.94);
+  border-bottom: 1px solid rgba(21, 101, 192, 0.25);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -33,20 +33,21 @@
 .game-room {
   font-family: 'Oswald', sans-serif;
   font-size: 0.78rem;
-  color: rgba(255,255,255,0.4);
-  letter-spacing: 0.08em;
+  color: rgba(21, 101, 192, 0.8);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .game-room strong {
-  color: #FFD700;
+  color: #FFCC00;
   font-size: 0.95rem;
   letter-spacing: 0.12em;
+  text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
 }
 
 .game-leave {
   background: none;
-  border: 1px solid rgba(255,255,255,0.15);
+  border: 1px solid rgba(21, 101, 192, 0.35);
   color: rgba(255,255,255,0.4);
   font-family: 'Oswald', sans-serif;
   font-size: 0.75rem;
@@ -55,6 +56,12 @@
   border-radius: 5px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.game-leave:active {
+  border-color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.7);
 }
 
 /* My card */
@@ -62,13 +69,12 @@
   margin: 0.75rem;
   padding: 0.75rem;
   border-radius: 12px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--accent, #FFD700);
-  border-opacity: 0.3;
+  background: rgba(10, 25, 60, 0.55);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, rgba(21,101,192,0.3));
   display: flex;
   gap: 0.75rem;
   align-items: center;
-  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  box-shadow: 0 0 20px rgba(21, 101, 192, 0.1);
 }
 
 .game-mycard__img-wrap {
@@ -94,7 +100,7 @@
   position: absolute;
   font-family: 'Bangers', cursive;
   font-size: 2rem;
-  color: var(--accent, #FFD700);
+  color: var(--accent, #FFCC00);
   opacity: 0.5;
 }
 
@@ -116,7 +122,7 @@
 .game-mycard__player {
   font-family: 'Oswald', sans-serif;
   font-size: 0.72rem;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.4);
   letter-spacing: 0.04em;
 }
 
@@ -130,7 +136,7 @@
 .game-hp-bar {
   flex: 1;
   height: 8px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(21, 101, 192, 0.15);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -164,9 +170,9 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.game-result--win  { background: rgba(0,200,80,0.12);  border: 1px solid rgba(0,200,80,0.35);  color: #44ff88; }
-.game-result--lose { background: rgba(255,50,50,0.12);  border: 1px solid rgba(255,50,50,0.35);  color: #ff6666; }
-.game-result--tie  { background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.25); color: rgba(255,215,0,0.85); }
+.game-result--win  { background: rgba(0,200,80,0.1);   border: 1px solid rgba(0,200,80,0.3);   color: #44ff88; }
+.game-result--lose { background: rgba(255,50,50,0.1);  border: 1px solid rgba(255,50,50,0.3);  color: #ff6666; }
+.game-result--tie  { background: rgba(255,204,0,0.07); border: 1px solid rgba(255,204,0,0.25); color: rgba(255,204,0,0.85); }
 
 .game-result__rolls {
   display: flex;
@@ -186,8 +192,8 @@
 .battle-panel {
   margin: 0.5rem 0.75rem;
   padding: 1rem;
-  background: rgba(255,215,0,0.06);
-  border: 1px solid rgba(255,215,0,0.25);
+  background: rgba(255, 204, 0, 0.05);
+  border: 1px solid rgba(255, 204, 0, 0.28);
   border-radius: 12px;
   animation: slide-in 0.3s ease;
 }
@@ -197,9 +203,10 @@
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #FFD700;
+  color: #FFCC00;
   margin-bottom: 0.75rem;
   text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
 }
 
 .battle-panel__row {
@@ -219,7 +226,7 @@
 .battle-panel__label {
   font-family: 'Oswald', sans-serif;
   font-size: 0.65rem;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.4);
   letter-spacing: 0.06em;
   text-align: center;
 }
@@ -227,14 +234,14 @@
 .battle-panel__vs {
   font-family: 'Bangers', cursive;
   font-size: 1.5rem;
-  color: rgba(255,255,255,0.25);
+  color: rgba(255, 204, 0, 0.3);
   flex-shrink: 0;
 }
 
 .battle-panel__waiting {
   font-family: 'Oswald', sans-serif;
   font-size: 0.65rem;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.28);
   letter-spacing: 0.06em;
   animation: pulse 1.2s ease-in-out infinite;
 }
@@ -249,8 +256,8 @@
   width: 56px;
   height: 56px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.05);
-  border: 2px solid rgba(255,255,255,0.1);
+  background: rgba(10, 25, 60, 0.6);
+  border: 2px solid rgba(21, 101, 192, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -259,7 +266,7 @@
 
 .gdie--rolling {
   animation: dice-shake 0.08s linear infinite;
-  border-color: rgba(255,215,0,0.5) !important;
+  border-color: rgba(255, 204, 0, 0.6) !important;
 }
 
 .gdie--landed {
@@ -280,12 +287,12 @@
 
 .gdie__sym { font-family: 'Bangers', cursive; font-size: 1.8rem; line-height: 1; }
 .gdie__sym--uni { font-size: 2.4rem; line-height: 1; }
-.gdie__q { font-family: 'Bangers', cursive; font-size: 1.5rem; color: rgba(255,255,255,0.2); }
+.gdie__q { font-family: 'Bangers', cursive; font-size: 1.5rem; color: rgba(255,255,255,0.18); }
 
 .battle-roll-btn {
   padding: 0.6rem 1rem;
   border-radius: 8px;
-  background: var(--c, #FFD700);
+  background: var(--c, #FFCC00);
   border: none;
   color: #111;
   font-family: 'Oswald', sans-serif;
@@ -296,13 +303,13 @@
   -webkit-tap-highlight-color: transparent;
   width: 100%;
   transition: all 0.15s;
-  box-shadow: 0 0 12px var(--c, #FFD700), 0 2px 8px rgba(0,0,0,0.4);
+  box-shadow: 0 0 12px var(--c, #FFCC00), 0 2px 8px rgba(0,0,0,0.4);
   animation: roll-pulse 1s ease-in-out infinite;
 }
 
 @keyframes roll-pulse {
-  0%, 100% { box-shadow: 0 0 8px var(--c, #FFD700); }
-  50% { box-shadow: 0 0 18px var(--c, #FFD700), 0 0 30px var(--c, #FFD70055); }
+  0%, 100% { box-shadow: 0 0 8px var(--c, #FFCC00); }
+  50% { box-shadow: 0 0 18px var(--c, #FFCC00), 0 0 30px var(--c, #FFCC0055); }
 }
 
 .battle-roll-btn:active:not(:disabled) {
@@ -315,6 +322,168 @@
   animation: none;
 }
 
+/* Villains */
+.game-villains {
+  padding: 0.75rem 0.75rem 0;
+}
+
+.game-villain-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.villain-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem;
+  background: rgba(10, 25, 60, 0.45);
+  border: 1px solid rgba(21, 101, 192, 0.15);
+  border-left: 3px solid var(--vcolor);
+  border-radius: 10px;
+}
+
+.villain-card--chefao {
+  background: rgba(255, 102, 0, 0.05);
+  border-color: rgba(255, 102, 0, 0.2);
+  border-left-color: #FF6600;
+  box-shadow: 0 0 14px rgba(255, 102, 0, 0.1);
+}
+
+.villain-card__img-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 7px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.5);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.villain-card__img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.villain-card__fallback {
+  position: absolute;
+  font-size: 1.6rem;
+}
+
+.villain-card__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.villain-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.villain-card__name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.villain-card__diff {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  background: rgba(21, 101, 192, 0.15);
+  color: var(--vcolor);
+}
+
+.villain-card--chefao .villain-card__diff {
+  color: #FF6600;
+  background: rgba(255, 102, 0, 0.15);
+}
+
+.villain-card__mechanic {
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.32);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.villain-card__hprow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+}
+
+.villain-hp-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(21, 101, 192, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.villain-hp-bar__fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--vcolor);
+  transition: width 0.5s ease;
+}
+
+.villain-card--chefao .villain-hp-bar__fill {
+  background: #FF6600;
+}
+
+.villain-card__hp {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.32);
+  white-space: nowrap;
+}
+
+.villain-attack-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(10, 25, 60, 0.5);
+  border: 1.5px solid var(--vc, #FF4400);
+  color: var(--vc, #FF4400);
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.villain-attack-btn:active:not(:disabled) {
+  background: rgba(255,255,255,0.08);
+  transform: scale(0.9);
+}
+
+.villain-attack-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 /* Opponents */
 .game-opponents {
   padding: 0.75rem;
@@ -324,11 +493,11 @@
 .game-section-title {
   font-family: 'Oswald', sans-serif;
   font-size: 0.68rem;
-  letter-spacing: 0.15em;
-  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.18em;
+  color: rgba(21, 101, 192, 0.9);
   text-transform: uppercase;
   margin-bottom: 0.6rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .game-empty {
@@ -344,14 +513,14 @@
   align-items: center;
   gap: 0.65rem;
   padding: 0.6rem;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(10, 25, 60, 0.45);
+  border: 1px solid rgba(21, 101, 192, 0.15);
   border-radius: 10px;
   margin-bottom: 0.5rem;
 }
 
 .opponent-row--dead {
-  opacity: 0.4;
+  opacity: 0.35;
   filter: grayscale(0.8);
 }
 
@@ -407,12 +576,12 @@
 .opponent-row__hp {
   font-family: 'Oswald', sans-serif;
   font-size: 0.68rem;
-  color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.38);
 }
 
 .opp-hp-bar {
   height: 5px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(21, 101, 192, 0.12);
   border-radius: 3px;
   overflow: hidden;
   margin-top: 0.1rem;
@@ -423,9 +592,9 @@
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: rgba(255,255,255,0.04);
-  border: 1.5px solid var(--c, #FFD700);
-  color: var(--c, #FFD700);
+  background: rgba(10, 25, 60, 0.5);
+  border: 1.5px solid var(--c, #FFCC00);
+  color: var(--c, #FFCC00);
   font-size: 1.1rem;
   display: flex;
   align-items: center;
@@ -436,7 +605,7 @@
 }
 
 .attack-btn:active:not(:disabled) {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.08);
   transform: scale(0.9);
 }
 

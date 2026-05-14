@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1.25rem;
-  background: radial-gradient(ellipse at top, #12122a 0%, #0a0a1a 65%);
+  background: radial-gradient(ellipse at top, #0d1e3d 0%, #070e1a 65%);
   gap: 0;
 }
 
@@ -19,11 +19,11 @@
 .home-logo__x {
   font-family: 'Bangers', cursive;
   font-size: 5rem;
-  color: #FFD700;
+  color: #FFCC00;
   line-height: 1;
   text-shadow:
-    0 0 24px rgba(255, 215, 0, 0.8),
-    0 0 48px rgba(255, 215, 0, 0.3),
+    0 0 24px rgba(255, 204, 0, 0.9),
+    0 0 56px rgba(255, 204, 0, 0.35),
     2px 2px 0 #000;
 }
 
@@ -47,7 +47,7 @@
 .home-tagline {
   font-family: 'Oswald', sans-serif;
   font-size: 0.72rem;
-  color: rgba(255, 215, 0, 0.5);
+  color: rgba(255, 204, 0, 0.55);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-bottom: 2rem;
@@ -56,20 +56,21 @@
 .home-card {
   width: 100%;
   max-width: 340px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 25, 60, 0.55);
+  border: 1px solid rgba(21, 101, 192, 0.3);
   border-radius: 16px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  box-shadow: 0 0 24px rgba(21, 101, 192, 0.1);
 }
 
 .home-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 25, 60, 0.7);
+  border: 1.5px solid rgba(21, 101, 192, 0.35);
   border-radius: 8px;
   color: #fff;
   font-family: 'Oswald', sans-serif;
@@ -80,7 +81,7 @@
 }
 
 .home-input:focus {
-  border-color: rgba(255, 215, 0, 0.5);
+  border-color: rgba(255, 204, 0, 0.6);
 }
 
 .home-input--code {
@@ -91,7 +92,7 @@
 }
 
 .home-input::placeholder {
-  color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.22);
   font-size: 0.85rem;
   letter-spacing: 0.05em;
 }
@@ -124,31 +125,33 @@
 }
 
 .home-btn--primary {
-  background: #FFD700;
+  background: #FFCC00;
   color: #000;
   border: none;
+  box-shadow: 0 0 16px rgba(255, 204, 0, 0.35);
 }
 
 .home-btn--primary:active:not(:disabled) {
-  background: #e6c200;
+  background: #e6b800;
   transform: scale(0.97);
+  box-shadow: none;
 }
 
 .home-btn--secondary {
-  background: transparent;
-  color: #FFD700;
-  border: 2px solid #FFD700;
+  background: rgba(21, 101, 192, 0.2);
+  color: #FFCC00;
+  border: 2px solid rgba(255, 204, 0, 0.6);
 }
 
 .home-btn--secondary:active:not(:disabled) {
-  background: rgba(255, 215, 0, 0.1);
+  background: rgba(255, 204, 0, 0.1);
   transform: scale(0.97);
 }
 
 .home-btn--ghost {
   background: transparent;
-  color: rgba(255,255,255,0.4);
-  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.35);
+  border: 1px solid rgba(21, 101, 192, 0.25);
   font-size: 0.8rem;
 }
 
@@ -169,7 +172,7 @@
   margin-top: 1.5rem;
   background: none;
   border: none;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.28);
   font-family: 'Oswald', sans-serif;
   font-size: 0.75rem;
   letter-spacing: 0.08em;

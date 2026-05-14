@@ -1,6 +1,6 @@
 .app {
   min-height: 100dvh;
-  background: #0a0a1a;
+  background: #070e1a;
   transition: opacity 0.3s ease;
 }
 
@@ -12,7 +12,7 @@
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.82);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,13 +21,14 @@
 }
 
 .confirm-modal {
-  background: #1a1a2e;
-  border: 1px solid rgba(255,255,255,0.15);
+  background: #0d1a38;
+  border: 1px solid rgba(21, 101, 192, 0.4);
   border-radius: 14px;
   padding: 1.5rem;
   max-width: 320px;
   width: 100%;
   text-align: center;
+  box-shadow: 0 0 32px rgba(21, 101, 192, 0.2);
 }
 
 .confirm-modal__text {
@@ -61,6 +62,7 @@
 }
 
 .confirm-modal__btn--cancel {
-  background: rgba(255,255,255,0.1);
+  background: rgba(21, 101, 192, 0.25);
   color: rgba(255,255,255,0.8);
+  border: 1px solid rgba(21, 101, 192, 0.4);
 }

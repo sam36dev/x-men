@@ -3,6 +3,7 @@ import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
 import { attackPlayer, submitRoll, leaveRoom } from '../roomService'
 import { characters } from '../data/characters'
+import { villains } from '../data/villains'
 import './Game.css'
 
 function ConfirmModal({ onConfirm, onCancel }) {
@@ -220,6 +221,41 @@ export default function Game({ roomCode, playerId, onLeave }) {
           </div>
         </div>
       )}
+
+      {/* Villains */}
+      <div className="game-villains">
+        <h3 className="game-section-title">Vilões do Mapa</h3>
+        <div className="game-villain-scroll">
+          {villains.map(v => (
+            <div key={v.id} className={`villain-card villain-card--${v.difficulty}`} style={{ '--vcolor': v.color }}>
+              <div className="villain-card__img-wrap">
+                <img src={v.image} alt={v.name} onError={e => { e.target.style.display = 'none' }} />
+                <span className="villain-card__fallback">{v.typeIcon}</span>
+              </div>
+              <div className="villain-card__info">
+                <div className="villain-card__header">
+                  <span className="villain-card__name">{v.name}</span>
+                  <span className="villain-card__diff">{v.difficultyLabel}</span>
+                </div>
+                <span className="villain-card__mechanic">{v.mechanic}</span>
+                <div className="villain-card__hprow">
+                  <div className="villain-hp-bar">
+                    <div className="villain-hp-bar__fill" style={{ width: '100%' }} />
+                  </div>
+                  <span className="villain-card__hp">❤️ {v.hp}</span>
+                </div>
+              </div>
+              <button
+                className="villain-attack-btn"
+                style={{ '--vc': v.color }}
+                disabled={!!battle || !me?.alive}
+              >
+                ⚔️
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Opponents */}
       <div className="game-opponents">

@@ -1,0 +1,266 @@
+============================================================
+  X-MEN CARD GAME — SISTEMA DE HABILIDADES
+============================================================
+
+ESTRUTURA DE CADA PERSONAGEM
+------------------------------------------------------------
+  [A] Passiva aleatória  — 33% de chance, ativa em batalha automaticamente
+  [B] Ativa por turno    — jogador declara antes de rolar, 1x por turno
+  [C] Condicional        — ativa automaticamente quando um estado é atingido
+------------------------------------------------------------
+
+PERSONAGENS JOGÁVEIS (10)
+  1. Wolverine   2. Ciclope      3. Tempestade   4. Jean Grey→Phoenix
+  5. Professor X 6. Gambit       7. Vampira       8. Noturno
+  9. Colosso    10. Psylocke
+
+JEAN GREY tem transformação: quando HP ≤ 30 vira PHOENIX
+  → troca D8 por D10, poderes cósmicos ativados, visual muda
+------------------------------------------------------------
+
+
+══════════════════════════════════════════════
+  1. WOLVERINE  |  D6
+══════════════════════════════════════════════
+
+[A] FATOR DE CURA (33%)
+    Ao perder uma batalha, recupera metade do dano sofrido.
+    Ex: levou 10 de dano → recupera 5 imediatamente.
+
+[B] INVESTIDA (1x por turno)
+    Wolverine ataca primeiro e soma +2 ao resultado do dado.
+    Deve ser declarada antes de rolar.
+
+[C] FÚRIA BERSERKER (condicional: HP ≤ 40)
+    Enquanto HP estiver em 40 ou abaixo, troca o D6 por D10
+    em todas as batalhas até recuperar HP acima de 40.
+
+
+══════════════════════════════════════════════
+  2. CICLOPE  |  D8
+══════════════════════════════════════════════
+
+[A] PRECISÃO ÓPTICA (33%)
+    Garante dano mínimo de 3, mesmo em empate ou diferença baixa.
+
+[B] RAIO ÓPTICO CONCENTRADO (1x por turno)
+    Dobra o resultado do seu dado nessa batalha.
+    Deve ser declarada antes de rolar.
+
+[C] LIDERANÇA (condicional: ser o jogador com mais HP no jogo ≥ 60)
+    Enquanto for o jogador com mais HP, soma +2 em todos os dados.
+
+
+══════════════════════════════════════════════
+  3. TEMPESTADE  |  D6
+══════════════════════════════════════════════
+
+[A] RELÂMPAGO (33%)
+    Se o dado mostrar 6, o dano causado é dobrado.
+
+[B] CONTROLE DO CLIMA (1x por turno)
+    Pode trocar o D6 por D8 em qualquer batalha nesse turno.
+    Deve ser declarada antes de rolar.
+
+[C] OLHO DA TEMPESTADE (condicional: HP ≤ 50)
+    Enquanto HP estiver em 50 ou abaixo, soma +2 ao dado em todas as batalhas.
+
+
+══════════════════════════════════════════════
+  4. JEAN GREY → PHOENIX  |  D8 (→ D10)
+══════════════════════════════════════════════
+
+FASE 1: JEAN GREY (HP > 30)
+
+[A] BARREIRA PSÍQUICA (33%)
+    Bloqueia completamente o dano de uma batalha.
+
+[B] LIGAÇÃO MENTAL (1x por turno)
+    Vê o resultado do dado do oponente antes da revelação.
+    Pode escolher usar sua habilidade ativa após ver.
+
+[C] TELECINESE (condicional: perder 2 batalhas seguidas)
+    Após 2 derrotas consecutivas, redireciona 50% do próximo
+    dano recebido de volta ao atacante.
+
+--- TRANSFORMAÇÃO: HP ≤ 30 → vira PHOENIX (D10 permanente) ---
+
+FASE 2: PHOENIX (HP ≤ 30, permanente)
+
+[A] CHAMA CÓSMICA (33%)
+    O dano causado é triplicado nessa batalha.
+
+[B] RESSURREIÇÃO (1x por partida — substituída após uso)
+    Ao chegar em 0 HP, volta com 40 HP automaticamente.
+    Só pode ser usada uma vez por partida.
+
+[C] FÊNIX NEGRO (condicional: permanente na fase Phoenix)
+    Todo dano causado é dobrado enquanto estiver na fase Phoenix.
+    Empilha com Chama Cósmica se ativar [A].
+
+
+══════════════════════════════════════════════
+  5. PROFESSOR X  |  D6
+══════════════════════════════════════════════
+
+[A] EMPATIA (33%)
+    Vê o resultado do dado do oponente antes de revelar.
+    Pode decidir se aplica sua habilidade ativa nessa batalha.
+
+[B] CONTROLE MENTAL (1x por turno)
+    Anula o dado do oponente e força o resultado dele a ser 1.
+    Deve ser declarada antes de rolar.
+
+[C] PAZ MENTAL (condicional: HP ≤ 40)
+    Quando HP estiver em 40 ou abaixo e receber um desafio,
+    pode recusar a batalha sem sofrer dano (1x por estado de HP baixo).
+
+
+══════════════════════════════════════════════
+  6. GAMBIT  |  D6
+══════════════════════════════════════════════
+
+[A] CARTA EXPLOSIVA (33%)
+    Se o dado mostrar 6, ignora o dado do oponente e causa
+    15 de dano fixo independentemente do resultado adversário.
+
+[B] BARALHO EXPLOSIVO (1x por turno)
+    Pode rerolar seu dado uma vez após ver o resultado.
+    Deve ser declarada antes de revelar o dado do oponente.
+
+[C] SORTE CAJUN (condicional: perder 2 batalhas consecutivas)
+    Após 2 derrotas seguidas, a próxima batalha usa D10
+    em vez de D6 automaticamente (reseta o contador).
+
+
+══════════════════════════════════════════════
+  7. VAMPIRA  |  D8
+══════════════════════════════════════════════
+
+[A] ABSORÇÃO (33%)
+    Durante a batalha, copia a habilidade [A] do oponente
+    e a utiliza também nessa mesma batalha.
+
+[B] VÔO (1x por turno)
+    Move +2 casas adicionais nesse turno, podendo escolher
+    evitar ou buscar uma casa de confronto.
+
+[C] TOQUE LETAL (condicional: HP ≥ 70 e vencer por diferença ≥ 5)
+    Se estiver com 70+ HP e vencer com diferença de 5 ou mais,
+    o oponente perde o próximo turno automaticamente.
+
+
+══════════════════════════════════════════════
+  8. NOTURNO  |  D6
+══════════════════════════════════════════════
+
+[A] ATAQUE FURTIVO (33%)
+    Se Noturno for quem caiu na casa do oponente (atacante),
+    soma +3 ao resultado do dado.
+
+[B] BAMF! (1x por turno)
+    Teleporta para qualquer casa do tabuleiro sem rolar dados
+    de movimento. Não ativa batalha ao teleportar.
+
+[C] SOMBRAS (condicional: HP ≤ 35)
+    Quando HP estiver em 35 ou abaixo, tem 50% de chance
+    de esquivar completamente de qualquer ataque recebido
+    (rolar par no D6 = esquiva).
+
+
+══════════════════════════════════════════════
+  9. COLOSSO  |  D6
+══════════════════════════════════════════════
+
+[A] FORMA DE AÇO (33%)
+    Recebe no máximo 8 de dano por batalha, independente
+    da diferença entre os dados.
+
+[B] FORÇA TITÂNICA (1x por turno)
+    Multiplica o dano causado por 1.5 nessa batalha.
+    Deve ser declarada antes de rolar.
+
+[C] MURALHA (condicional: HP ≤ 20)
+    Quando HP estiver em 20 ou abaixo, não pode ser eliminado
+    nesse turno — sobrevive com no mínimo 1 HP.
+
+
+══════════════════════════════════════════════
+  10. PSYLOCKE  |  D8
+══════════════════════════════════════════════
+
+[A] LÂMINA PSÍQUICA (33%)
+    O ataque ignora qualquer redução de dano do oponente
+    (penetra Forma de Aço do Colosso, Campo Magnético, etc.).
+
+[B] GOLPE NINJA (1x por turno)
+    Soma +3 ao dado e o oponente não pode usar habilidade [B]
+    nessa batalha (declarada antes de rolar).
+
+[C] VÍNCULO TELEPÁTICO (condicional: enfrentar o mesmo oponente 2x seguidas)
+    Se enfrentar o mesmo jogador em batalhas consecutivas,
+    passa a ver as habilidades ativas dele e pode anular uma por turno.
+
+
+============================================================
+  VILÕES DO MAPA (NPCs)
+============================================================
+
+Os vilões ficam em casas fixas ou aleatórias do tabuleiro.
+Todos os jogadores podem enfrentá-los. Vilões não escolhem
+habilidades — agem por regra automática.
+
+------------------------------------------------------------
+MAGNETO  |  HP 120  |  D8  |  MÉDIO
+  Mecânica: Campo Magnético — reduz dano recebido em 2 (mín. 1)
+  Especial:  Contra Wolverine/Colosso soma +3 ao dado
+  Recompensa: libera rota para o Leste do mapa
+
+MÍSTICA  |  HP 100  |  D8  |  MÉDIO
+  Mecânica: Metamorfo — copia exatamente o dado do atacante
+  Especial:  Se o jogador perder, foge para casa aleatória
+  Recompensa: revela posição de um vilão oculto
+
+DENTE DE SABRE  |  HP 110  |  D8  |  MÉDIO
+  Mecânica: Predador — dano dobrado contra Wolverine
+  Especial:  Regenera 10 HP se não for derrotado na 1ª rodada
+  Recompensa: dá +1 permanente ao dado de Wolverine
+
+JUGGERNAUT  |  HP 150  |  D6  |  DIFÍCIL
+  Mecânica: Imparável — absorve os primeiros 10 de dano
+  Especial:  Não contra-ataca na 1ª rodada (jogador ataca 2x)
+  Recompensa: +20 HP ao vencedor
+
+SR. SINISTRO  |  HP 130  |  D10  |  DIFÍCIL
+  Mecânica: Experimento — rola 2 dados e usa o maior
+  Especial:  Copia a habilidade [A] do jogador na batalha
+  Recompensa: revela as habilidades ocultas de todos
+
+OMEGA RED  |  HP 140  |  D8  |  DIFÍCIL
+  Mecânica: Tentáculos — drena 5 HP/turno na mesma região
+  Especial:  Recupera metade do dano que causar
+  Recompensa: imunidade a dreno de HP pelo resto da partida
+
+APOCALIPSE  |  HP 200  |  D10  |  CHEFÃO FINAL
+  Mecânica: Só pode ser desafiado com 3+ vitórias acumuladas
+  Especial:  Fase 2 — quando HP ≤ 100, dano dobra automaticamente
+  Recompensa: VENCE O JOGO
+------------------------------------------------------------
+
+============================================================
+  RESUMO — ESTADOS CONDICIONAIS
+============================================================
+
+  HP ≤ 40        Wolverine (Fúria Berserker), Professor X (Paz Mental)
+  HP ≤ 50        Tempestade (Olho da Tempestade)
+  HP ≤ 35        Noturno (Sombras)
+  HP ≤ 30        Jean Grey → transforma em Phoenix
+  HP ≤ 20        Colosso (Muralha)
+  HP ≥ 70        Vampira (Toque Letal — precisa vencer por 5+)
+  HP ≥ 60 + maior Ciclope (Liderança)
+  2 derrotas      Gambit (Sorte Cajun), Jean Grey (Telecinese)
+  Adversário fixo Magneto vs Wolverine/Colosso
+  2x mesmo oponente Psylocke (Vínculo Telepático)
+  Fase Phoenix   Permanente após transformação de Jean Grey
+
+============================================================

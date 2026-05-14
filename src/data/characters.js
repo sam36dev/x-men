@@ -64,48 +64,42 @@ export const characters = [
   },
   {
     id: 4,
-    name: "Fênix",
+    name: "Jean Grey",
     alias: "Jean Grey",
-    image: "https://upload.wikimedia.org/wikipedia/en/thumb/8/8c/Jean_Grey_%28Modern%29.webp/500px-Jean_Grey_%28Modern%29.webp.png",
+    image: "https://upload.wikimedia.org/wikipedia/en/thumb/2/22/Jean_Grey_%28New_X-Men%29.png/500px-Jean_Grey_%28New_X-Men%29.png",
     powers: [
-      "Telecinese Suprema",
       "Telepatia Avançada",
-      "Força Fênix Cósmica",
-      "Manipulação de Matéria"
+      "Telecinese",
+      "Barreira Psíquica",
+      "Ligação Mental"
     ],
     type: "Psíquico",
     typeIcon: "🔮",
     hp: 100,
-    diceType: 10,
-    multiplier: 9,
-    color: "#FF6B35",
-    gradient: "linear-gradient(160deg, #3d1000 0%, #1a0800 50%, #0d0400 100%)",
+    diceType: 8,
+    multiplier: 10,
+    color: "#FF9944",
+    gradient: "linear-gradient(160deg, #2a0800 0%, #150400 50%, #0a0200 100%)",
     team: "X-Men",
-    number: "004"
+    number: "004",
+    transformation: {
+      triggersAt: 30,
+      name: "Phoenix",
+      diceType: 10,
+      color: "#FF4400",
+      gradient: "linear-gradient(160deg, #3d1000 0%, #1a0800 50%, #0d0400 100%)",
+      type: "Cósmico",
+      typeIcon: "🔥",
+      powers: [
+        "Força Fênix Cósmica",
+        "Telecinese Suprema",
+        "Chama Estelar",
+        "Ressurreição"
+      ]
+    }
   },
   {
     id: 5,
-    name: "Magneto",
-    alias: "Erik Lehnsherr",
-    image: "https://upload.wikimedia.org/wikipedia/en/thumb/e/e9/Magneto_%28Marvel_Comics_character%29.jpg/500px-Magneto_%28Marvel_Comics_character%29.jpg",
-    powers: [
-      "Controle Eletromagnético",
-      "Voo",
-      "Escudos de Metal",
-      "Manipulação Metálica Total"
-    ],
-    type: "Energia",
-    typeIcon: "🧲",
-    hp: 100,
-    diceType: 8,
-    multiplier: 12,
-    color: "#CC44FF",
-    gradient: "linear-gradient(160deg, #1a003d 0%, #0d001a 50%, #07000d 100%)",
-    team: "Brotherhood",
-    number: "005"
-  },
-  {
-    id: 6,
     name: "Professor X",
     alias: "Charles Xavier",
     image: "https://upload.wikimedia.org/wikipedia/en/thumb/a/a8/Professor_X.png/500px-Professor_X.png",
@@ -123,10 +117,10 @@ export const characters = [
     color: "#4488FF",
     gradient: "linear-gradient(160deg, #00103d 0%, #00081a 50%, #00040d 100%)",
     team: "X-Men",
-    number: "006"
+    number: "005"
   },
   {
-    id: 7,
+    id: 6,
     name: "Gambit",
     alias: "Remy LeBeau",
     image: "https://upload.wikimedia.org/wikipedia/en/thumb/9/94/Gambit_%28Marvel_Comics%29.png/500px-Gambit_%28Marvel_Comics%29.png",
@@ -144,11 +138,11 @@ export const characters = [
     color: "#FF4499",
     gradient: "linear-gradient(160deg, #1a0020 0%, #0d0010 50%, #07000a 100%)",
     team: "X-Men",
-    number: "007"
+    number: "006"
   },
   {
-    id: 8,
-    name: "Pícara",
+    id: 7,
+    name: "Vampira",
     alias: "Anna Marie",
     image: "https://upload.wikimedia.org/wikipedia/en/thumb/d/d3/Excalibur_2019_-18.jpeg/500px-Excalibur_2019_-18.jpeg",
     powers: [
@@ -165,10 +159,10 @@ export const characters = [
     color: "#44CC88",
     gradient: "linear-gradient(160deg, #001a0a 0%, #000d05 50%, #000703 100%)",
     team: "X-Men",
-    number: "008"
+    number: "007"
   },
   {
-    id: 9,
+    id: 8,
     name: "Noturno",
     alias: "Kurt Wagner",
     image: "https://upload.wikimedia.org/wikipedia/en/thumb/f/f7/Nightcrawler_%28character%29.png/500px-Nightcrawler_%28character%29.png",
@@ -186,10 +180,10 @@ export const characters = [
     color: "#6688FF",
     gradient: "linear-gradient(160deg, #000d1a 0%, #000608 50%, #000304 100%)",
     team: "X-Men",
-    number: "009"
+    number: "008"
   },
   {
-    id: 10,
+    id: 9,
     name: "Colosso",
     alias: "Piotr Rasputin",
     image: "https://upload.wikimedia.org/wikipedia/en/thumb/2/26/Colossus-AvX_Consequences.jpg/500px-Colossus-AvX_Consequences.jpg",
@@ -207,48 +201,27 @@ export const characters = [
     color: "#AAAACC",
     gradient: "linear-gradient(160deg, #1a1a22 0%, #0d0d10 50%, #07070a 100%)",
     team: "X-Men",
-    number: "010"
+    number: "009"
   },
   {
-    id: 11,
-    name: "Fera",
-    alias: "Hank McCoy",
-    image: "https://upload.wikimedia.org/wikipedia/en/thumb/0/0b/Beast_%28Hank_McCoy_-_circa_2019%29.png/500px-Beast_%28Hank_McCoy_-_circa_2019%29.png",
+    id: 10,
+    name: "Psylocke",
+    alias: "Betsy Braddock",
+    image: "https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Psylocke_%28Betsy_Braddock%29.png/500px-Psylocke_%28Betsy_Braddock%29.png",
     powers: [
-      "Super Força e Agilidade",
-      "Gênio Científico",
-      "Garras Afiadas",
-      "Combate Acrobático"
+      "Lâmina Psíquica",
+      "Telepatia",
+      "Artes Marciais Ninja",
+      "Projeção Psíquica"
     ],
-    type: "Físico",
-    typeIcon: "🦁",
-    hp: 100,
-    diceType: 6,
-    multiplier: 13,
-    color: "#4466FF",
-    gradient: "linear-gradient(160deg, #000d2a 0%, #000610 50%, #000308 100%)",
-    team: "X-Men",
-    number: "011"
-  },
-  {
-    id: 12,
-    name: "Deadpool",
-    alias: "Wade Wilson",
-    image: "https://i.annihil.us/u/prod/marvel/i/mg/9/90/5261a86cacb99/portrait_incredible.jpg",
-    powers: [
-      "Regeneração Sobrenatural",
-      "Mestre em Armas",
-      "Agilidade Máxima",
-      "Quarta Parede Quebrada"
-    ],
-    type: "Combate",
-    typeIcon: "💀",
+    type: "Psíquico",
+    typeIcon: "🗡️",
     hp: 100,
     diceType: 8,
-    multiplier: 11,
-    color: "#FF2222",
-    gradient: "linear-gradient(160deg, #2a0000 0%, #110000 50%, #070000 100%)",
-    team: "X-Force",
-    number: "012"
+    multiplier: 12,
+    color: "#CC44FF",
+    gradient: "linear-gradient(160deg, #1a0030 0%, #0d0018 50%, #07000c 100%)",
+    team: "X-Men",
+    number: "010"
   }
 ]
