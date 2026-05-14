@@ -24,13 +24,19 @@ const FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
 function face(n, d) { return d === 6 ? FACES[n - 1] : n }
 
 function DiceFace({ value, diceType, color, rolling }) {
+  // During rolling always show unicode dice faces regardless of dice type
+  const sym = value != null
+    ? (rolling ? FACES[(value - 1) % 6] : face(value, diceType))
+    : null
+  const useUni = rolling || diceType === 6
+
   return (
     <div
       className={`gdie ${rolling ? 'gdie--rolling' : ''} ${value != null && !rolling ? 'gdie--landed' : ''}`}
       style={{ borderColor: value != null ? color + 'aa' : undefined }}
     >
-      {value != null
-        ? <span className={diceType === 6 ? 'gdie__sym--uni' : 'gdie__sym'}>{face(value, diceType)}</span>
+      {sym != null
+        ? <span className={useUni ? 'gdie__sym--uni' : 'gdie__sym'}>{sym}</span>
         : <span className="gdie__q">?</span>
       }
     </div>
@@ -81,7 +87,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const [result, setResult] = useState(null)
   const [confirmLeave, setConfirmLeave] = useState(false)
   const [shaking, setShaking] = useState(false)
+  const [oppRolling, setOppRolling] = useState(false)
+  const [oppDisplayRoll, setOppDisplayRoll] = useState(null)
   const prevBattleRef = useRef(null)
+  const prevOppRollRef = useRef(null)
 
   useEffect(() => {
     const r = ref(db, `rooms/${roomCode}`)
@@ -116,6 +125,35 @@ export default function Game({ roomCode, playerId, onLeave }) {
     }
     if (!cur) setMyRoll(null)
   }, [room?.battle])
+
+  // Opponent dice animation when their roll arrives
+  const currentOppRoll = room?.battle
+    ? (room.battle.attackerId === playerId ? room.battle.defenderRoll : room.battle.attackerRoll)
+    : null
+
+  useEffect(() => {
+    if (currentOppRoll != null && prevOppRollRef.current == null) {
+      setOppRolling(true)
+      setOppDisplayRoll(Math.ceil(Math.random() * 6))
+      let ticks = 0
+      const interval = setInterval(() => {
+        ticks++
+        setOppDisplayRoll(Math.ceil(Math.random() * 6))
+        if (ticks >= 12) {
+          clearInterval(interval)
+          setOppDisplayRoll(currentOppRoll)
+          setOppRolling(false)
+        }
+      }, 80)
+      prevOppRollRef.current = currentOppRoll
+      return () => clearInterval(interval)
+    }
+    if (currentOppRoll == null) {
+      prevOppRollRef.current = null
+      setOppDisplayRoll(null)
+      setOppRolling(false)
+    }
+  }, [currentOppRoll])
 
   if (!room) return <div className="game-loading">Carregando…</div>
 
@@ -340,8 +378,13 @@ export default function Game({ roomCode, playerId, onLeave }) {
             <span className="battle-panel__vs">VS</span>
             <div className="battle-panel__side">
               <span className="battle-panel__label">{battleOpponent?.name} · D{battleOpponentChar?.diceType}</span>
-              <DiceFace value={oppBattleRoll} diceType={battleOpponentChar?.diceType ?? 6} color={battleOpponentChar?.color ?? '#888'} rolling={false} />
-              {oppBattleRoll == null && <span className="battle-panel__waiting">aguardando…</span>}
+              <DiceFace
+                value={oppRolling ? oppDisplayRoll : oppBattleRoll}
+                diceType={battleOpponentChar?.diceType ?? 6}
+                color={battleOpponentChar?.color ?? '#888'}
+                rolling={oppRolling}
+              />
+              {oppBattleRoll == null && !oppRolling && <span className="battle-panel__waiting">aguardando…</span>}
             </div>
           </div>
         </div>
