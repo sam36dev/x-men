@@ -782,3 +782,89 @@
   text-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
   margin-top: 0.15rem;
 }
+
+/* [C] Conditional ability UI */
+.player-c-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.15rem;
+  flex-wrap: wrap;
+}
+
+.player-c-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: rgba(0, 220, 120, 0.6);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.player-c-cond {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.55rem;
+  color: rgba(255, 255, 255, 0.25);
+  padding: 0.05rem 0.28rem;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.player-c-cond--met {
+  color: rgba(0, 220, 120, 0.9);
+  border-color: rgba(0, 220, 120, 0.4);
+  background: rgba(0, 220, 120, 0.08);
+}
+
+.player-c-active {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #00ee77;
+  background: rgba(0, 238, 119, 0.15);
+  border: 1px solid rgba(0, 238, 119, 0.4);
+  border-radius: 3px;
+  padding: 0.05rem 0.25rem;
+  text-shadow: 0 0 6px rgba(0, 238, 119, 0.6);
+  animation: c-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes c-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.player-c-toggle {
+  background: rgba(0, 220, 120, 0.08);
+  border: 1px solid rgba(0, 220, 120, 0.3);
+  color: rgba(0, 220, 120, 0.7);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.player-c-toggle:active {
+  background: rgba(0, 220, 120, 0.2);
+  transform: scale(0.92);
+}
+
+.player-c-toggle--on {
+  background: rgba(0, 238, 119, 0.2);
+  border-color: rgba(0, 238, 119, 0.7);
+  color: #00ee77;
+}

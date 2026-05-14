@@ -9,7 +9,8 @@ export const characters = [
     color: "#F5A623", gradient: "linear-gradient(160deg, #3d2000 0%, #1a0a00 50%, #0d0500 100%)",
     team: "X-Men", number: "001",
     ability:  { name: "Fator de Cura",       description: "Ao perder, recupera metade do dano recebido",          effect: "HEAL_HALF"    },
-    abilityB: { name: "Investida",            description: "Soma +2 ao dado nessa batalha",                        effect: "B_PLUS_2"     }
+    abilityB: { name: "Investida",            description: "Soma +2 ao dado nessa batalha",                        effect: "B_PLUS_2"     },
+    abilityC: { name: "Fúria Berserker",      description: "HP ≤ 40: +4 ao resultado do dado nessa batalha",       effect: "C_ROLL_BOOST_4", condition: "hp_lte_40" }
   },
   {
     id: 2,
@@ -21,7 +22,8 @@ export const characters = [
     color: "#FF4444", gradient: "linear-gradient(160deg, #3d0000 0%, #1a0000 50%, #0d0000 100%)",
     team: "X-Men", number: "002",
     ability:  { name: "Raio Certeiro",        description: "Vencedor causa no mínimo 3 de dano",                   effect: "MIN_DAMAGE_3" },
-    abilityB: { name: "Raio Concentrado",     description: "Dobra o resultado do dado nessa batalha",              effect: "B_DOUBLE_ROLL" }
+    abilityB: { name: "Raio Concentrado",     description: "Dobra o resultado do dado nessa batalha",              effect: "B_DOUBLE_ROLL" },
+    abilityC: { name: "Raio Supremo",         description: "HP ≤ 50: dano causado é no mínimo 5",                  effect: "C_MIN_DAMAGE_5", condition: "hp_lte_50" }
   },
   {
     id: 3,
@@ -33,7 +35,8 @@ export const characters = [
     color: "#88BBFF", gradient: "linear-gradient(160deg, #001a3d 0%, #000d1a 50%, #000509 100%)",
     team: "X-Men", number: "003",
     ability:  { name: "Tempestade Perfeita",  description: "Se tirou o valor máximo do dado, dano é dobrado",      effect: "DOUBLE_MAX"   },
-    abilityB: { name: "Controle do Clima",    description: "Trata o dado como D8 (+2 ao resultado)",               effect: "B_UPGRADE"    }
+    abilityB: { name: "Controle do Clima",    description: "Trata o dado como D8 (+2 ao resultado)",               effect: "B_UPGRADE"    },
+    abilityC: { name: "Olho da Tempestade",   description: "HP ≤ 50: dado conta como valor máximo do tipo",        effect: "C_MAX_ROLL",  condition: "hp_lte_50" }
   },
   {
     id: 4,
@@ -51,7 +54,8 @@ export const characters = [
       powers: ["Força Fênix Cósmica", "Telecinese Suprema", "Chama Estelar", "Ressurreição"]
     },
     ability:  { name: "Escudo Psíquico",      description: "Ao perder, bloqueia todo o dano recebido",             effect: "SHIELD"       },
-    abilityB: { name: "Ligação Mental",        description: "Reduz o dado do oponente em -2 (mín. 1)",              effect: "B_WEAKEN"     }
+    abilityB: { name: "Ligação Mental",        description: "Reduz o dado do oponente em -2 (mín. 1)",              effect: "B_WEAKEN"     },
+    abilityC: { name: "Chama Fênix",          description: "HP ≤ 30: metade do dano recebido é refletido ao oponente", effect: "C_REDIRECT_HALF", condition: "hp_lte_30" }
   },
   {
     id: 5,
@@ -63,7 +67,8 @@ export const characters = [
     color: "#4488FF", gradient: "linear-gradient(160deg, #00103d 0%, #00081a 50%, #00040d 100%)",
     team: "X-Men", number: "005",
     ability:  { name: "Enfraquecimento Mental", description: "Reduz o dado do oponente em -2 (mín 1)",              effect: "WEAKEN"       },
-    abilityB: { name: "Controle Mental",        description: "Força o dado do oponente a ser 1",                    effect: "B_FORCE_ONE"  }
+    abilityB: { name: "Controle Mental",        description: "Força o dado do oponente a ser 1",                    effect: "B_FORCE_ONE"  },
+    abilityC: { name: "Escudo Mental",          description: "HP ≤ 35: anula os efeitos de habilidade [A] do oponente", effect: "C_MIND_SHIELD", condition: "hp_lte_35" }
   },
   {
     id: 6,
@@ -75,7 +80,8 @@ export const characters = [
     color: "#FF4499", gradient: "linear-gradient(160deg, #1a0020 0%, #0d0010 50%, #07000a 100%)",
     team: "X-Men", number: "006",
     ability:  { name: "Carta Explosiva",      description: "Se tirou o valor máximo do dado, dano fixo é 15",      effect: "EXPLOSIVE"    },
-    abilityB: { name: "Baralho Explosivo",    description: "Rerola o dado automaticamente na resolução",           effect: "B_REROLL"     }
+    abilityB: { name: "Baralho Explosivo",    description: "Rerola o dado automaticamente na resolução",           effect: "B_REROLL"     },
+    abilityC: { name: "Aposta Final",         description: "HP ≤ 40: +4 ao resultado do dado nessa batalha",       effect: "C_ROLL_BOOST_4", condition: "hp_lte_40" }
   },
   {
     id: 7,
@@ -87,7 +93,8 @@ export const characters = [
     color: "#44CC88", gradient: "linear-gradient(160deg, #001a0a 0%, #000d05 50%, #000703 100%)",
     team: "X-Men", number: "007",
     ability:  { name: "Absorção de Poder",    description: "Copia e aplica o efeito do oponente como se fosse seu", effect: "ABSORB"      },
-    abilityB: { name: "Voo",                  description: "Move +2 casas no tabuleiro (efeito físico)",            effect: "B_MOVEMENT"   }
+    abilityB: { name: "Voo",                  description: "Move +2 casas no tabuleiro (efeito físico)",            effect: "B_MOVEMENT"   },
+    abilityC: { name: "Absorção Garantida",   description: "2 derrotas seguidas: Absorção ativa com 100% de chance", effect: "C_ABSORB_SURE", condition: "losses_2" }
   },
   {
     id: 8,
@@ -99,7 +106,8 @@ export const characters = [
     color: "#6688FF", gradient: "linear-gradient(160deg, #000d1a 0%, #000608 50%, #000304 100%)",
     team: "X-Men", number: "008",
     ability:  { name: "Ataque Furtivo",       description: "Se for o atacante, +3 no resultado do dado",           effect: "SNEAK"        },
-    abilityB: { name: "Bamf!",                description: "Teleporta para qualquer casa (efeito físico)",          effect: "B_MOVEMENT"   }
+    abilityB: { name: "Bamf!",                description: "Teleporta para qualquer casa (efeito físico)",          effect: "B_MOVEMENT"   },
+    abilityC: { name: "Esquiva Total",        description: "HP ≤ 30: 50% de chance de esquivar e não receber dano", effect: "C_DODGE_50",  condition: "hp_lte_30" }
   },
   {
     id: 9,
@@ -111,7 +119,8 @@ export const characters = [
     color: "#AAAACC", gradient: "linear-gradient(160deg, #1a1a22 0%, #0d0d10 50%, #07070a 100%)",
     team: "X-Men", number: "009",
     ability:  { name: "Armadura de Aço",      description: "Ao perder, recebe no máximo 8 de dano",                effect: "ARMOR"        },
-    abilityB: { name: "Força Titânica",       description: "Multiplica o dano causado por 1.5 (se vencer)",        effect: "B_DAMAGE_BOOST" }
+    abilityB: { name: "Força Titânica",       description: "Multiplica o dano causado por 1.5 (se vencer)",        effect: "B_DAMAGE_BOOST" },
+    abilityC: { name: "Última Resistência",   description: "HP ≤ 20: sobrevive com 1 HP ao invés de ser eliminado", effect: "C_SURVIVE_1", condition: "hp_lte_20" }
   },
   {
     id: 10,
@@ -123,6 +132,7 @@ export const characters = [
     color: "#CC44FF", gradient: "linear-gradient(160deg, #1a0030 0%, #0d0018 50%, #07000c 100%)",
     team: "X-Men", number: "010",
     ability:  { name: "Lâmina Perfurante",    description: "Dano ignora ARMOR e SHIELD do oponente",               effect: "PIERCE"       },
-    abilityB: { name: "Golpe Ninja",          description: "+3 ao dado e cancela o [B] do oponente nessa batalha", effect: "B_NINJA"      }
+    abilityB: { name: "Golpe Ninja",          description: "+3 ao dado e cancela o [B] do oponente nessa batalha", effect: "B_NINJA"      },
+    abilityC: { name: "Lâmina Ativada",       description: "HP ≤ 50: PIERCE ativa com 100% de chance",             effect: "C_PIERCE_SURE", condition: "hp_lte_50" }
   }
 ]

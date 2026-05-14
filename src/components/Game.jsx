@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, declareAbilityB } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, declareAbilityB, toggleCAbility } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -45,6 +45,41 @@ function getChance(player, allPlayers) {
   return Math.min(90, base + tokenBonus + leaderBonus) + '%'
 }
 
+function isCConditionMet(player, char, allPlayers) {
+  if (!char?.abilityC) return false
+  const cond = char.abilityC.condition
+  switch (cond) {
+    case 'hp_lte_20': return player.hp <= 20
+    case 'hp_lte_30': return player.hp <= 30
+    case 'hp_lte_35': return player.hp <= 35
+    case 'hp_lte_40': return player.hp <= 40
+    case 'hp_lte_50': return player.hp <= 50
+    case 'hp_gte_70': return player.hp >= 70
+    case 'losses_2':  return (player.consecutiveLosses || 0) >= 2
+    case 'leader': {
+      const maxWins = Math.max(...allPlayers.map(p => p.wins || 0))
+      return maxWins > 0 && (player.wins || 0) === maxWins
+    }
+    case 'always': return true
+    default: return false
+  }
+}
+
+function cConditionLabel(condition) {
+  const labels = {
+    hp_lte_20: 'HP ≤ 20',
+    hp_lte_30: 'HP ≤ 30',
+    hp_lte_35: 'HP ≤ 35',
+    hp_lte_40: 'HP ≤ 40',
+    hp_lte_50: 'HP ≤ 50',
+    hp_gte_70: 'HP ≥ 70',
+    losses_2: '2 derrotas seguidas',
+    leader: 'Líder da partida',
+    always: 'Sempre ativa',
+  }
+  return labels[condition] ?? condition
+}
+
 export default function Game({ roomCode, playerId, onLeave }) {
   const [room, setRoom] = useState(null)
   const [myRoll, setMyRoll] = useState(null)
@@ -66,7 +101,9 @@ export default function Game({ roomCode, playerId, onLeave }) {
     prevBattleRef.current = cur
 
     if (prev && prev.resolved && !cur) {
-      const { attackerId, defenderId, attackerRoll, defenderRoll, attAbility, defAbility, attAbilityB, defAbilityB } = prev
+      const { attackerId, defenderId, attackerRoll, defenderRoll,
+              attAbility, defAbility, attAbilityB, defAbilityB,
+              attAbilityC, defAbilityC } = prev
       if (attackerRoll !== null && defenderRoll !== null) {
         const damage = Math.abs(attackerRoll - defenderRoll)
         const loserId = attackerRoll > defenderRoll ? defenderId
@@ -77,6 +114,8 @@ export default function Game({ roomCode, playerId, onLeave }) {
           defAbility: defAbility ?? null,
           attAbilityB: attAbilityB ?? null,
           defAbilityB: defAbilityB ?? null,
+          attAbilityC: attAbilityC ?? null,
+          defAbilityC: defAbilityC ?? null,
         })
         setMyRoll(null)
         setTimeout(() => setResult(null), 5000)
@@ -132,7 +171,6 @@ export default function Game({ roomCode, playerId, onLeave }) {
     onLeave()
   }
 
-  // Determine which ability name activated for the result banner (from my perspective)
   function resolveActivatedAbility() {
     if (!result) return null
     const iAmAttacker = result.attackerId === playerId
@@ -141,6 +179,8 @@ export default function Game({ roomCode, playerId, onLeave }) {
       iAmAttacker ? result.defAbility    : result.attAbility,
       iAmAttacker ? result.attAbilityB   : result.defAbilityB,
       iAmAttacker ? result.defAbilityB   : result.attAbilityB,
+      iAmAttacker ? result.attAbilityC   : result.defAbilityC,
+      iAmAttacker ? result.defAbilityC   : result.attAbilityC,
     ].filter(Boolean)
     if (names.length === 0) return null
     return names.join(' · ') + ' ativado!'
@@ -196,6 +236,23 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 <span className="player-tokens__ability">{myChar.ability.name}</span>
               )}
             </div>
+            {myChar.abilityC && (
+              <div className="player-c-row">
+                <span className="player-c-label">[C] {myChar.abilityC.name}</span>
+                <span className={`player-c-cond ${isCConditionMet(me, myChar, players) ? 'player-c-cond--met' : ''}`}>
+                  {cConditionLabel(myChar.abilityC.condition)}
+                </span>
+                {me.cActive && <span className="player-c-active">ATIVO</span>}
+                {isHost && (
+                  <button
+                    className={`player-c-toggle ${me.cActive ? 'player-c-toggle--on' : ''}`}
+                    onClick={() => toggleCAbility(roomCode, me.id)}
+                  >
+                    {me.cActive ? '✓' : '○'}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -318,42 +375,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
         </div>
       )}
 
-      {/* Villains */}
-      <div className="game-villains">
-        <h3 className="game-section-title">Vilões do Mapa</h3>
-        <div className="game-villain-scroll">
-          {villains.map(v => (
-            <div key={v.id} className={`villain-card villain-card--${v.difficulty}`} style={{ '--vcolor': v.color }}>
-              <div className="villain-card__img-wrap">
-                <img src={v.image} alt={v.name} onError={e => { e.target.style.display = 'none' }} />
-                <span className="villain-card__fallback">{v.typeIcon}</span>
-              </div>
-              <div className="villain-card__info">
-                <div className="villain-card__header">
-                  <span className="villain-card__name">{v.name}</span>
-                  <span className="villain-card__diff">{v.difficultyLabel}</span>
-                </div>
-                <span className="villain-card__mechanic">{v.mechanic}</span>
-                <div className="villain-card__hprow">
-                  <div className="villain-hp-bar">
-                    <div className="villain-hp-bar__fill" style={{ width: '100%' }} />
-                  </div>
-                  <span className="villain-card__hp">❤️ {v.hp}</span>
-                </div>
-              </div>
-              <button
-                className="villain-attack-btn"
-                style={{ '--vc': v.color }}
-                disabled={!!battle || !me?.alive}
-              >
-                ⚔️
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Opponents */}
+      {/* Jogadores — above Vilões */}
       <div className="game-opponents">
         <h3 className="game-section-title">Jogadores</h3>
 
@@ -364,6 +386,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
         {alivePlayers.map(p => {
           const char = characters.find(c => c.id === p.characterId)
           const inBattle = battle && (battle.attackerId === p.id || battle.defenderId === p.id)
+          const condMet = isCConditionMet(p, char, players)
           return (
             <div key={p.id} className="opponent-row">
               <div className="opponent-row__img-wrap">
@@ -398,6 +421,23 @@ export default function Game({ roomCode, playerId, onLeave }) {
                     </button>
                   )}
                 </div>
+                {char?.abilityC && (
+                  <div className="player-c-row">
+                    <span className="player-c-label">[C] {char.abilityC.name}</span>
+                    <span className={`player-c-cond ${condMet ? 'player-c-cond--met' : ''}`}>
+                      {cConditionLabel(char.abilityC.condition)}
+                    </span>
+                    {p.cActive && <span className="player-c-active">ATIVO</span>}
+                    {isHost && (
+                      <button
+                        className={`player-c-toggle ${p.cActive ? 'player-c-toggle--on' : ''}`}
+                        onClick={() => toggleCAbility(roomCode, p.id)}
+                      >
+                        {p.cActive ? '✓' : '○'}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
               <button
                 className="attack-btn"
@@ -426,6 +466,41 @@ export default function Game({ roomCode, playerId, onLeave }) {
             </div>
           )
         })}
+      </div>
+
+      {/* Villains — below Jogadores */}
+      <div className="game-villains">
+        <h3 className="game-section-title">Vilões do Mapa</h3>
+        <div className="game-villain-scroll">
+          {villains.map(v => (
+            <div key={v.id} className={`villain-card villain-card--${v.difficulty}`} style={{ '--vcolor': v.color }}>
+              <div className="villain-card__img-wrap">
+                <img src={v.image} alt={v.name} onError={e => { e.target.style.display = 'none' }} />
+                <span className="villain-card__fallback">{v.typeIcon}</span>
+              </div>
+              <div className="villain-card__info">
+                <div className="villain-card__header">
+                  <span className="villain-card__name">{v.name}</span>
+                  <span className="villain-card__diff">{v.difficultyLabel}</span>
+                </div>
+                <span className="villain-card__mechanic">{v.mechanic}</span>
+                <div className="villain-card__hprow">
+                  <div className="villain-hp-bar">
+                    <div className="villain-hp-bar__fill" style={{ width: '100%' }} />
+                  </div>
+                  <span className="villain-card__hp">❤️ {v.hp}</span>
+                </div>
+              </div>
+              <button
+                className="villain-attack-btn"
+                style={{ '--vc': v.color }}
+                disabled={!!battle || !me?.alive}
+              >
+                ⚔️
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
