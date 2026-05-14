@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, declareAbilityB } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -66,7 +66,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
     prevBattleRef.current = cur
 
     if (prev && prev.resolved && !cur) {
-      const { attackerId, defenderId, attackerRoll, defenderRoll, attAbility, defAbility } = prev
+      const { attackerId, defenderId, attackerRoll, defenderRoll, attAbility, defAbility, attAbilityB, defAbilityB } = prev
       if (attackerRoll !== null && defenderRoll !== null) {
         const damage = Math.abs(attackerRoll - defenderRoll)
         const loserId = attackerRoll > defenderRoll ? defenderId
@@ -75,6 +75,8 @@ export default function Game({ roomCode, playerId, onLeave }) {
           attackerRoll, defenderRoll, damage, loserId, attackerId, defenderId,
           attAbility: attAbility ?? null,
           defAbility: defAbility ?? null,
+          attAbilityB: attAbilityB ?? null,
+          defAbilityB: defAbilityB ?? null,
         })
         setMyRoll(null)
         setTimeout(() => setResult(null), 3500)
@@ -120,6 +122,11 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const alivePlayers = players.filter(p => p.id !== playerId && p.alive)
   const deadPlayers = players.filter(p => p.id !== playerId && !p.alive)
 
+  const battleAtt    = battle ? players.find(p => p.id === battle.attackerId) : null
+  const battleDef    = battle ? players.find(p => p.id === battle.defenderId) : null
+  const battleAttChar = battle ? characters.find(c => c.id === battleAtt?.characterId) : null
+  const battleDefChar = battle ? characters.find(c => c.id === battleDef?.characterId) : null
+
   async function handleLeave() {
     await leaveRoom(roomCode, playerId)
     onLeave()
@@ -129,13 +136,14 @@ export default function Game({ roomCode, playerId, onLeave }) {
   function resolveActivatedAbility() {
     if (!result) return null
     const iAmAttacker = result.attackerId === playerId
-    const myAbility = iAmAttacker ? result.attAbility : result.defAbility
-    const oppAbility = iAmAttacker ? result.defAbility : result.attAbility
-    // Show mine first, then opponent's
-    if (myAbility && oppAbility) return `${myAbility} + ${oppAbility} ativados!`
-    if (myAbility) return `${myAbility} ativado!`
-    if (oppAbility) return `${oppAbility} ativado!`
-    return null
+    const names = [
+      iAmAttacker ? result.attAbility    : result.defAbility,
+      iAmAttacker ? result.defAbility    : result.attAbility,
+      iAmAttacker ? result.attAbilityB   : result.defAbilityB,
+      iAmAttacker ? result.defAbilityB   : result.attAbilityB,
+    ].filter(Boolean)
+    if (names.length === 0) return null
+    return names.join(' · ') + ' ativado!'
   }
 
   const activatedAbilityLabel = resolveActivatedAbility()
@@ -254,6 +262,58 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 <span className="battle-panel__waiting">aguardando…</span>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Host [B] panel — visible to host whenever there's an active battle */}
+      {isHost && battle && !battle.resolved && (
+        <div className="host-b-panel">
+          <h4 className="host-b-panel__title">⚙️ Ativar Habilidade [B]</h4>
+          <div className="host-b-panel__row">
+
+            <div className="host-b-panel__side">
+              <span className="host-b-panel__player">{battleAtt?.name}</span>
+              <span className="host-b-panel__char" style={{ color: battleAttChar?.color }}>
+                {battleAttChar?.typeIcon} {battleAttChar?.name}
+              </span>
+              {battleAttChar?.abilityB && battleAttChar.abilityB.effect !== 'B_MOVEMENT' ? (
+                <button
+                  className={`host-b-btn ${battle.attackerAbilityB ? 'host-b-btn--on' : ''}`}
+                  onClick={() => declareAbilityB(roomCode, battle.attackerId)}
+                  disabled={!!battle.attackerAbilityB}
+                >
+                  {battle.attackerAbilityB ? '✓ ' : ''}{battleAttChar.abilityB.name}
+                </button>
+              ) : (
+                <span className="host-b-panel__physical">
+                  {battleAttChar?.abilityB?.name ?? '—'} (físico)
+                </span>
+              )}
+            </div>
+
+            <span className="host-b-panel__vs">VS</span>
+
+            <div className="host-b-panel__side">
+              <span className="host-b-panel__player">{battleDef?.name}</span>
+              <span className="host-b-panel__char" style={{ color: battleDefChar?.color }}>
+                {battleDefChar?.typeIcon} {battleDefChar?.name}
+              </span>
+              {battleDefChar?.abilityB && battleDefChar.abilityB.effect !== 'B_MOVEMENT' ? (
+                <button
+                  className={`host-b-btn ${battle.defenderAbilityB ? 'host-b-btn--on' : ''}`}
+                  onClick={() => declareAbilityB(roomCode, battle.defenderId)}
+                  disabled={!!battle.defenderAbilityB}
+                >
+                  {battle.defenderAbilityB ? '✓ ' : ''}{battleDefChar.abilityB.name}
+                </button>
+              ) : (
+                <span className="host-b-panel__physical">
+                  {battleDefChar?.abilityB?.name ?? '—'} (físico)
+                </span>
+              )}
+            </div>
+
           </div>
         </div>
       )}

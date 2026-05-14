@@ -63,7 +63,17 @@ export async function attackPlayer(code, attackerId, defenderId) {
     attackerId,
     defenderId,
     resolved: false,
+    attackerAbilityB: false,
+    defenderAbilityB: false,
   })
+}
+
+export async function declareAbilityB(code, playerId) {
+  const snap = await get(ref(db, `rooms/${code}/battle`))
+  const battle = snap.val()
+  if (!battle || battle.resolved) return
+  const key = battle.attackerId === playerId ? 'attackerAbilityB' : 'defenderAbilityB'
+  await update(ref(db, `rooms/${code}/battle`), { [key]: true })
 }
 
 export async function submitRoll(code, playerId, roll) {
@@ -132,33 +142,44 @@ async function _resolveBattle(code, battle) {
   const attActivated = attEffect ? _rollsChance(attChance) : false
   const defActivated = defEffect ? _rollsChance(defChance) : false
 
-  // Final active effects (null if not activated)
   let activeAttEffect = attActivated ? attEffect : null
   let activeDefEffect = defActivated ? defEffect : null
 
-  // Step 1: ABSORB resolves first — Vampira copies opponent's effect
-  if (activeAttEffect === 'ABSORB') {
-    activeAttEffect = activeDefEffect !== 'ABSORB' ? activeDefEffect : null
-  }
-  if (activeDefEffect === 'ABSORB') {
-    activeDefEffect = activeAttEffect !== 'ABSORB' ? activeAttEffect : null
-  }
+  // [A] Step 1: ABSORB — Vampira copies opponent's effect
+  if (activeAttEffect === 'ABSORB') activeAttEffect = activeDefEffect !== 'ABSORB' ? activeDefEffect : null
+  if (activeDefEffect === 'ABSORB') activeDefEffect = activeAttEffect !== 'ABSORB' ? activeAttEffect : null
 
-  // Step 2: Pre-roll modifiers
-  // SNEAK: attacker gets +3 if they are the attackerId
-  if (activeAttEffect === 'SNEAK') {
-    attackerRoll = attackerRoll + 3
-  }
-  if (activeDefEffect === 'SNEAK') {
-    // defender is not the attacker, SNEAK gives no bonus
-  }
-  // WEAKEN: reduces opponent's roll by -2 (min 1)
-  if (activeAttEffect === 'WEAKEN') {
-    defenderRoll = Math.max(1, defenderRoll - 2)
-  }
-  if (activeDefEffect === 'WEAKEN') {
-    attackerRoll = Math.max(1, attackerRoll - 2)
-  }
+  // [B] — host-declared abilities
+  let attBEffect = battle.attackerAbilityB ? (attChar?.abilityB?.effect ?? null) : null
+  let defBEffect = battle.defenderAbilityB ? (defChar?.abilityB?.effect ?? null) : null
+
+  // B_NINJA cancels opponent's [B] (unless both have it — then both apply)
+  if (attBEffect === 'B_NINJA' && defBEffect !== 'B_NINJA') defBEffect = null
+  if (defBEffect === 'B_NINJA' && attBEffect !== 'B_NINJA') attBEffect = null
+
+  // [B] reroll: replaces roll before any modifier
+  if (attBEffect === 'B_REROLL') attackerRoll = Math.ceil(Math.random() * (attChar?.diceType || 6))
+  if (defBEffect === 'B_REROLL') defenderRoll = Math.ceil(Math.random() * (defChar?.diceType || 6))
+
+  // [B] roll modifiers
+  if (attBEffect === 'B_PLUS_2')      attackerRoll += 2
+  if (attBEffect === 'B_UPGRADE')     attackerRoll += 2
+  if (attBEffect === 'B_DOUBLE_ROLL') attackerRoll *= 2
+  if (attBEffect === 'B_NINJA')       attackerRoll += 3
+  if (attBEffect === 'B_WEAKEN')      defenderRoll = Math.max(1, defenderRoll - 2)
+  if (attBEffect === 'B_FORCE_ONE')   defenderRoll = 1
+
+  if (defBEffect === 'B_PLUS_2')      defenderRoll += 2
+  if (defBEffect === 'B_UPGRADE')     defenderRoll += 2
+  if (defBEffect === 'B_DOUBLE_ROLL') defenderRoll *= 2
+  if (defBEffect === 'B_NINJA')       defenderRoll += 3
+  if (defBEffect === 'B_WEAKEN')      attackerRoll = Math.max(1, attackerRoll - 2)
+  if (defBEffect === 'B_FORCE_ONE')   attackerRoll = 1
+
+  // [A] Step 2: Pre-roll modifiers
+  if (activeAttEffect === 'SNEAK') attackerRoll += 3
+  if (activeAttEffect === 'WEAKEN') defenderRoll = Math.max(1, defenderRoll - 2)
+  if (activeDefEffect === 'WEAKEN') attackerRoll = Math.max(1, attackerRoll - 2)
 
   // Step 3: Determine winner and base damage
   let damage = Math.abs(attackerRoll - defenderRoll)
@@ -201,6 +222,10 @@ async function _resolveBattle(code, battle) {
       damage = Math.max(3, damage)
     }
 
+    // [B] winner damage boost
+    const winnerBEffect = winnerId === attackerId ? attBEffect : defBEffect
+    if (winnerBEffect === 'B_DAMAGE_BOOST') damage = Math.floor(damage * 1.5)
+
     // Step 5: Loser damage reducers (skip if winner has PIERCE)
     if (winnerEffect !== 'PIERCE') {
       if (loserEffect === 'ARMOR') {
@@ -212,14 +237,16 @@ async function _resolveBattle(code, battle) {
     }
   }
 
-  // Determine which ability names to surface to the UI
   const attAbilityName = attActivated && attChar?.ability ? attChar.ability.name : null
   const defAbilityName = defActivated && defChar?.ability ? defChar.ability.name : null
+  const attBName = battle.attackerAbilityB && attChar?.abilityB?.effect !== 'B_MOVEMENT' ? attChar?.abilityB?.name : null
+  const defBName = battle.defenderAbilityB && defChar?.abilityB?.effect !== 'B_MOVEMENT' ? defChar?.abilityB?.name : null
 
-  // Write ability info to battle doc so UI can read it before clearing
   await update(battleRef, {
     attAbility: attAbilityName,
     defAbility: defAbilityName,
+    attAbilityB: attBName,
+    defAbilityB: defBName,
   })
 
   // Apply damage to loser HP
