@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, togglePreB, toggleCAbility } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, togglePreB, toggleCAbility, changeTurn } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -230,6 +230,16 @@ export default function Game({ roomCode, playerId, onLeave }) {
               <span className="player-tokens__chance">{myChar.ability ? getChance(me, players) : '—'}</span>
               {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
             </div>
+            <div className="player-turn-row">
+              <span className="player-turn-label">TURNO</span>
+              <span className="player-turn-val">{me.turn ?? 1}</span>
+              {isHost && (
+                <>
+                  <button className="turn-btn" onClick={() => changeTurn(roomCode, me.id, -1)}>−</button>
+                  <button className="turn-btn" onClick={() => changeTurn(roomCode, me.id, +1)}>+</button>
+                </>
+              )}
+            </div>
             {myChar?.abilityB && myChar.abilityB.effect !== 'B_MOVEMENT' && (
               <button
                 className={`my-b-btn ${me.preB ? 'my-b-btn--on' : ''}`}
@@ -337,44 +347,40 @@ export default function Game({ roomCode, playerId, onLeave }) {
         </div>
       )}
 
-      {/* Host [B] status panel — shows current preB state during battle */}
-      {isHost && battle && !battle.resolved && (
+      {/* [B] status panel during battle — each side manages their own */}
+      {battle && !battle.resolved && (battleAtt || battleDef) && (
         <div className="host-b-panel">
           <h4 className="host-b-panel__title">⚙️ Habilidade [B]</h4>
           <div className="host-b-panel__row">
-            <div className="host-b-panel__side">
-              <span className="host-b-panel__player">{battleAtt?.name}</span>
-              <span className="host-b-panel__char" style={{ color: battleAttChar?.color }}>
-                {battleAttChar?.typeIcon} {battleAttChar?.name}
-              </span>
-              {battleAttChar?.abilityB && battleAttChar.abilityB.effect !== 'B_MOVEMENT' ? (
-                <button
-                  className={`host-b-btn ${battleAtt?.preB ? 'host-b-btn--on' : ''}`}
-                  onClick={() => togglePreB(roomCode, battle.attackerId)}
-                >
-                  {battleAtt?.preB ? '✓ ' : ''}{battleAttChar.abilityB.name}
-                </button>
-              ) : (
-                <span className="host-b-panel__physical">{battleAttChar?.abilityB?.name ?? '—'} (físico)</span>
-              )}
-            </div>
-            <span className="host-b-panel__vs">VS</span>
-            <div className="host-b-panel__side">
-              <span className="host-b-panel__player">{battleDef?.name}</span>
-              <span className="host-b-panel__char" style={{ color: battleDefChar?.color }}>
-                {battleDefChar?.typeIcon} {battleDefChar?.name}
-              </span>
-              {battleDefChar?.abilityB && battleDefChar.abilityB.effect !== 'B_MOVEMENT' ? (
-                <button
-                  className={`host-b-btn ${battleDef?.preB ? 'host-b-btn--on' : ''}`}
-                  onClick={() => togglePreB(roomCode, battle.defenderId)}
-                >
-                  {battleDef?.preB ? '✓ ' : ''}{battleDefChar.abilityB.name}
-                </button>
-              ) : (
-                <span className="host-b-panel__physical">{battleDefChar?.abilityB?.name ?? '—'} (físico)</span>
-              )}
-            </div>
+            {[
+              { player: battleAtt, char: battleAttChar, pid: battle.attackerId },
+              { player: battleDef, char: battleDefChar, pid: battle.defenderId },
+            ].map((side, i) => (
+              <div key={i} className="host-b-panel__side">
+                <span className="host-b-panel__player">{side.player?.name}</span>
+                <span className="host-b-panel__char" style={{ color: side.char?.color }}>
+                  {side.char?.typeIcon} {side.char?.name}
+                </span>
+                {side.char?.abilityB && side.char.abilityB.effect !== 'B_MOVEMENT' ? (
+                  side.pid === playerId ? (
+                    // Own side — interactive toggle
+                    <button
+                      className={`host-b-btn ${side.player?.preB ? 'host-b-btn--on' : ''}`}
+                      onClick={() => togglePreB(roomCode, side.pid)}
+                    >
+                      {side.player?.preB ? '✓ ' : ''}{side.char.abilityB.name}
+                    </button>
+                  ) : (
+                    // Opponent side — view only
+                    <span className={`host-b-status ${side.player?.preB ? 'host-b-status--on' : ''}`}>
+                      {side.player?.preB ? '✓ ' : '○ '}{side.char.abilityB.name}
+                    </span>
+                  )
+                ) : (
+                  <span className="host-b-panel__physical">{side.char?.abilityB?.name ?? '—'} (físico)</span>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -405,6 +411,16 @@ export default function Game({ roomCode, playerId, onLeave }) {
                   }} />
                 </div>
                 <span className="opponent-row__hp">❤️ {p.hp}/100</span>
+                <div className="player-turn-row">
+                  <span className="player-turn-label">TURNO</span>
+                  <span className="player-turn-val">{p.turn ?? 1}</span>
+                  {isHost && (
+                    <>
+                      <button className="turn-btn" onClick={() => changeTurn(roomCode, p.id, -1)}>−</button>
+                      <button className="turn-btn" onClick={() => changeTurn(roomCode, p.id, +1)}>+</button>
+                    </>
+                  )}
+                </div>
                 <div className="player-tokens">
                   <span className="player-tokens__coins">🪙 ×{p.tokens || 0}</span>
                   <span className="player-tokens__chance">{char?.ability ? getChance(p, players) : '—'}</span>

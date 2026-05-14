@@ -23,7 +23,7 @@ export async function createRoom(playerId, playerName) {
     status: 'lobby',
     createdAt: Date.now(),
     players: {
-      [playerId]: { name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false },
+      [playerId]: { name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false, turn: 1 },
     },
   })
   return code
@@ -36,7 +36,7 @@ export async function joinRoom(code, playerId, playerName) {
   const count = Object.keys(room.players || {}).length
   if (count >= 8) throw new Error('Sala cheia (máximo 8 jogadores)')
   await update(ref(db, `rooms/${code}/players/${playerId}`), {
-    name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false,
+    name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false, turn: 1,
   })
 }
 
@@ -64,6 +64,10 @@ export async function attackPlayer(code, attackerId, defenderId) {
     defenderId,
     resolved: false,
   })
+}
+
+export async function changeTurn(code, playerId, delta) {
+  await runTransaction(ref(db, `rooms/${code}/players/${playerId}/turn`), (cur) => Math.max(1, (cur || 1) + delta))
 }
 
 export async function togglePreB(code, playerId) {
