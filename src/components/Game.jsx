@@ -67,15 +67,9 @@ function isCConditionMet(player, char, allPlayers) {
 
 function cConditionLabel(condition) {
   const labels = {
-    hp_lte_20: 'HP ≤ 20',
-    hp_lte_30: 'HP ≤ 30',
-    hp_lte_35: 'HP ≤ 35',
-    hp_lte_40: 'HP ≤ 40',
-    hp_lte_50: 'HP ≤ 50',
-    hp_gte_70: 'HP ≥ 70',
-    losses_2: '2 derrotas seguidas',
-    leader: 'Líder da partida',
-    always: 'Sempre ativa',
+    hp_lte_20: 'HP ≤ 20', hp_lte_30: 'HP ≤ 30', hp_lte_35: 'HP ≤ 35',
+    hp_lte_40: 'HP ≤ 40', hp_lte_50: 'HP ≤ 50', hp_gte_70: 'HP ≥ 70',
+    losses_2: '2 derrotas seguidas', leader: 'Líder da partida', always: 'Sempre ativa',
   }
   return labels[condition] ?? condition
 }
@@ -86,6 +80,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const [rolling, setRolling] = useState(false)
   const [result, setResult] = useState(null)
   const [confirmLeave, setConfirmLeave] = useState(false)
+  const [shaking, setShaking] = useState(false)
   const prevBattleRef = useRef(null)
 
   useEffect(() => {
@@ -94,7 +89,6 @@ export default function Game({ roomCode, playerId, onLeave }) {
     return () => off(r)
   }, [roomCode])
 
-  // Detect battle cleared → show result briefly
   useEffect(() => {
     const prev = prevBattleRef.current
     const cur = room?.battle
@@ -110,14 +104,13 @@ export default function Game({ roomCode, playerId, onLeave }) {
           : attackerRoll < defenderRoll ? attackerId : null
         setResult({
           attackerRoll, defenderRoll, damage, loserId, attackerId, defenderId,
-          attAbility: attAbility ?? null,
-          defAbility: defAbility ?? null,
-          attAbilityB: attAbilityB ?? null,
-          defAbilityB: defAbilityB ?? null,
-          attAbilityC: attAbilityC ?? null,
-          defAbilityC: defAbilityC ?? null,
+          attAbility: attAbility ?? null, defAbility: defAbility ?? null,
+          attAbilityB: attAbilityB ?? null, defAbilityB: defAbilityB ?? null,
+          attAbilityC: attAbilityC ?? null, defAbilityC: defAbilityC ?? null,
         })
         setMyRoll(null)
+        setShaking(true)
+        setTimeout(() => setShaking(false), 550)
         setTimeout(() => setResult(null), 5000)
       }
     }
@@ -141,6 +134,19 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const myBattleRoll = battle ? (isAttacker ? battle.attackerRoll : battle.defenderRoll) : null
   const oppBattleRoll = battle ? (isAttacker ? battle.defenderRoll : battle.attackerRoll) : null
 
+  const battleAtt     = battle ? players.find(p => p.id === battle.attackerId) : null
+  const battleDef     = battle ? players.find(p => p.id === battle.defenderId) : null
+  const battleAttChar = battle ? characters.find(c => c.id === battleAtt?.characterId) : null
+  const battleDefChar = battle ? characters.find(c => c.id === battleDef?.characterId) : null
+
+  const resultWinnerId = result?.loserId
+    ? (result.loserId === result.attackerId ? result.defenderId : result.attackerId)
+    : null
+  const resultWinnerChar = resultWinnerId
+    ? characters.find(c => c.id === players.find(p => p.id === resultWinnerId)?.characterId)
+    : null
+  const flashColor = result ? (resultWinnerChar?.color ?? '#FFCC00') : null
+
   function rollDice() {
     if (rolling || myRoll !== null || !myChar) return
     setRolling(true)
@@ -159,12 +165,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
   }
 
   const alivePlayers = players.filter(p => p.id !== playerId && p.alive)
-  const deadPlayers = players.filter(p => p.id !== playerId && !p.alive)
-
-  const battleAtt    = battle ? players.find(p => p.id === battle.attackerId) : null
-  const battleDef    = battle ? players.find(p => p.id === battle.defenderId) : null
-  const battleAttChar = battle ? characters.find(c => c.id === battleAtt?.characterId) : null
-  const battleDefChar = battle ? characters.find(c => c.id === battleDef?.characterId) : null
+  const deadPlayers  = players.filter(p => p.id !== playerId && !p.alive)
 
   async function handleLeave() {
     await leaveRoom(roomCode, playerId)
@@ -175,34 +176,32 @@ export default function Game({ roomCode, playerId, onLeave }) {
     if (!result) return null
     const iAmAttacker = result.attackerId === playerId
     const names = [
-      iAmAttacker ? result.attAbility    : result.defAbility,
-      iAmAttacker ? result.defAbility    : result.attAbility,
-      iAmAttacker ? result.attAbilityB   : result.defAbilityB,
-      iAmAttacker ? result.defAbilityB   : result.attAbilityB,
-      iAmAttacker ? result.attAbilityC   : result.defAbilityC,
-      iAmAttacker ? result.defAbilityC   : result.attAbilityC,
+      iAmAttacker ? result.attAbility  : result.defAbility,
+      iAmAttacker ? result.defAbility  : result.attAbility,
+      iAmAttacker ? result.attAbilityB : result.defAbilityB,
+      iAmAttacker ? result.defAbilityB : result.attAbilityB,
+      iAmAttacker ? result.attAbilityC : result.defAbilityC,
+      iAmAttacker ? result.defAbilityC : result.attAbilityC,
     ].filter(Boolean)
-    if (names.length === 0) return null
-    return names.join(' · ') + ' ativado!'
+    return names.length ? names.join(' · ') + ' ativado!' : null
   }
 
   const activatedAbilityLabel = resolveActivatedAbility()
 
   return (
-    <div className="game-page">
+    <div className={`game-page ${shaking ? 'game-page--shake' : ''}`}>
+      {shaking && flashColor && (
+        <div className="game-flash" style={{ '--fc': flashColor }} />
+      )}
+
       {confirmLeave && (
-        <ConfirmModal
-          onConfirm={handleLeave}
-          onCancel={() => setConfirmLeave(false)}
-        />
+        <ConfirmModal onConfirm={handleLeave} onCancel={() => setConfirmLeave(false)} />
       )}
 
       {/* Top bar */}
       <div className="game-topbar">
         <span className="game-room">SALA: <strong>{roomCode}</strong></span>
-        <button className="game-leave" onClick={() => setConfirmLeave(true)}>
-          Sair
-        </button>
+        <button className="game-leave" onClick={() => setConfirmLeave(true)}>Sair</button>
       </div>
 
       {/* My card */}
@@ -219,10 +218,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
               <div className="game-hp-bar">
                 <div
                   className="game-hp-bar__fill"
-                  style={{
-                    width: `${me.hp}%`,
-                    background: me.hp < 30 ? '#ff2222' : me.hp < 60 ? '#ffaa00' : '#ff5555',
-                  }}
+                  style={{ width: `${me.hp}%`, background: me.hp < 30 ? '#ff2222' : me.hp < 60 ? '#ffaa00' : '#ff5555' }}
                 />
               </div>
               <span className="game-hp-label" style={{ color: me.hp < 30 ? '#ff4444' : me.hp < 60 ? '#ffaa00' : '#ff8888' }}>
@@ -232,9 +228,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
             <div className="player-tokens">
               <span className="player-tokens__coins">🪙 ×{me.tokens || 0}</span>
               <span className="player-tokens__chance">{myChar.ability ? getChance(me, players) : '—'}</span>
-              {myChar.ability && (
-                <span className="player-tokens__ability">{myChar.ability.name}</span>
-              )}
+              {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
             </div>
             {myChar.abilityC && (
               <div className="player-c-row">
@@ -257,7 +251,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
         </div>
       )}
 
-      {/* Transient result banner */}
+      {/* Result banner */}
       {result && (() => {
         const iLost = result.loserId === playerId
         const iWon  = result.loserId && result.loserId !== playerId
@@ -283,52 +277,60 @@ export default function Game({ roomCode, playerId, onLeave }) {
         )
       })()}
 
-      {/* Battle panel */}
+      {/* Battle panel — full card view when in battle */}
       {isInBattle && battle && (
         <div className="battle-panel">
           <h3 className="battle-panel__title">
             {isAttacker ? '⚔️ Você está atacando!' : '🛡️ Você foi atacado!'}
           </h3>
+
+          {/* Character cards */}
+          <div className="battle-cards">
+            <div className="battle-char battle-char--att" style={{ '--cc': myChar?.color }}>
+              <div className="battle-char__img-wrap">
+                <img src={myChar?.image} alt={myChar?.name} onError={e => { e.target.style.display = 'none' }} />
+                <span className="battle-char__fallback">{myChar?.name?.charAt(0)}</span>
+              </div>
+              <span className="battle-char__name" style={{ color: myChar?.color }}>{myChar?.name}</span>
+            </div>
+
+            <div className="battle-cards__vs">VS</div>
+
+            <div className="battle-char battle-char--def" style={{ '--cc': battleOpponentChar?.color }}>
+              <div className="battle-char__img-wrap">
+                <img src={battleOpponentChar?.image} alt={battleOpponentChar?.name} onError={e => { e.target.style.display = 'none' }} />
+                <span className="battle-char__fallback">{battleOpponentChar?.name?.charAt(0)}</span>
+              </div>
+              <span className="battle-char__name" style={{ color: battleOpponentChar?.color }}>{battleOpponentChar?.name}</span>
+            </div>
+          </div>
+
+          {/* Dice row */}
           <div className="battle-panel__row">
             <div className="battle-panel__side">
               <span className="battle-panel__label">Você · D{myChar?.diceType}</span>
               <DiceFace value={myBattleRoll ?? myRoll} diceType={myChar?.diceType ?? 6} color={myChar?.color ?? '#FFD700'} rolling={rolling} />
               {myBattleRoll == null && myRoll === null && (
-                <button
-                  className="battle-roll-btn"
-                  style={{ '--c': myChar?.color }}
-                  onClick={rollDice}
-                  disabled={rolling}
-                >
+                <button className="battle-roll-btn" style={{ '--c': myChar?.color }} onClick={rollDice} disabled={rolling}>
                   {rolling ? '…' : '🎲 Rolar'}
                 </button>
               )}
             </div>
-
             <span className="battle-panel__vs">VS</span>
-
             <div className="battle-panel__side">
               <span className="battle-panel__label">{battleOpponent?.name} · D{battleOpponentChar?.diceType}</span>
-              <DiceFace
-                value={oppBattleRoll}
-                diceType={battleOpponentChar?.diceType ?? 6}
-                color={battleOpponentChar?.color ?? '#888'}
-                rolling={false}
-              />
-              {oppBattleRoll == null && (
-                <span className="battle-panel__waiting">aguardando…</span>
-              )}
+              <DiceFace value={oppBattleRoll} diceType={battleOpponentChar?.diceType ?? 6} color={battleOpponentChar?.color ?? '#888'} rolling={false} />
+              {oppBattleRoll == null && <span className="battle-panel__waiting">aguardando…</span>}
             </div>
           </div>
         </div>
       )}
 
-      {/* Host [B] panel — visible to host whenever there's an active battle */}
+      {/* Host [B] panel */}
       {isHost && battle && !battle.resolved && (
         <div className="host-b-panel">
           <h4 className="host-b-panel__title">⚙️ Ativar Habilidade [B]</h4>
           <div className="host-b-panel__row">
-
             <div className="host-b-panel__side">
               <span className="host-b-panel__player">{battleAtt?.name}</span>
               <span className="host-b-panel__char" style={{ color: battleAttChar?.color }}>
@@ -343,14 +345,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
                   {battle.attackerAbilityB ? '✓ ' : ''}{battleAttChar.abilityB.name}
                 </button>
               ) : (
-                <span className="host-b-panel__physical">
-                  {battleAttChar?.abilityB?.name ?? '—'} (físico)
-                </span>
+                <span className="host-b-panel__physical">{battleAttChar?.abilityB?.name ?? '—'} (físico)</span>
               )}
             </div>
-
             <span className="host-b-panel__vs">VS</span>
-
             <div className="host-b-panel__side">
               <span className="host-b-panel__player">{battleDef?.name}</span>
               <span className="host-b-panel__char" style={{ color: battleDefChar?.color }}>
@@ -365,28 +363,20 @@ export default function Game({ roomCode, playerId, onLeave }) {
                   {battle.defenderAbilityB ? '✓ ' : ''}{battleDefChar.abilityB.name}
                 </button>
               ) : (
-                <span className="host-b-panel__physical">
-                  {battleDefChar?.abilityB?.name ?? '—'} (físico)
-                </span>
+                <span className="host-b-panel__physical">{battleDefChar?.abilityB?.name ?? '—'} (físico)</span>
               )}
             </div>
-
           </div>
         </div>
       )}
 
-      {/* Jogadores — above Vilões */}
+      {/* Jogadores */}
       <div className="game-opponents">
         <h3 className="game-section-title">Jogadores</h3>
-
-        {alivePlayers.length === 0 && (
-          <p className="game-empty">Nenhum oponente vivo.</p>
-        )}
-
+        {alivePlayers.length === 0 && <p className="game-empty">Nenhum oponente vivo.</p>}
         {alivePlayers.map(p => {
           const char = characters.find(c => c.id === p.characterId)
           const inBattle = battle && (battle.attackerId === p.id || battle.defenderId === p.id)
-          const condMet = isCConditionMet(p, char, players)
           return (
             <div key={p.id} className="opponent-row">
               <div className="opponent-row__img-wrap">
@@ -400,9 +390,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 </span>
                 <div className="opp-hp-bar">
                   <div style={{
-                    width: `${p.hp}%`,
-                    height: '100%',
-                    borderRadius: '3px',
+                    width: `${p.hp}%`, height: '100%', borderRadius: '3px',
                     background: p.hp < 30 ? '#ff2222' : p.hp < 60 ? '#ffaa00' : '#ff5555',
                     transition: 'width 0.5s ease',
                   }} />
@@ -412,19 +400,13 @@ export default function Game({ roomCode, playerId, onLeave }) {
                   <span className="player-tokens__coins">🪙 ×{p.tokens || 0}</span>
                   <span className="player-tokens__chance">{char?.ability ? getChance(p, players) : '—'}</span>
                   {isHost && p.alive && (
-                    <button
-                      className="give-token-btn"
-                      onClick={() => giveToken(roomCode, p.id)}
-                      title="Dar token"
-                    >
-                      +
-                    </button>
+                    <button className="give-token-btn" onClick={() => giveToken(roomCode, p.id)} title="Dar token">+</button>
                   )}
                 </div>
                 {char?.abilityC && (
                   <div className="player-c-row">
                     <span className="player-c-label">[C] {char.abilityC.name}</span>
-                    <span className={`player-c-cond ${condMet ? 'player-c-cond--met' : ''}`}>
+                    <span className={`player-c-cond ${isCConditionMet(p, char, players) ? 'player-c-cond--met' : ''}`}>
                       {cConditionLabel(char.abilityC.condition)}
                     </span>
                     {p.cActive && <span className="player-c-active">ATIVO</span>}
@@ -450,7 +432,6 @@ export default function Game({ roomCode, playerId, onLeave }) {
             </div>
           )
         })}
-
         {deadPlayers.map(p => {
           const char = characters.find(c => c.id === p.characterId)
           return (
@@ -468,7 +449,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
         })}
       </div>
 
-      {/* Villains — below Jogadores */}
+      {/* Vilões */}
       <div className="game-villains">
         <h3 className="game-section-title">Vilões do Mapa</h3>
         <div className="game-villain-scroll">
