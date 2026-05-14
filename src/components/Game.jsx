@@ -79,7 +79,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
           defAbilityB: defAbilityB ?? null,
         })
         setMyRoll(null)
-        setTimeout(() => setResult(null), 3500)
+        setTimeout(() => setResult(null), 5000)
       }
     }
     if (!cur) setMyRoll(null)
