@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -37,6 +37,14 @@ function DiceFace({ value, diceType, color, rolling }) {
   )
 }
 
+function getChance(player, allPlayers) {
+  const base = 20
+  const tokenBonus = (player.tokens || 0) * 10
+  const maxWins = Math.max(...allPlayers.map(p => p.wins || 0))
+  const leaderBonus = maxWins > 0 && (player.wins || 0) === maxWins ? 10 : 0
+  return Math.min(90, base + tokenBonus + leaderBonus) + '%'
+}
+
 export default function Game({ roomCode, playerId, onLeave }) {
   const [room, setRoom] = useState(null)
   const [myRoll, setMyRoll] = useState(null)
@@ -58,13 +66,16 @@ export default function Game({ roomCode, playerId, onLeave }) {
     prevBattleRef.current = cur
 
     if (prev && prev.resolved && !cur) {
-      // Battle just cleared — show result for 3s
-      const { attackerId, defenderId, attackerRoll, defenderRoll } = prev
+      const { attackerId, defenderId, attackerRoll, defenderRoll, attAbility, defAbility } = prev
       if (attackerRoll !== null && defenderRoll !== null) {
         const damage = Math.abs(attackerRoll - defenderRoll)
         const loserId = attackerRoll > defenderRoll ? defenderId
           : attackerRoll < defenderRoll ? attackerId : null
-        setResult({ attackerRoll, defenderRoll, damage, loserId, attackerId, defenderId })
+        setResult({
+          attackerRoll, defenderRoll, damage, loserId, attackerId, defenderId,
+          attAbility: attAbility ?? null,
+          defAbility: defAbility ?? null,
+        })
         setMyRoll(null)
         setTimeout(() => setResult(null), 3500)
       }
@@ -78,10 +89,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const me = players.find(p => p.id === playerId)
   const myChar = characters.find(c => c.id === me?.characterId)
   const battle = room.battle
+  const isHost = room.hostId === playerId
   const isInBattle = battle && (battle.attackerId === playerId || battle.defenderId === playerId)
   const isAttacker = battle?.attackerId === playerId
 
-  // Find opponent char in battle for their dice type
   const battleOpponentId = battle ? (isAttacker ? battle.defenderId : battle.attackerId) : null
   const battleOpponent = players.find(p => p.id === battleOpponentId)
   const battleOpponentChar = characters.find(c => c.id === battleOpponent?.characterId)
@@ -113,6 +124,21 @@ export default function Game({ roomCode, playerId, onLeave }) {
     await leaveRoom(roomCode, playerId)
     onLeave()
   }
+
+  // Determine which ability name activated for the result banner (from my perspective)
+  function resolveActivatedAbility() {
+    if (!result) return null
+    const iAmAttacker = result.attackerId === playerId
+    const myAbility = iAmAttacker ? result.attAbility : result.defAbility
+    const oppAbility = iAmAttacker ? result.defAbility : result.attAbility
+    // Show mine first, then opponent's
+    if (myAbility && oppAbility) return `${myAbility} + ${oppAbility} ativados!`
+    if (myAbility) return `${myAbility} ativado!`
+    if (oppAbility) return `${oppAbility} ativado!`
+    return null
+  }
+
+  const activatedAbilityLabel = resolveActivatedAbility()
 
   return (
     <div className="game-page">
@@ -155,6 +181,13 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 ❤️ {me.hp}
               </span>
             </div>
+            <div className="player-tokens">
+              <span className="player-tokens__coins">🪙 ×{me.tokens || 0}</span>
+              <span className="player-tokens__chance">{myChar.ability ? getChance(me, players) : '—'}</span>
+              {myChar.ability && (
+                <span className="player-tokens__ability">{myChar.ability.name}</span>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -178,6 +211,9 @@ export default function Game({ roomCode, playerId, onLeave }) {
               {iLost && `💥 Você perdeu! −${result.damage} HP`}
               {iWon  && `🏆 Você venceu! Oponente −${result.damage} HP`}
             </p>
+            {activatedAbilityLabel && (
+              <p className="ability-activated">⚡ {activatedAbilityLabel}</p>
+            )}
           </div>
         )
       })()}
@@ -289,6 +325,19 @@ export default function Game({ roomCode, playerId, onLeave }) {
                   }} />
                 </div>
                 <span className="opponent-row__hp">❤️ {p.hp}/100</span>
+                <div className="player-tokens">
+                  <span className="player-tokens__coins">🪙 ×{p.tokens || 0}</span>
+                  <span className="player-tokens__chance">{char?.ability ? getChance(p, players) : '—'}</span>
+                  {isHost && p.alive && (
+                    <button
+                      className="give-token-btn"
+                      onClick={() => giveToken(roomCode, p.id)}
+                      title="Dar token"
+                    >
+                      +
+                    </button>
+                  )}
+                </div>
               </div>
               <button
                 className="attack-btn"

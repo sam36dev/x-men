@@ -18,7 +18,12 @@ export const characters = [
     color: "#F5A623",
     gradient: "linear-gradient(160deg, #3d2000 0%, #1a0a00 50%, #0d0500 100%)",
     team: "X-Men",
-    number: "001"
+    number: "001",
+    ability: {
+      name: "Fator de Cura",
+      description: "Ao perder, recupera metade do dano recebido",
+      effect: "HEAL_HALF"
+    }
   },
   {
     id: 2,
@@ -39,7 +44,12 @@ export const characters = [
     color: "#FF4444",
     gradient: "linear-gradient(160deg, #3d0000 0%, #1a0000 50%, #0d0000 100%)",
     team: "X-Men",
-    number: "002"
+    number: "002",
+    ability: {
+      name: "Raio Certeiro",
+      description: "Vencedor causa no mínimo 3 de dano",
+      effect: "MIN_DAMAGE_3"
+    }
   },
   {
     id: 3,
@@ -60,7 +70,12 @@ export const characters = [
     color: "#88BBFF",
     gradient: "linear-gradient(160deg, #001a3d 0%, #000d1a 50%, #000509 100%)",
     team: "X-Men",
-    number: "003"
+    number: "003",
+    ability: {
+      name: "Tempestade Perfeita",
+      description: "Se tirou o valor máximo do dado, dano é dobrado",
+      effect: "DOUBLE_MAX"
+    }
   },
   {
     id: 4,
@@ -96,6 +111,11 @@ export const characters = [
         "Chama Estelar",
         "Ressurreição"
       ]
+    },
+    ability: {
+      name: "Escudo Psíquico",
+      description: "Ao perder, bloqueia todo o dano recebido",
+      effect: "SHIELD"
     }
   },
   {
@@ -117,7 +137,12 @@ export const characters = [
     color: "#4488FF",
     gradient: "linear-gradient(160deg, #00103d 0%, #00081a 50%, #00040d 100%)",
     team: "X-Men",
-    number: "005"
+    number: "005",
+    ability: {
+      name: "Enfraquecimento Mental",
+      description: "Reduz o dado do oponente em -2 (mín 1)",
+      effect: "WEAKEN"
+    }
   },
   {
     id: 6,
@@ -138,7 +163,12 @@ export const characters = [
     color: "#FF4499",
     gradient: "linear-gradient(160deg, #1a0020 0%, #0d0010 50%, #07000a 100%)",
     team: "X-Men",
-    number: "006"
+    number: "006",
+    ability: {
+      name: "Carta Explosiva",
+      description: "Se tirou o valor máximo do dado, dano fixo é 15",
+      effect: "EXPLOSIVE"
+    }
   },
   {
     id: 7,
@@ -159,7 +189,12 @@ export const characters = [
     color: "#44CC88",
     gradient: "linear-gradient(160deg, #001a0a 0%, #000d05 50%, #000703 100%)",
     team: "X-Men",
-    number: "007"
+    number: "007",
+    ability: {
+      name: "Absorção de Poder",
+      description: "Copia e aplica o efeito do oponente como se fosse seu",
+      effect: "ABSORB"
+    }
   },
   {
     id: 8,
@@ -180,7 +215,12 @@ export const characters = [
     color: "#6688FF",
     gradient: "linear-gradient(160deg, #000d1a 0%, #000608 50%, #000304 100%)",
     team: "X-Men",
-    number: "008"
+    number: "008",
+    ability: {
+      name: "Ataque Furtivo",
+      description: "Se for o atacante, +3 no resultado do dado",
+      effect: "SNEAK"
+    }
   },
   {
     id: 9,
@@ -201,7 +241,12 @@ export const characters = [
     color: "#AAAACC",
     gradient: "linear-gradient(160deg, #1a1a22 0%, #0d0d10 50%, #07070a 100%)",
     team: "X-Men",
-    number: "009"
+    number: "009",
+    ability: {
+      name: "Armadura de Aço",
+      description: "Ao perder, recebe no máximo 8 de dano",
+      effect: "ARMOR"
+    }
   },
   {
     id: 10,
@@ -222,6 +267,11 @@ export const characters = [
     color: "#CC44FF",
     gradient: "linear-gradient(160deg, #1a0030 0%, #0d0018 50%, #07000c 100%)",
     team: "X-Men",
-    number: "010"
+    number: "010",
+    ability: {
+      name: "Lâmina Perfurante",
+      description: "Dano ignora ARMOR e SHIELD do oponente",
+      effect: "PIERCE"
+    }
   }
 ]

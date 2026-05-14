@@ -618,3 +618,73 @@
   font-size: 1.2rem;
   flex-shrink: 0;
 }
+
+/* Ability system UI */
+.player-tokens {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+  flex-wrap: wrap;
+}
+
+.player-tokens__coins {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.65rem;
+  color: rgba(255, 204, 0, 0.75);
+  letter-spacing: 0.03em;
+}
+
+.player-tokens__chance {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.62rem;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.03em;
+}
+
+.player-tokens__ability {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.58rem;
+  color: rgba(255, 255, 255, 0.22);
+  font-style: italic;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.give-token-btn {
+  background: rgba(255, 204, 0, 0.12);
+  border: 1px solid rgba(255, 204, 0, 0.35);
+  color: rgba(255, 204, 0, 0.85);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.give-token-btn:active {
+  background: rgba(255, 204, 0, 0.25);
+  border-color: rgba(255, 204, 0, 0.65);
+}
+
+.ability-activated {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: rgba(255, 204, 0, 0.9);
+  text-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
+  margin-top: 0.15rem;
+}
