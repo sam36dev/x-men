@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, declareAbilityB, toggleCAbility } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, togglePreB, toggleCAbility } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -230,6 +230,17 @@ export default function Game({ roomCode, playerId, onLeave }) {
               <span className="player-tokens__chance">{myChar.ability ? getChance(me, players) : '—'}</span>
               {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
             </div>
+            {myChar?.abilityB && myChar.abilityB.effect !== 'B_MOVEMENT' && (
+              <button
+                className={`my-b-btn ${me.preB ? 'my-b-btn--on' : ''}`}
+                onClick={() => togglePreB(roomCode, playerId)}
+                disabled={!!isInBattle}
+              >
+                <span className="my-b-btn__tag">[B]</span>
+                <span className="my-b-btn__name">{myChar.abilityB.name}</span>
+                {me.preB && <span className="my-b-btn__check">✓</span>}
+              </button>
+            )}
             {myChar.abilityC && (
               <div className="player-c-row">
                 <span className="player-c-label">[C] {myChar.abilityC.name}</span>
@@ -326,10 +337,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
         </div>
       )}
 
-      {/* Host [B] panel */}
+      {/* Host [B] status panel — shows current preB state during battle */}
       {isHost && battle && !battle.resolved && (
         <div className="host-b-panel">
-          <h4 className="host-b-panel__title">⚙️ Ativar Habilidade [B]</h4>
+          <h4 className="host-b-panel__title">⚙️ Habilidade [B]</h4>
           <div className="host-b-panel__row">
             <div className="host-b-panel__side">
               <span className="host-b-panel__player">{battleAtt?.name}</span>
@@ -338,11 +349,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
               </span>
               {battleAttChar?.abilityB && battleAttChar.abilityB.effect !== 'B_MOVEMENT' ? (
                 <button
-                  className={`host-b-btn ${battle.attackerAbilityB ? 'host-b-btn--on' : ''}`}
-                  onClick={() => declareAbilityB(roomCode, battle.attackerId)}
-                  disabled={!!battle.attackerAbilityB}
+                  className={`host-b-btn ${battleAtt?.preB ? 'host-b-btn--on' : ''}`}
+                  onClick={() => togglePreB(roomCode, battle.attackerId)}
                 >
-                  {battle.attackerAbilityB ? '✓ ' : ''}{battleAttChar.abilityB.name}
+                  {battleAtt?.preB ? '✓ ' : ''}{battleAttChar.abilityB.name}
                 </button>
               ) : (
                 <span className="host-b-panel__physical">{battleAttChar?.abilityB?.name ?? '—'} (físico)</span>
@@ -356,11 +366,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
               </span>
               {battleDefChar?.abilityB && battleDefChar.abilityB.effect !== 'B_MOVEMENT' ? (
                 <button
-                  className={`host-b-btn ${battle.defenderAbilityB ? 'host-b-btn--on' : ''}`}
-                  onClick={() => declareAbilityB(roomCode, battle.defenderId)}
-                  disabled={!!battle.defenderAbilityB}
+                  className={`host-b-btn ${battleDef?.preB ? 'host-b-btn--on' : ''}`}
+                  onClick={() => togglePreB(roomCode, battle.defenderId)}
                 >
-                  {battle.defenderAbilityB ? '✓ ' : ''}{battleDefChar.abilityB.name}
+                  {battleDef?.preB ? '✓ ' : ''}{battleDefChar.abilityB.name}
                 </button>
               ) : (
                 <span className="host-b-panel__physical">{battleDefChar?.abilityB?.name ?? '—'} (físico)</span>

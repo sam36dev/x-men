@@ -23,7 +23,7 @@ export async function createRoom(playerId, playerName) {
     status: 'lobby',
     createdAt: Date.now(),
     players: {
-      [playerId]: { name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false },
+      [playerId]: { name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false },
     },
   })
   return code
@@ -36,7 +36,7 @@ export async function joinRoom(code, playerId, playerName) {
   const count = Object.keys(room.players || {}).length
   if (count >= 8) throw new Error('Sala cheia (máximo 8 jogadores)')
   await update(ref(db, `rooms/${code}/players/${playerId}`), {
-    name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false,
+    name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false,
   })
 }
 
@@ -63,21 +63,15 @@ export async function attackPlayer(code, attackerId, defenderId) {
     attackerId,
     defenderId,
     resolved: false,
-    attackerAbilityB: false,
-    defenderAbilityB: false,
   })
+}
+
+export async function togglePreB(code, playerId) {
+  await runTransaction(ref(db, `rooms/${code}/players/${playerId}/preB`), (cur) => !cur)
 }
 
 export async function toggleCAbility(code, playerId) {
   await runTransaction(ref(db, `rooms/${code}/players/${playerId}/cActive`), (cur) => !cur)
-}
-
-export async function declareAbilityB(code, playerId) {
-  const snap = await get(ref(db, `rooms/${code}/battle`))
-  const battle = snap.val()
-  if (!battle || battle.resolved) return
-  const key = battle.attackerId === playerId ? 'attackerAbilityB' : 'defenderAbilityB'
-  await update(ref(db, `rooms/${code}/battle`), { [key]: true })
 }
 
 export async function submitRoll(code, playerId, roll) {
@@ -166,9 +160,9 @@ async function _resolveBattle(code, battle) {
   if (attCEffect === 'C_MIND_SHIELD') activeDefEffect = null
   if (defCEffect === 'C_MIND_SHIELD') activeAttEffect = null
 
-  // [B] — host-declared abilities
-  let attBEffect = battle.attackerAbilityB ? (attChar?.abilityB?.effect ?? null) : null
-  let defBEffect = battle.defenderAbilityB ? (defChar?.abilityB?.effect ?? null) : null
+  // [B] — pre-declared by each player before battle
+  let attBEffect = attPlayer?.preB ? (attChar?.abilityB?.effect ?? null) : null
+  let defBEffect = defPlayer?.preB ? (defChar?.abilityB?.effect ?? null) : null
 
   // B_NINJA cancels opponent's [B] (unless both have it — then both apply)
   if (attBEffect === 'B_NINJA' && defBEffect !== 'B_NINJA') defBEffect = null
@@ -260,8 +254,8 @@ async function _resolveBattle(code, battle) {
 
   const attAbilityName = attActivated && attChar?.ability ? attChar.ability.name : null
   const defAbilityName = defActivated && defChar?.ability ? defChar.ability.name : null
-  const attBName = battle.attackerAbilityB && attChar?.abilityB?.effect !== 'B_MOVEMENT' ? attChar?.abilityB?.name : null
-  const defBName = battle.defenderAbilityB && defChar?.abilityB?.effect !== 'B_MOVEMENT' ? defChar?.abilityB?.name : null
+  const attBName = attPlayer?.preB && attChar?.abilityB?.effect !== 'B_MOVEMENT' ? attChar?.abilityB?.name : null
+  const defBName = defPlayer?.preB && defChar?.abilityB?.effect !== 'B_MOVEMENT' ? defChar?.abilityB?.name : null
   const attCName = attCEffect && attChar?.abilityC ? attChar.abilityC.name : null
   const defCName = defCEffect && defChar?.abilityC ? defChar.abilityC.name : null
 
@@ -318,9 +312,9 @@ async function _resolveBattle(code, battle) {
     await runTransaction(ref(db, `rooms/${code}/players/${loserId}/consecutiveLosses`), (cur) => (cur || 0) + 1)
   }
 
-  // Reset cActive for both combatants after battle resolves
-  await update(ref(db, `rooms/${code}/players/${attackerId}`), { cActive: false })
-  await update(ref(db, `rooms/${code}/players/${defenderId}`), { cActive: false })
+  // Reset preB and cActive for both combatants after battle resolves
+  await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false })
+  await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false })
 
   setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 4000)
 }
