@@ -751,6 +751,13 @@
   letter-spacing: 0.03em;
 }
 
+.player-tokens__wins {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.65rem;
+  color: rgba(255, 204, 0, 0.75);
+  letter-spacing: 0.03em;
+}
+
 .player-tokens__chance {
   font-family: 'Oswald', sans-serif;
   font-size: 0.62rem;

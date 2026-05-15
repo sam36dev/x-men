@@ -333,6 +333,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
             </div>
             <div className="player-tokens">
               <span className="player-tokens__coins">🪙 ×{me.tokens || 0}</span>
+              <span className="player-tokens__wins">🏆 ×{me.wins || 0}</span>
               <span className="player-tokens__chance">{myChar.ability ? getChance(me, players) : '—'}</span>
               {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
             </div>
@@ -605,6 +606,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 </div>
                 <div className="player-tokens">
                   <span className="player-tokens__coins">🪙 ×{p.tokens || 0}</span>
+                  <span className="player-tokens__wins">🏆 ×{p.wins || 0}</span>
                   <span className="player-tokens__chance">{char?.ability ? getChance(p, players) : '—'}</span>
                   {isHost && p.alive && (
                     <button className="give-token-btn" onClick={() => giveToken(roomCode, p.id)} title="Dar token">+</button>
