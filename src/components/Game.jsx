@@ -111,8 +111,12 @@ export default function Game({ roomCode, playerId, onLeave }) {
     if (prev && prev.resolved && !cur) {
       const { attackerId, defenderId, attackerRoll, defenderRoll,
               attAbility, defAbility, attAbilityB, defAbilityB,
-              attAbilityC, defAbilityC } = prev
-      if (attackerRoll !== null && defenderRoll !== null) {
+              attAbilityC, defAbilityC, fled } = prev
+      if (fled) {
+        setResult({ fled, attackerId, defenderId })
+        setMyRoll(null)
+        setTimeout(() => setResult(null), 3500)
+      } else if (attackerRoll !== null && defenderRoll !== null) {
         const damage = Math.abs(attackerRoll - defenderRoll)
         const loserId = attackerRoll > defenderRoll ? defenderId
           : attackerRoll < defenderRoll ? attackerId : null
@@ -346,7 +350,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 </>
               )}
             </div>
-            {myChar?.abilityB && myChar.abilityB.effect !== 'B_MOVEMENT' && (
+            {myChar?.abilityB && (myChar.abilityB.effect !== 'B_MOVEMENT' || myChar.id === 7) && (
               <button
                 className={`my-b-btn ${me.preB ? 'my-b-btn--on' : ''}`}
                 onClick={() => togglePreB(roomCode, playerId)}
@@ -410,6 +414,17 @@ export default function Game({ roomCode, playerId, onLeave }) {
           </div>
         )
       })()}
+
+      {/* Flee result banner */}
+      {result?.fled && (
+        <div className={`game-result ${result.fled === playerId ? 'game-result--tie' : 'game-result--win'}`}>
+          <p>
+            {result.fled === playerId
+              ? '🕊️ Você fugiu — nenhum dano'
+              : '🕊️ Vampira fugiu — batalha cancelada'}
+          </p>
+        </div>
+      )}
 
       {/* Villain result banner */}
       {villainResult && villainResult.vPlayerId === playerId && (
@@ -550,7 +565,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 <span className="host-b-panel__char" style={{ color: side.char?.color }}>
                   {side.char?.typeIcon} {side.char?.name}
                 </span>
-                {side.char?.abilityB && side.char.abilityB.effect !== 'B_MOVEMENT' ? (
+                {side.char?.abilityB && (side.char.abilityB.effect !== 'B_MOVEMENT' || side.char?.id === 7) ? (
                   side.pid === playerId ? (
                     // Own side — interactive toggle
                     <button

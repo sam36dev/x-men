@@ -195,6 +195,16 @@ async function _resolveBattle(code, battle) {
   const attChar = characters.find(c => c.id === attPlayer?.characterId)
   const defChar = characters.find(c => c.id === defPlayer?.characterId)
 
+  // Vampira Voo — pre-declared [B] means she flees, no damage dealt to either side
+  if ((attPlayer?.preB && attChar?.id === 7) || (defPlayer?.preB && defChar?.id === 7)) {
+    const fleeId = (attPlayer?.preB && attChar?.id === 7) ? attackerId : defenderId
+    await update(battleRef, { fled: fleeId })
+    await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false })
+    await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false })
+    setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 3500)
+    return
+  }
+
   const attChance = attPlayer ? _abilityChance(attPlayer, allPlayers) : 0
   const defChance = defPlayer ? _abilityChance(defPlayer, allPlayers) : 0
 
