@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -343,6 +343,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 <>
                   <button className="give-token-btn" onClick={() => giveToken(roomCode, me.id)} title="Dar token">+</button>
                   <button className="give-token-btn give-token-btn--remove" onClick={() => removeToken(roomCode, me.id)} title="Gastar token" disabled={(me.tokens || 0) === 0}>−</button>
+                  <button className="give-token-btn give-token-btn--heal" onClick={() => healPlayer(roomCode, me.id)} title="+2 HP" disabled={me.hp >= 100}>🔥</button>
                 </>
               )}
             </div>
@@ -638,6 +639,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                     <>
                       <button className="give-token-btn" onClick={() => giveToken(roomCode, p.id)} title="Dar token">+</button>
                       <button className="give-token-btn give-token-btn--remove" onClick={() => removeToken(roomCode, p.id)} title="Gastar token" disabled={(p.tokens || 0) === 0}>−</button>
+                      <button className="give-token-btn give-token-btn--heal" onClick={() => healPlayer(roomCode, p.id)} title="+2 HP" disabled={p.hp >= 100}>🔥</button>
                     </>
                   )}
                 </div>

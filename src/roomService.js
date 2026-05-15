@@ -117,6 +117,14 @@ export async function removeToken(code, targetPlayerId) {
   await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}/tokens`), (cur) => Math.max(0, (cur || 0) - 1))
 }
 
+export async function healPlayer(code, targetPlayerId, amount = 2) {
+  await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}`), (p) => {
+    if (!p) return null
+    const newHp = Math.min(100, (p.hp || 0) + amount)
+    return { ...p, hp: newHp, alive: true }
+  })
+}
+
 export async function attackPlayer(code, attackerId, defenderId) {
   await set(ref(db, `rooms/${code}/battle`), {
     attackerId,
