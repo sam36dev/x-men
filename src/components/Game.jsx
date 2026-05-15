@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -339,6 +339,12 @@ export default function Game({ roomCode, playerId, onLeave }) {
               <span className="player-tokens__coins">🪙 ×{me.tokens || 0}</span>
               <span className="player-tokens__chance">{myChar.ability ? getChance(me, players) : '—'}</span>
               {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
+              {isHost && (
+                <>
+                  <button className="give-token-btn" onClick={() => giveToken(roomCode, me.id)} title="Dar token">+</button>
+                  <button className="give-token-btn give-token-btn--remove" onClick={() => removeToken(roomCode, me.id)} title="Gastar token" disabled={(me.tokens || 0) === 0}>−</button>
+                </>
+              )}
             </div>
             <div className="player-turn-row">
               <span className="player-turn-label">TURNO</span>
@@ -629,7 +635,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
                   <span className="player-tokens__coins">🪙 ×{p.tokens || 0}</span>
                   <span className="player-tokens__chance">{char?.ability ? getChance(p, players) : '—'}</span>
                   {isHost && p.alive && (
-                    <button className="give-token-btn" onClick={() => giveToken(roomCode, p.id)} title="Dar token">+</button>
+                    <>
+                      <button className="give-token-btn" onClick={() => giveToken(roomCode, p.id)} title="Dar token">+</button>
+                      <button className="give-token-btn give-token-btn--remove" onClick={() => removeToken(roomCode, p.id)} title="Gastar token" disabled={(p.tokens || 0) === 0}>−</button>
+                    </>
                   )}
                 </div>
                 {char?.abilityC && (

@@ -115,9 +115,11 @@ export async function leaveRoom(code, playerId) {
 }
 
 export async function giveToken(code, targetPlayerId) {
-  await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}/tokens`), (cur) => {
-    return (cur || 0) + 1
-  })
+  await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}/tokens`), (cur) => (cur || 0) + 1)
+}
+
+export async function removeToken(code, targetPlayerId) {
+  await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}/tokens`), (cur) => Math.max(0, (cur || 0) - 1))
 }
 
 export async function attackPlayer(code, attackerId, defenderId) {
