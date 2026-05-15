@@ -89,7 +89,7 @@ export const characters = [
     alias: "Anna Marie",
     image: "https://upload.wikimedia.org/wikipedia/en/thumb/d/d3/Excalibur_2019_-18.jpeg/500px-Excalibur_2019_-18.jpeg",
     powers: ["Absorção de Poderes", "Super Força", "Invulnerabilidade", "Voo"],
-    type: "Absorção", typeIcon: "💫", hp: 100, diceType: 8, multiplier: 11,
+    type: "Absorção", typeIcon: "💫", hp: 100, diceType: 6, multiplier: 11,
     color: "#44CC88", gradient: "linear-gradient(160deg, #001a0a 0%, #000d05 50%, #000703 100%)",
     team: "X-Men", number: "007",
     ability:  { name: "Absorção de Poder",    description: "Copia e aplica o efeito do oponente como se fosse seu", effect: "ABSORB"      },
