@@ -71,11 +71,13 @@ export async function submitVillainRoll(code, playerId, roll) {
   if (!vb || vb.resolved || vb.playerId !== playerId) return
 
   const villain = villains.find(v => v.id === vb.villainId)
-  const villainRoll = Math.ceil(Math.random() * (villain?.diceType ?? 6))
+  const die1 = Math.ceil(Math.random() * (villain?.diceType ?? 6))
+  const die2 = villain?.id === 6 ? Math.ceil(Math.random() * (villain?.diceType ?? 6)) : null
+  const villainRoll = die2 != null ? Math.max(die1, die2) : die1
 
   const txResult = await runTransaction(vBattleRef, (cur) => {
     if (!cur || cur.resolved) return undefined
-    return { ...cur, playerRoll: roll, villainRoll, resolved: true }
+    return { ...cur, playerRoll: roll, villainRoll, villainRoll2: die2, resolved: true }
   })
   if (!txResult.committed) return
 

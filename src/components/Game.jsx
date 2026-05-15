@@ -23,7 +23,7 @@ function ConfirmModal({ onConfirm, onCancel }) {
 const FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
 function face(n, d) { return d === 6 ? FACES[n - 1] : n }
 
-function DiceFace({ value, diceType, color, rolling }) {
+function DiceFace({ value, diceType, color, rolling, selected }) {
   // During rolling always show unicode dice faces regardless of dice type
   const sym = value != null
     ? (rolling ? FACES[(value - 1) % 6] : face(value, diceType))
@@ -32,7 +32,7 @@ function DiceFace({ value, diceType, color, rolling }) {
 
   return (
     <div
-      className={`gdie ${rolling ? 'gdie--rolling' : ''} ${value != null && !rolling ? 'gdie--landed' : ''}`}
+      className={`gdie ${rolling ? 'gdie--rolling' : ''} ${value != null && !rolling ? 'gdie--landed' : ''} ${selected ? 'gdie--selected' : ''}`}
       style={{ borderColor: value != null ? color + 'aa' : undefined }}
     >
       {sym != null
@@ -92,6 +92,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const [myVillainRoll, setMyVillainRoll] = useState(null)
   const [villainRolling, setVillainRolling] = useState(false)
   const [villainDiceDisplay, setVillainDiceDisplay] = useState(null)
+  const [villainDiceDisplay2, setVillainDiceDisplay2] = useState(null)
   const [villainResult, setVillainResult] = useState(null)
   const prevBattleRef = useRef(null)
   const prevOppRollRef = useRef(null)
@@ -186,22 +187,26 @@ export default function Game({ roomCode, playerId, onLeave }) {
 
     // Animate villain dice when villainRoll arrives
     if (cur?.resolved && cur.villainRoll != null && !prev?.resolved) {
+      const hasDie2 = cur.villainRoll2 != null
       setVillainRolling(true)
       setVillainDiceDisplay(Math.ceil(Math.random() * 6))
+      if (hasDie2) setVillainDiceDisplay2(Math.ceil(Math.random() * 6))
       let ticks = 0
       const interval = setInterval(() => {
         ticks++
         setVillainDiceDisplay(Math.ceil(Math.random() * 6))
+        if (hasDie2) setVillainDiceDisplay2(Math.ceil(Math.random() * 6))
         if (ticks >= 12) {
           clearInterval(interval)
           setVillainDiceDisplay(cur.villainRoll)
+          if (hasDie2) setVillainDiceDisplay2(cur.villainRoll2)
           setVillainRolling(false)
         }
       }, 80)
       return () => clearInterval(interval)
     }
 
-    if (!cur) { setMyVillainRoll(null); setVillainDiceDisplay(null); setVillainRolling(false) }
+    if (!cur) { setMyVillainRoll(null); setVillainDiceDisplay(null); setVillainDiceDisplay2(null); setVillainRolling(false) }
   }, [room?.villainBattle])
 
   if (!room) return <div className="game-loading">Carregando…</div>
@@ -489,13 +494,28 @@ export default function Game({ roomCode, playerId, onLeave }) {
             </div>
             <span className="battle-panel__vs">VS</span>
             <div className="battle-panel__side">
-              <span className="battle-panel__label">{activeVillain?.name} · D{activeVillain?.diceType}</span>
-              <DiceFace
-                value={villainRolling ? villainDiceDisplay : (villainBattle.villainRoll ?? null)}
-                diceType={activeVillain?.diceType ?? 6}
-                color={activeVillain?.color ?? '#888'}
-                rolling={villainRolling}
-              />
+              <span className="battle-panel__label">
+                {activeVillain?.name} · D{activeVillain?.diceType}
+                {villainBattle.villainRoll2 != null && ' (2 dados)'}
+              </span>
+              <div className="villain-dice-pair">
+                <DiceFace
+                  value={villainRolling ? villainDiceDisplay : (villainBattle.villainRoll ?? null)}
+                  diceType={activeVillain?.diceType ?? 6}
+                  color={activeVillain?.color ?? '#888'}
+                  rolling={villainRolling}
+                  selected={!villainRolling && villainBattle.villainRoll2 != null && (villainBattle.villainRoll >= (villainBattle.villainRoll2 ?? 0))}
+                />
+                {villainBattle.villainRoll2 != null && (
+                  <DiceFace
+                    value={villainRolling ? villainDiceDisplay2 : villainBattle.villainRoll2}
+                    diceType={activeVillain?.diceType ?? 6}
+                    color={activeVillain?.color ?? '#888'}
+                    rolling={villainRolling}
+                    selected={!villainRolling && villainBattle.villainRoll2 > villainBattle.villainRoll}
+                  />
+                )}
+              </div>
               {villainBattle.villainRoll == null && !villainRolling && (
                 <span className="battle-panel__waiting">aguardando…</span>
               )}

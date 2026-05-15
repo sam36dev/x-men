@@ -85,7 +85,7 @@ export const villains = [
     alias: "Nathaniel Essex",
     image: "https://upload.wikimedia.org/wikipedia/en/thumb/3/36/MrSinister.png/500px-MrSinister.png",
     hp: 100,
-    diceType: 10,
+    diceType: 6,
     difficulty: "dificil",
     difficultyLabel: "Difícil",
     color: "#CC0044",

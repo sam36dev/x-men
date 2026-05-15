@@ -273,6 +273,17 @@
   animation: dice-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.gdie--selected {
+  border-color: rgba(255, 220, 50, 0.9) !important;
+  box-shadow: 0 0 10px rgba(255, 200, 0, 0.55);
+}
+
+.villain-dice-pair {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
 @keyframes dice-shake {
   0%   { transform: rotate(-5deg) scale(1.05); }
   50%  { transform: rotate(5deg) scale(1.05); }
