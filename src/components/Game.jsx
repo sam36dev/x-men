@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, togglePreB, toggleCAbility, changeTurn } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -89,8 +89,13 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const [shaking, setShaking] = useState(false)
   const [oppRolling, setOppRolling] = useState(false)
   const [oppDisplayRoll, setOppDisplayRoll] = useState(null)
+  const [myVillainRoll, setMyVillainRoll] = useState(null)
+  const [villainRolling, setVillainRolling] = useState(false)
+  const [villainDiceDisplay, setVillainDiceDisplay] = useState(null)
+  const [villainResult, setVillainResult] = useState(null)
   const prevBattleRef = useRef(null)
   const prevOppRollRef = useRef(null)
+  const prevVillainBattleRef = useRef(null)
 
   useEffect(() => {
     const r = ref(db, `rooms/${roomCode}`)
@@ -155,6 +160,46 @@ export default function Game({ roomCode, playerId, onLeave }) {
     }
   }, [currentOppRoll])
 
+  // Villain battle: detect resolution and animate villain dice
+  useEffect(() => {
+    const prev = prevVillainBattleRef.current
+    const cur = room?.villainBattle
+    prevVillainBattleRef.current = cur
+
+    if (prev && prev.resolved && !cur) {
+      const { playerRoll, villainRoll, playerId: vPlayerId, villainId } = prev
+      if (playerRoll != null && villainRoll != null) {
+        const damage = Math.abs(playerRoll - villainRoll)
+        const playerWon = playerRoll > villainRoll
+        const tied = playerRoll === villainRoll
+        setVillainResult({ playerRoll, villainRoll, damage, playerWon, tied, villainId, vPlayerId })
+        setMyVillainRoll(null)
+        setShaking(true)
+        setTimeout(() => setShaking(false), 550)
+        setTimeout(() => setVillainResult(null), 5000)
+      }
+    }
+
+    // Animate villain dice when villainRoll arrives
+    if (cur?.resolved && cur.villainRoll != null && !prev?.resolved) {
+      setVillainRolling(true)
+      setVillainDiceDisplay(Math.ceil(Math.random() * 6))
+      let ticks = 0
+      const interval = setInterval(() => {
+        ticks++
+        setVillainDiceDisplay(Math.ceil(Math.random() * 6))
+        if (ticks >= 12) {
+          clearInterval(interval)
+          setVillainDiceDisplay(cur.villainRoll)
+          setVillainRolling(false)
+        }
+      }, 80)
+      return () => clearInterval(interval)
+    }
+
+    if (!cur) { setMyVillainRoll(null); setVillainDiceDisplay(null); setVillainRolling(false) }
+  }, [room?.villainBattle])
+
   if (!room) return <div className="game-loading">Carregando…</div>
 
   const players = Object.entries(room.players || {}).map(([id, p]) => ({ id, ...p }))
@@ -198,6 +243,29 @@ export default function Game({ roomCode, playerId, onLeave }) {
         setMyRoll(final)
         setRolling(false)
         submitRoll(roomCode, playerId, final)
+      }
+    }, 80)
+  }
+
+  const villainBattle = room.villainBattle
+  const isInVillainBattle = villainBattle?.playerId === playerId
+  const activeVillain = villainBattle ? villains.find(v => v.id === villainBattle.villainId) : null
+  const villainHp = room.villainHp ?? {}
+
+  function rollDiceVillain() {
+    if (villainRolling || myVillainRoll !== null || !myChar) return
+    setVillainRolling(false)
+    let ticks = 0
+    let rolling = true
+    setMyVillainRoll(Math.ceil(Math.random() * myChar.diceType))
+    const interval = setInterval(() => {
+      ticks++
+      setMyVillainRoll(Math.ceil(Math.random() * myChar.diceType))
+      if (ticks >= 12) {
+        clearInterval(interval)
+        const final = Math.ceil(Math.random() * myChar.diceType)
+        setMyVillainRoll(final)
+        submitVillainRoll(roomCode, playerId, final)
       }
     }, 80)
   }
@@ -335,6 +403,77 @@ export default function Game({ roomCode, playerId, onLeave }) {
           </div>
         )
       })()}
+
+      {/* Villain result banner */}
+      {villainResult && villainResult.vPlayerId === playerId && (
+        <div className={`game-result ${villainResult.playerWon ? 'game-result--win' : villainResult.tied ? 'game-result--tie' : 'game-result--lose'}`}>
+          <div className="game-result__rolls">
+            <span style={{ color: myChar?.color }}>{face(villainResult.playerRoll, myChar?.diceType ?? 6)}</span>
+            <span className="game-result__vs">VS</span>
+            <span style={{ color: villains.find(v => v.id === villainResult.villainId)?.color }}>
+              {villainResult.villainRoll}
+            </span>
+          </div>
+          <p>
+            {villainResult.tied  && '⚖️ Empate — ninguém toma dano'}
+            {villainResult.playerWon  && `🏆 Você venceu! Vilão −${villainResult.damage} HP`}
+            {!villainResult.playerWon && !villainResult.tied && `💥 Você perdeu! −${villainResult.damage} HP`}
+          </p>
+        </div>
+      )}
+
+      {/* Villain battle panel */}
+      {isInVillainBattle && villainBattle && (
+        <div className="battle-panel">
+          <h3 className="battle-panel__title">⚔️ Enfrentando {activeVillain?.name}!</h3>
+          <div className="battle-cards">
+            <div className="battle-char battle-char--att" style={{ '--cc': myChar?.color }}>
+              <div className="battle-char__img-wrap">
+                <img src={myChar?.image} alt={myChar?.name} onError={e => { e.target.style.display = 'none' }} />
+                <span className="battle-char__fallback">{myChar?.name?.charAt(0)}</span>
+              </div>
+              <span className="battle-char__name" style={{ color: myChar?.color }}>{myChar?.name}</span>
+            </div>
+            <div className="battle-cards__vs">VS</div>
+            <div className="battle-char battle-char--def" style={{ '--cc': activeVillain?.color }}>
+              <div className="battle-char__img-wrap">
+                <img src={activeVillain?.image} alt={activeVillain?.name} onError={e => { e.target.style.display = 'none' }} />
+                <span className="battle-char__fallback">{activeVillain?.typeIcon}</span>
+              </div>
+              <span className="battle-char__name" style={{ color: activeVillain?.color }}>{activeVillain?.name}</span>
+            </div>
+          </div>
+          <div className="battle-panel__row">
+            <div className="battle-panel__side">
+              <span className="battle-panel__label">Você · D{myChar?.diceType}</span>
+              <DiceFace
+                value={myVillainRoll}
+                diceType={myChar?.diceType ?? 6}
+                color={myChar?.color ?? '#FFD700'}
+                rolling={myVillainRoll !== null && villainBattle.playerRoll == null}
+              />
+              {villainBattle.playerRoll == null && myVillainRoll === null && (
+                <button className="battle-roll-btn" style={{ '--c': myChar?.color }} onClick={rollDiceVillain}>
+                  🎲 Rolar
+                </button>
+              )}
+            </div>
+            <span className="battle-panel__vs">VS</span>
+            <div className="battle-panel__side">
+              <span className="battle-panel__label">{activeVillain?.name} · D{activeVillain?.diceType}</span>
+              <DiceFace
+                value={villainRolling ? villainDiceDisplay : (villainBattle.villainRoll ?? null)}
+                diceType={activeVillain?.diceType ?? 6}
+                color={activeVillain?.color ?? '#888'}
+                rolling={villainRolling}
+              />
+              {villainBattle.villainRoll == null && !villainRolling && (
+                <span className="battle-panel__waiting">aguardando…</span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Battle panel — full card view when in battle */}
       {isInBattle && battle && (
@@ -521,34 +660,44 @@ export default function Game({ roomCode, playerId, onLeave }) {
       <div className="game-villains">
         <h3 className="game-section-title">Vilões do Mapa</h3>
         <div className="game-villain-scroll">
-          {villains.map(v => (
-            <div key={v.id} className={`villain-card villain-card--${v.difficulty}`} style={{ '--vcolor': v.color }}>
-              <div className="villain-card__img-wrap">
-                <img src={v.image} alt={v.name} onError={e => { e.target.style.display = 'none' }} />
-                <span className="villain-card__fallback">{v.typeIcon}</span>
-              </div>
-              <div className="villain-card__info">
-                <div className="villain-card__header">
-                  <span className="villain-card__name">{v.name}</span>
-                  <span className="villain-card__diff">{v.difficultyLabel}</span>
-                </div>
-                <span className="villain-card__mechanic">{v.mechanic}</span>
-                <div className="villain-card__hprow">
-                  <div className="villain-hp-bar">
-                    <div className="villain-hp-bar__fill" style={{ width: '100%' }} />
-                  </div>
-                  <span className="villain-card__hp">❤️ {v.hp}</span>
-                </div>
-              </div>
-              <button
-                className="villain-attack-btn"
-                style={{ '--vc': v.color }}
-                disabled={!!battle || !me?.alive}
+          {villains.map(v => {
+            const currentHp = villainHp[v.id] ?? v.hp
+            const defeated = currentHp <= 0
+            const hpPct = Math.max(0, (currentHp / v.hp) * 100)
+            return (
+              <div
+                key={v.id}
+                className={`villain-card villain-card--${v.difficulty} ${defeated ? 'villain-card--defeated' : ''}`}
+                style={{ '--vcolor': v.color }}
               >
-                ⚔️
-              </button>
-            </div>
-          ))}
+                <div className="villain-card__img-wrap">
+                  <img src={v.image} alt={v.name} onError={e => { e.target.style.display = 'none' }} />
+                  <span className="villain-card__fallback">{v.typeIcon}</span>
+                </div>
+                <div className="villain-card__info">
+                  <div className="villain-card__header">
+                    <span className="villain-card__name">{v.name}</span>
+                    <span className="villain-card__diff">{defeated ? '💀 Derrotado' : v.difficultyLabel}</span>
+                  </div>
+                  <span className="villain-card__mechanic">{v.mechanic}</span>
+                  <div className="villain-card__hprow">
+                    <div className="villain-hp-bar">
+                      <div className="villain-hp-bar__fill" style={{ width: `${hpPct}%` }} />
+                    </div>
+                    <span className="villain-card__hp">❤️ {currentHp}/{v.hp}</span>
+                  </div>
+                </div>
+                <button
+                  className="villain-attack-btn"
+                  style={{ '--vc': v.color }}
+                  disabled={!!battle || !!villainBattle || !me?.alive || defeated}
+                  onClick={() => attackVillain(roomCode, playerId, v.id)}
+                >
+                  ⚔️
+                </button>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>

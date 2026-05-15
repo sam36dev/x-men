@@ -455,6 +455,11 @@
   border-radius: 10px;
 }
 
+.villain-card--defeated {
+  opacity: 0.35;
+  filter: grayscale(0.9);
+}
+
 .villain-card--chefao {
   background: rgba(255, 102, 0, 0.05);
   border-color: rgba(255, 102, 0, 0.2);

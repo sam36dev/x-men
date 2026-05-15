@@ -4,6 +4,7 @@ import {
   runTransaction,
 } from 'firebase/database'
 import { characters } from './data/characters'
+import { villains } from './data/villains'
 
 function genCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -45,7 +46,70 @@ export async function selectCharacter(code, playerId, characterId) {
 }
 
 export async function startGame(code) {
-  await update(ref(db, `rooms/${code}`), { status: 'playing' })
+  const villainHp = {}
+  villains.forEach(v => { villainHp[v.id] = v.hp })
+  await update(ref(db, `rooms/${code}`), { status: 'playing', villainHp })
+}
+
+export async function attackVillain(code, playerId, villainId) {
+  const snap = await get(ref(db, `rooms/${code}/villainHp/${villainId}`))
+  const hp = snap.val()
+  if (hp == null || hp <= 0) return
+  await set(ref(db, `rooms/${code}/villainBattle`), {
+    playerId,
+    villainId,
+    playerRoll: null,
+    villainRoll: null,
+    resolved: false,
+  })
+}
+
+export async function submitVillainRoll(code, playerId, roll) {
+  const vBattleRef = ref(db, `rooms/${code}/villainBattle`)
+  const snap = await get(vBattleRef)
+  const vb = snap.val()
+  if (!vb || vb.resolved || vb.playerId !== playerId) return
+
+  const villain = villains.find(v => v.id === vb.villainId)
+  const villainRoll = Math.ceil(Math.random() * (villain?.diceType ?? 6))
+
+  let mine = false
+  await runTransaction(vBattleRef, (cur) => {
+    if (!cur || cur.resolved) return undefined
+    mine = true
+    return { ...cur, playerRoll: roll, villainRoll, resolved: true }
+  })
+  if (!mine) return
+
+  await _resolveVillainBattle(code, { ...vb, playerRoll: roll, villainRoll })
+}
+
+async function _resolveVillainBattle(code, vb) {
+  const { playerId, villainId, playerRoll, villainRoll } = vb
+  const damage = Math.abs(playerRoll - villainRoll)
+
+  if (playerRoll > villainRoll && damage > 0) {
+    // Player wins — damage villain HP
+    await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`), (cur) => {
+      return Math.max(0, (cur ?? 0) - damage)
+    })
+    const afterSnap = await get(ref(db, `rooms/${code}/villainHp/${villainId}`))
+    if ((afterSnap.val() ?? 0) <= 0) {
+      // Villain defeated — count win for player
+      await runTransaction(ref(db, `rooms/${code}/players/${playerId}/wins`), (cur) => (cur || 0) + 1)
+      await runTransaction(ref(db, `rooms/${code}/players/${playerId}/consecutiveLosses`), () => 0)
+    }
+  } else if (villainRoll > playerRoll && damage > 0) {
+    // Villain wins — damage player
+    await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+      if (!p) return null
+      const newHp = Math.max(0, p.hp - damage)
+      return { ...p, hp: newHp, alive: newHp > 0 }
+    })
+    await runTransaction(ref(db, `rooms/${code}/players/${playerId}/consecutiveLosses`), (cur) => (cur || 0) + 1)
+  }
+
+  setTimeout(() => remove(ref(db, `rooms/${code}/villainBattle`)), 4000)
 }
 
 export async function leaveRoom(code, playerId) {
