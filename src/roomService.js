@@ -87,24 +87,19 @@ async function _resolveVillainBattle(code, vb) {
   const damage = Math.abs(playerRoll - villainRoll)
 
   if (playerRoll > villainRoll && damage > 0) {
-    // Player wins — damage villain HP
-    await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`), (cur) => {
-      return Math.max(0, (cur ?? 0) - damage)
+    // Player wins the roll — damage villain and count win
+    await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`), (cur) => Math.max(0, (cur ?? 0) - damage))
+    await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+      if (!p) return null
+      return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
     })
-    const afterSnap = await get(ref(db, `rooms/${code}/villainHp/${villainId}`))
-    if ((afterSnap.val() ?? 0) <= 0) {
-      // Villain defeated — count win for player
-      await runTransaction(ref(db, `rooms/${code}/players/${playerId}/wins`), (cur) => (cur || 0) + 1)
-      await runTransaction(ref(db, `rooms/${code}/players/${playerId}/consecutiveLosses`), () => 0)
-    }
   } else if (villainRoll > playerRoll && damage > 0) {
     // Villain wins — damage player
     await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
       if (!p) return null
       const newHp = Math.max(0, p.hp - damage)
-      return { ...p, hp: newHp, alive: newHp > 0 }
+      return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1 }
     })
-    await runTransaction(ref(db, `rooms/${code}/players/${playerId}/consecutiveLosses`), (cur) => (cur || 0) + 1)
   }
 
   setTimeout(() => remove(ref(db, `rooms/${code}/villainBattle`)), 4000)
