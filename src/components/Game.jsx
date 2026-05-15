@@ -364,7 +364,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                   {cConditionLabel(myChar.abilityC.condition)}
                 </span>
                 {me.cActive && <span className="player-c-active">ATIVO</span>}
-                {isHost && (
+                {isHost && myChar.abilityC.effect !== 'C_STEAL_ABILITY' && (
                   <button
                     className={`player-c-toggle ${me.cActive ? 'player-c-toggle--on' : ''}`}
                     onClick={() => toggleCAbility(roomCode, me.id)}
@@ -372,6 +372,13 @@ export default function Game({ roomCode, playerId, onLeave }) {
                     {me.cActive ? '✓' : '○'}
                   </button>
                 )}
+              </div>
+            )}
+            {myChar.id === 7 && me.stolenAbility && (
+              <div className="player-stolen-row">
+                <span className="player-stolen-label">🩸 Roubado:</span>
+                <span className="player-stolen-name">{me.stolenAbility.name}</span>
+                <span className="player-stolen-charges">×{me.stolenAbility.charges}</span>
               </div>
             )}
           </div>
@@ -617,7 +624,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                       {cConditionLabel(char.abilityC.condition)}
                     </span>
                     {p.cActive && <span className="player-c-active">ATIVO</span>}
-                    {isHost && (
+                    {isHost && char.abilityC.effect !== 'C_STEAL_ABILITY' && (
                       <button
                         className={`player-c-toggle ${p.cActive ? 'player-c-toggle--on' : ''}`}
                         onClick={() => toggleCAbility(roomCode, p.id)}
@@ -625,6 +632,13 @@ export default function Game({ roomCode, playerId, onLeave }) {
                         {p.cActive ? '✓' : '○'}
                       </button>
                     )}
+                  </div>
+                )}
+                {char?.id === 7 && p.stolenAbility && (
+                  <div className="player-stolen-row">
+                    <span className="player-stolen-label">🩸 Roubado:</span>
+                    <span className="player-stolen-name">{p.stolenAbility.name}</span>
+                    <span className="player-stolen-charges">×{p.stolenAbility.charges}</span>
                   </div>
                 )}
               </div>

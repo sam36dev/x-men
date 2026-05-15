@@ -244,6 +244,13 @@ async function _resolveBattle(code, battle) {
   if (attCEffect === 'C_ROLL_BOOST_4') attackerRoll += 4
   if (defCEffect === 'C_ROLL_BOOST_4') defenderRoll += 4
 
+  // Vampira [C] Toque Vampírico — stored stolen [A], auto-activates 1 charge per battle
+  const attStolenEff = attChar?.id === 7 && (attPlayer?.stolenAbility?.charges ?? 0) > 0 ? attPlayer.stolenAbility.effect : null
+  const defStolenEff = defChar?.id === 7 && (defPlayer?.stolenAbility?.charges ?? 0) > 0 ? defPlayer.stolenAbility.effect : null
+  if (attStolenEff === 'SNEAK')  attackerRoll += 3
+  if (attStolenEff === 'WEAKEN') defenderRoll = Math.max(1, defenderRoll - 2)
+  if (defStolenEff === 'WEAKEN') attackerRoll = Math.max(1, attackerRoll - 2)
+
   // [B] roll modifiers
   if (attBEffect === 'B_PLUS_2')      attackerRoll += 2
   if (attBEffect === 'B_UPGRADE')     attackerRoll += 2
@@ -306,10 +313,28 @@ async function _resolveBattle(code, battle) {
     const winnerBEffect = winnerId === attackerId ? attBEffect : defBEffect
     if (winnerBEffect === 'B_DAMAGE_BOOST') damage = Math.floor(damage * 1.5)
 
+    // Stolen ability — winner damage effects
+    const winnerStolenEff = winnerId === attackerId ? attStolenEff : defStolenEff
+    const loserStolenEff  = loserId  === attackerId ? attStolenEff : defStolenEff
+    if (winnerStolenEff === 'DOUBLE_MAX') {
+      const maxRoll = winnerChar?.diceType ?? 6
+      const origWinnerRoll = winnerId === attackerId ? battle.attackerRoll : battle.defenderRoll
+      if (origWinnerRoll === maxRoll) damage *= 2
+    }
+    if (winnerStolenEff === 'EXPLOSIVE') {
+      const maxRoll = winnerChar?.diceType ?? 6
+      const origWinnerRoll = winnerId === attackerId ? battle.attackerRoll : battle.defenderRoll
+      if (origWinnerRoll === maxRoll) damage = 15
+    }
+    if (winnerStolenEff === 'MIN_DAMAGE_3') damage = Math.max(3, damage)
+
     // Step 5: Loser damage reducers (skip if winner has PIERCE)
-    if (winnerEffect !== 'PIERCE') {
+    const winnerPierces = winnerEffect === 'PIERCE' || winnerStolenEff === 'PIERCE'
+    if (!winnerPierces) {
       if (loserEffect === 'ARMOR') damage = Math.min(8, damage)
       if (loserEffect === 'SHIELD') damage = 0
+      if (loserStolenEff === 'ARMOR') damage = Math.min(8, damage)
+      if (loserStolenEff === 'SHIELD') damage = 0
     }
 
     // [C] C_DODGE_50 — 50% chance loser takes no damage
@@ -354,8 +379,8 @@ async function _resolveBattle(code, battle) {
     }
   }
 
-  // HEAL_HALF — loser recovers damage/2 after taking damage
-  if (loserId && damage > 0 && loserEffect === 'HEAL_HALF') {
+  // HEAL_HALF — loser recovers damage/2 after taking damage (own [A] or stolen)
+  if (loserId && damage > 0 && (loserEffect === 'HEAL_HALF' || (loserId === attackerId ? attStolenEff : defStolenEff) === 'HEAL_HALF')) {
     const heal = Math.floor(damage / 2)
     if (heal > 0) {
       await runTransaction(ref(db, `rooms/${code}/players/${loserId}`), (p) => {
@@ -371,6 +396,34 @@ async function _resolveBattle(code, battle) {
     await runTransaction(ref(db, `rooms/${code}/players/${winnerId}`), (p) => {
       if (!p) return null
       return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
+    })
+  }
+
+  // Vampira Toque Vampírico — steal opponent [A] on 4+ damage win; consume 1 charge if used
+  const doAttSteal = attChar?.id === 7 && winnerId === attackerId && damage >= 4 && defChar?.ability
+  const doDefSteal = defChar?.id === 7 && winnerId === defenderId && damage >= 4 && attChar?.ability
+  if (doAttSteal || attStolenEff) {
+    await runTransaction(ref(db, `rooms/${code}/players/${attackerId}/stolenAbility`), (cur) => {
+      let charges = cur?.charges ?? 0
+      if (attStolenEff) charges = Math.max(0, charges - 1)
+      if (doAttSteal) {
+        return cur?.effect
+          ? { ...cur, charges: charges + 3 }
+          : { effect: defChar.ability.effect, name: defChar.ability.name, charges: charges + 3 }
+      }
+      return charges <= 0 ? null : { ...cur, charges }
+    })
+  }
+  if (doDefSteal || defStolenEff) {
+    await runTransaction(ref(db, `rooms/${code}/players/${defenderId}/stolenAbility`), (cur) => {
+      let charges = cur?.charges ?? 0
+      if (defStolenEff) charges = Math.max(0, charges - 1)
+      if (doDefSteal) {
+        return cur?.effect
+          ? { ...cur, charges: charges + 3 }
+          : { effect: attChar.ability.effect, name: attChar.ability.name, charges: charges + 3 }
+      }
+      return charges <= 0 ? null : { ...cur, charges }
     })
   }
 

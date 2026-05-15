@@ -94,7 +94,7 @@ export const characters = [
     team: "X-Men", number: "007",
     ability:  { name: "Absorção de Poder",    description: "Copia e aplica o efeito do oponente como se fosse seu", effect: "ABSORB"      },
     abilityB: { name: "Voo",                  description: "Move +2 casas no tabuleiro (efeito físico)",            effect: "B_MOVEMENT"   },
-    abilityC: { name: "Absorção Garantida",   description: "2 derrotas seguidas: Absorção ativa com 100% de chance", effect: "C_ABSORB_SURE", condition: "losses_2" }
+    abilityC: { name: "Toque Vampírico",      description: "Vencer com 4+ dano: absorve [A] do oponente (+3 usos, acumula). Usa 1 carga por batalha.", effect: "C_STEAL_ABILITY", condition: "always" }
   },
   {
     id: 8,
