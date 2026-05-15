@@ -64,6 +64,22 @@
   color: rgba(255,255,255,0.7);
 }
 
+.game-clearbattle {
+  background: rgba(255, 80, 80, 0.12);
+  border: 1px solid rgba(255, 80, 80, 0.4);
+  color: rgba(255, 140, 140, 0.9);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  padding: 0.3rem 0.55rem;
+  border-radius: 5px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.game-clearbattle:active {
+  background: rgba(255, 80, 80, 0.25);
+}
+
 /* My card */
 .game-mycard {
   margin: 0.75rem;

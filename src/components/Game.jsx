@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -316,6 +316,9 @@ export default function Game({ roomCode, playerId, onLeave }) {
       {/* Top bar */}
       <div className="game-topbar">
         <span className="game-room">SALA: <strong>{roomCode}</strong></span>
+        {isHost && (battle || villainBattle) && (
+          <button className="game-clearbattle" onClick={() => clearBattle(roomCode)} title="Limpar batalha travada">🗑️ Limpar</button>
+        )}
         <button className="game-leave" onClick={() => setConfirmLeave(true)}>Sair</button>
       </div>
 

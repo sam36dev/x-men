@@ -88,23 +88,26 @@ async function _resolveVillainBattle(code, vb) {
   const { playerId, villainId, playerRoll, villainRoll } = vb
   const damage = Math.abs(playerRoll - villainRoll)
 
-  if (playerRoll > villainRoll && damage > 0) {
-    // Player wins the roll — damage villain and count win
-    await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`), (cur) => Math.max(0, (cur ?? 0) - damage))
-    await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
-      if (!p) return null
-      return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
-    })
-  } else if (villainRoll > playerRoll && damage > 0) {
-    // Villain wins — damage player
-    await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
-      if (!p) return null
-      const newHp = Math.max(0, p.hp - damage)
-      return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1 }
-    })
+  try {
+    if (playerRoll > villainRoll && damage > 0) {
+      // Player wins the roll — damage villain and count win
+      await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`), (cur) => Math.max(0, (cur ?? 0) - damage))
+      await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+        if (!p) return null
+        return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
+      })
+    } else if (villainRoll > playerRoll && damage > 0) {
+      // Villain wins — damage player
+      await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+        if (!p) return null
+        const newHp = Math.max(0, p.hp - damage)
+        return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1 }
+      })
+    }
+    setTimeout(() => remove(ref(db, `rooms/${code}/villainBattle`)), 4000)
+  } catch (err) {
+    await remove(ref(db, `rooms/${code}/villainBattle`)).catch(() => {})
   }
-
-  setTimeout(() => remove(ref(db, `rooms/${code}/villainBattle`)), 4000)
 }
 
 export async function leaveRoom(code, playerId) {
@@ -117,6 +120,11 @@ export async function giveToken(code, targetPlayerId) {
 
 export async function removeToken(code, targetPlayerId) {
   await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}/tokens`), (cur) => Math.max(0, (cur || 0) - 1))
+}
+
+export async function clearBattle(code) {
+  await remove(ref(db, `rooms/${code}/battle`))
+  await remove(ref(db, `rooms/${code}/villainBattle`))
 }
 
 export async function healPlayer(code, targetPlayerId, amount = 2) {
@@ -187,6 +195,11 @@ async function _resolveBattle(code, battle) {
     return { ...cur, resolved: true }
   })
   if (!txResult.committed) return
+
+  // Guarantee cleanup even if resolution throws midway
+  const ensureCleared = setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 8000)
+
+  try {
 
   const { attackerId, defenderId } = battle
   let { attackerRoll, defenderRoll } = battle
@@ -450,5 +463,11 @@ async function _resolveBattle(code, battle) {
   await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false })
   await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false })
 
+  clearTimeout(ensureCleared)
   setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 4000)
+
+  } catch (err) {
+    clearTimeout(ensureCleared)
+    await remove(ref(db, `rooms/${code}/battle`)).catch(() => {})
+  }
 }
