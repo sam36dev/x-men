@@ -239,16 +239,19 @@ export default function Game({ roomCode, playerId, onLeave }) {
     : null
   const flashColor = result ? (resultWinnerChar?.color ?? '#FFCC00') : null
 
+  // Wolverine upgrades to D10 when HP ≤ 30
+  const effectiveDiceType = myChar?.id === 1 && (me?.hp ?? 100) <= 30 ? 10 : (myChar?.diceType ?? 6)
+
   function rollDice() {
     if (rolling || myRoll !== null || !myChar) return
     setRolling(true)
     let ticks = 0
     const interval = setInterval(() => {
       ticks++
-      setMyRoll(Math.ceil(Math.random() * myChar.diceType))
+      setMyRoll(Math.ceil(Math.random() * effectiveDiceType))
       if (ticks >= 12) {
         clearInterval(interval)
-        const final = Math.ceil(Math.random() * myChar.diceType)
+        const final = Math.ceil(Math.random() * effectiveDiceType)
         setMyRoll(final)
         setRolling(false)
         submitRoll(roomCode, playerId, final)
@@ -266,13 +269,13 @@ export default function Game({ roomCode, playerId, onLeave }) {
     setVillainRolling(false)
     let ticks = 0
     let rolling = true
-    setMyVillainRoll(Math.ceil(Math.random() * myChar.diceType))
+    setMyVillainRoll(Math.ceil(Math.random() * effectiveDiceType))
     const interval = setInterval(() => {
       ticks++
-      setMyVillainRoll(Math.ceil(Math.random() * myChar.diceType))
+      setMyVillainRoll(Math.ceil(Math.random() * effectiveDiceType))
       if (ticks >= 12) {
         clearInterval(interval)
-        const final = Math.ceil(Math.random() * myChar.diceType)
+        const final = Math.ceil(Math.random() * effectiveDiceType)
         setMyVillainRoll(final)
         submitVillainRoll(roomCode, playerId, final)
       }
@@ -485,10 +488,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
           </div>
           <div className="battle-panel__row">
             <div className="battle-panel__side">
-              <span className="battle-panel__label">Você · D{myChar?.diceType}</span>
+              <span className="battle-panel__label">Você · D{effectiveDiceType}</span>
               <DiceFace
                 value={myVillainRoll}
-                diceType={myChar?.diceType ?? 6}
+                diceType={effectiveDiceType}
                 color={myChar?.color ?? '#FFD700'}
                 rolling={myVillainRoll !== null && villainBattle.playerRoll == null}
               />
@@ -561,8 +564,8 @@ export default function Game({ roomCode, playerId, onLeave }) {
           {/* Dice row */}
           <div className="battle-panel__row">
             <div className="battle-panel__side">
-              <span className="battle-panel__label">Você · D{myChar?.diceType}</span>
-              <DiceFace value={myBattleRoll ?? myRoll} diceType={myChar?.diceType ?? 6} color={myChar?.color ?? '#FFD700'} rolling={rolling} />
+              <span className="battle-panel__label">Você · D{effectiveDiceType}</span>
+              <DiceFace value={myBattleRoll ?? myRoll} diceType={effectiveDiceType} color={myChar?.color ?? '#FFD700'} rolling={rolling} />
               {myBattleRoll == null && myRoll === null && (
                 <button className="battle-roll-btn" style={{ '--c': myChar?.color }} onClick={rollDice} disabled={rolling}>
                   {rolling ? '…' : '🎲 Rolar'}
