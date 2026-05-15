@@ -318,7 +318,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
             <span className="game-mycard__fallback">{myChar.name.charAt(0)}</span>
           </div>
           <div className="game-mycard__info">
-            <span className="game-mycard__char" style={{ color: myChar.color }}>{myChar.name}</span>
+            <span className="game-mycard__char" style={{ color: myChar.color }}>{myChar.name} <span className="player-wins-count">({me.wins || 0})</span></span>
             <span className="game-mycard__player">{me.name} · D{myChar.diceType}</span>
             <div className="game-mycard__hprow">
               <div className="game-hp-bar">
@@ -333,7 +333,6 @@ export default function Game({ roomCode, playerId, onLeave }) {
             </div>
             <div className="player-tokens">
               <span className="player-tokens__coins">🪙 ×{me.tokens || 0}</span>
-              <span className="player-tokens__wins">🏆 ×{me.wins || 0}</span>
               <span className="player-tokens__chance">{myChar.ability ? getChance(me, players) : '—'}</span>
               {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
             </div>
@@ -584,7 +583,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
               <div className="opponent-row__info">
                 <span className="opponent-row__name">{p.name}</span>
                 <span className="opponent-row__char" style={{ color: char?.color }}>
-                  {char?.typeIcon} {char?.name} · D{char?.diceType}
+                  {char?.typeIcon} {char?.name} · D{char?.diceType} <span className="player-wins-count">({p.wins || 0})</span>
                 </span>
                 <div className="opp-hp-bar">
                   <div style={{
@@ -606,7 +605,6 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 </div>
                 <div className="player-tokens">
                   <span className="player-tokens__coins">🪙 ×{p.tokens || 0}</span>
-                  <span className="player-tokens__wins">🏆 ×{p.wins || 0}</span>
                   <span className="player-tokens__chance">{char?.ability ? getChance(p, players) : '—'}</span>
                   {isHost && p.alive && (
                     <button className="give-token-btn" onClick={() => giveToken(roomCode, p.id)} title="Dar token">+</button>
