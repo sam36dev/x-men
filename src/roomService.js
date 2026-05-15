@@ -6,6 +6,12 @@ import {
 import { characters } from './data/characters'
 import { villains } from './data/villains'
 
+function _toArr(val) {
+  if (!val) return []
+  if (Array.isArray(val)) return val
+  return Object.values(val)
+}
+
 function genCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
@@ -24,7 +30,7 @@ export async function createRoom(playerId, playerName) {
     status: 'lobby',
     createdAt: Date.now(),
     players: {
-      [playerId]: { name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false, turn: 1, preBUsedOnTurn: 0 },
+      [playerId]: { name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false, turn: 1, preBUsedOnTurn: 0, abilityDisabled: false },
     },
   })
   return code
@@ -37,7 +43,7 @@ export async function joinRoom(code, playerId, playerName) {
   const count = Object.keys(room.players || {}).length
   if (count >= 8) throw new Error('Sala cheia (máximo 8 jogadores)')
   await update(ref(db, `rooms/${code}/players/${playerId}`), {
-    name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false, turn: 1, preBUsedOnTurn: 0,
+    name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false, turn: 1, preBUsedOnTurn: 0, abilityDisabled: false,
   })
 }
 
@@ -233,8 +239,9 @@ async function _resolveBattle(code, battle) {
   const attChance = attPlayer ? _abilityChance(attPlayer, allPlayers) : 0
   const defChance = defPlayer ? _abilityChance(defPlayer, allPlayers) : 0
 
-  let attEffect = attChar?.ability?.effect ?? null
-  let defEffect = defChar?.ability?.effect ?? null
+  // abilityDisabled = true means Vampira currently holds this player's [A] ability
+  let attEffect = attPlayer?.abilityDisabled ? null : (attChar?.ability?.effect ?? null)
+  let defEffect = defPlayer?.abilityDisabled ? null : (defChar?.ability?.effect ?? null)
 
   // [C] effects — host-activated conditional abilities
   const attCEffect = attPlayer?.cActive ? (attChar?.abilityC?.effect ?? null) : null
@@ -279,9 +286,9 @@ async function _resolveBattle(code, battle) {
   if (attCEffect === 'C_ROLL_BOOST_4') attackerRoll += 4
   if (defCEffect === 'C_ROLL_BOOST_4') defenderRoll += 4
 
-  // Vampira [C] Toque Vampírico — stored stolen [A], auto-activates 1 charge per battle
-  const attStolenEff = attChar?.id === 7 && (attPlayer?.stolenAbility?.charges ?? 0) > 0 ? attPlayer.stolenAbility.effect : null
-  const defStolenEff = defChar?.id === 7 && (defPlayer?.stolenAbility?.charges ?? 0) > 0 ? defPlayer.stolenAbility.effect : null
+  // Vampira [C] Toque Vampírico — stolen [A] active for N rounds, auto-applies each battle
+  const attStolenEff = attChar?.id === 7 && (attPlayer?.stolenAbility?.rounds ?? 0) > 0 ? attPlayer.stolenAbility.effect : null
+  const defStolenEff = defChar?.id === 7 && (defPlayer?.stolenAbility?.rounds ?? 0) > 0 ? defPlayer.stolenAbility.effect : null
   if (attStolenEff === 'SNEAK')  attackerRoll += 3
   if (attStolenEff === 'WEAKEN') defenderRoll = Math.max(1, defenderRoll - 2)
   if (defStolenEff === 'WEAKEN') attackerRoll = Math.max(1, attackerRoll - 2)
@@ -394,27 +401,48 @@ async function _resolveBattle(code, battle) {
     defAbilityC: defCName,
   })
 
-  // Vampira Toque Vampírico flags — needed inside transactions below
+  // Vampira Toque Vampírico flags
   const doAttSteal = attChar?.id === 7 && winnerId === attackerId && damage >= 4 && defChar?.ability
   const doDefSteal = defChar?.id === 7 && winnerId === defenderId && damage >= 4 && attChar?.ability
   const isVampiraAtt = attChar?.id === 7
   const isVampiraDef = defChar?.id === 7
 
-  // Apply damage to loser HP + track loss streak + consume Vampira charge if she lost
+  // Helper: advance stolenAbility by 1 round (expire → activate queue or clear)
+  const _advanceSA = (sa) => {
+    if (!sa) return null
+    const newRounds = Math.max(0, sa.rounds - 1)
+    if (newRounds > 0) return { ...sa, rounds: newRounds }
+    const q = _toArr(sa.queue)
+    if (q.length > 0) {
+      const [next, ...rest] = q
+      return { effect: next.effect, name: next.name, rounds: 3, ownerId: next.ownerId, queue: rest.length > 0 ? rest : null }
+    }
+    return null
+  }
+
+  // Apply damage to loser HP + track loss streak + consume Vampira round if she lost
   if (loserId) {
-    const vampiraLost = (loserId === attackerId ? isVampiraAtt : isVampiraDef)
+    const vampiraLost = loserId === attackerId ? isVampiraAtt : isVampiraDef
     const loserStolenUsed = vampiraLost ? (loserId === attackerId ? attStolenEff : defStolenEff) : null
+    const loserSnap = loserId === attackerId ? attPlayer : defPlayer
+    const prevSALose = loserSnap?.stolenAbility ?? null
+    const loserWillExpire = !!(vampiraLost && loserStolenUsed && prevSALose && prevSALose.rounds - 1 <= 0)
+    const loserExpiredOwner = loserWillExpire ? prevSALose.ownerId : null
+    const loserNextOwner = loserWillExpire ? (_toArr(prevSALose.queue)[0]?.ownerId ?? null) : null
+
     await runTransaction(ref(db, `rooms/${code}/players/${loserId}`), (p) => {
       if (!p) return null
       let newHp = damage > 0 ? Math.max(0, p.hp - damage) : p.hp
       if (loserCEffect === 'C_SURVIVE_1' && newHp === 0) newHp = 1
       if (vampiraLost && loserStolenUsed) {
-        const ch = Math.max(0, (p.stolenAbility?.charges ?? 0) - 1)
-        const sa = ch <= 0 ? null : { ...p.stolenAbility, charges: ch }
-        return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1, stolenAbility: sa }
+        return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1, stolenAbility: _advanceSA(p.stolenAbility) }
       }
       return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1 }
     })
+
+    if (loserExpiredOwner && loserExpiredOwner !== loserNextOwner) {
+      await update(ref(db, `rooms/${code}/players/${loserExpiredOwner}`), { abilityDisabled: false })
+    }
   }
 
   // [C] C_REDIRECT_HALF — loser reflects half damage back to winner
@@ -443,44 +471,66 @@ async function _resolveBattle(code, battle) {
     }
   }
 
-  // Track wins for winner + reset loss streak + handle Vampira steal/consume if she won
+  // Track wins for winner + reset loss streak + handle Vampira steal/rounds if she won
   if (winnerId) {
-    const vampiraWon = (winnerId === attackerId ? isVampiraAtt : isVampiraDef)
+    const vampiraWon = winnerId === attackerId ? isVampiraAtt : isVampiraDef
     const winnerStolenUsed = vampiraWon ? (winnerId === attackerId ? attStolenEff : defStolenEff) : null
     const doWinnerSteal = winnerId === attackerId ? doAttSteal : doDefSteal
-    const opponentChar = winnerId === attackerId ? defChar : attChar
+    const opponentId = winnerId === attackerId ? defenderId : attackerId
+    const opponentAbility = winnerId === attackerId ? defChar?.ability : attChar?.ability
+    const winnerSnap = winnerId === attackerId ? attPlayer : defPlayer
+    const prevSAWin = winnerSnap?.stolenAbility ?? null
+    const winnerWillExpire = !!(winnerStolenUsed && prevSAWin && prevSAWin.rounds - 1 <= 0)
+    const winnerExpiredOwner = winnerWillExpire ? prevSAWin.ownerId : null
+    const winnerNextOwner = winnerWillExpire ? (_toArr(prevSAWin.queue)[0]?.ownerId ?? null) : null
+
     await runTransaction(ref(db, `rooms/${code}/players/${winnerId}`), (p) => {
       if (!p) return null
       if (vampiraWon) {
-        let ch = p.stolenAbility?.charges ?? 0
-        if (winnerStolenUsed) ch = Math.max(0, ch - 1)
-        let sa
-        if (doWinnerSteal) {
-          sa = p.stolenAbility?.effect
-            ? { ...p.stolenAbility, charges: ch + 3 }
-            : { effect: opponentChar.ability.effect, name: opponentChar.ability.name, charges: ch + 3 }
-        } else {
-          sa = ch <= 0 ? null : { ...p.stolenAbility, charges: ch }
+        // Step 1: advance rounds (expire → queue or clear)
+        let sa = winnerStolenUsed ? _advanceSA(p.stolenAbility) : (p.stolenAbility ?? null)
+        // Step 2: add steal
+        if (doWinnerSteal && opponentAbility) {
+          const entry = { effect: opponentAbility.effect, name: opponentAbility.name, ownerId: opponentId }
+          if (!sa) {
+            sa = { ...entry, rounds: 3, queue: null }
+          } else {
+            sa = { ...sa, queue: [..._toArr(sa.queue), entry] }
+          }
         }
         return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0, stolenAbility: sa }
       }
       return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
     })
+
+    if (vampiraWon) {
+      if (winnerExpiredOwner && winnerExpiredOwner !== winnerNextOwner) {
+        await update(ref(db, `rooms/${code}/players/${winnerExpiredOwner}`), { abilityDisabled: false })
+      }
+      if (doWinnerSteal) {
+        await update(ref(db, `rooms/${code}/players/${opponentId}`), { abilityDisabled: true })
+      }
+    }
   }
 
-  // TIE case — Vampira still consumes a charge if she had one active
+  // TIE case — Vampira still burns a round if she had one active
   if (!winnerId) {
-    if (attStolenEff && isVampiraAtt) {
-      await runTransaction(ref(db, `rooms/${code}/players/${attackerId}/stolenAbility`), (cur) => {
-        const ch = Math.max(0, (cur?.charges ?? 0) - 1)
-        return ch <= 0 ? null : { ...cur, charges: ch }
-      })
-    }
-    if (defStolenEff && isVampiraDef) {
-      await runTransaction(ref(db, `rooms/${code}/players/${defenderId}/stolenAbility`), (cur) => {
-        const ch = Math.max(0, (cur?.charges ?? 0) - 1)
-        return ch <= 0 ? null : { ...cur, charges: ch }
-      })
+    for (const [pId, isVamp, stolenEff, pSnap] of [
+      [attackerId, isVampiraAtt, attStolenEff, attPlayer],
+      [defenderId, isVampiraDef, defStolenEff, defPlayer],
+    ]) {
+      if (isVamp && stolenEff) {
+        const prevSATie = pSnap?.stolenAbility ?? null
+        const tieWillExpire = !!(prevSATie && prevSATie.rounds - 1 <= 0)
+        const tieExpiredOwner = tieWillExpire ? prevSATie.ownerId : null
+        const tieNextOwner = tieWillExpire ? (_toArr(prevSATie.queue)[0]?.ownerId ?? null) : null
+
+        await runTransaction(ref(db, `rooms/${code}/players/${pId}/stolenAbility`), (cur) => _advanceSA(cur))
+
+        if (tieExpiredOwner && tieExpiredOwner !== tieNextOwner) {
+          await update(ref(db, `rooms/${code}/players/${tieExpiredOwner}`), { abilityDisabled: false })
+        }
+      }
     }
   }
 

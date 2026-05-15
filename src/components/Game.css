@@ -817,6 +817,13 @@
   font-weight: 700;
 }
 
+.player-ability-stolen {
+  font-size: 0.72rem;
+  color: rgba(255, 80, 120, 0.85);
+  margin-top: 2px;
+  font-style: italic;
+}
+
 .player-tokens__chance {
   font-family: 'Oswald', sans-serif;
   font-size: 0.62rem;

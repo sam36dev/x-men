@@ -397,8 +397,11 @@ export default function Game({ roomCode, playerId, onLeave }) {
               <div className="player-stolen-row">
                 <span className="player-stolen-label">🩸 Roubado:</span>
                 <span className="player-stolen-name">{me.stolenAbility.name}</span>
-                <span className="player-stolen-charges">×{me.stolenAbility.charges}</span>
+                <span className="player-stolen-charges">{me.stolenAbility.rounds}🔄</span>
               </div>
+            )}
+            {me.abilityDisabled && (
+              <div className="player-ability-stolen">🩸 [A] roubada pela Vampira</div>
             )}
           </div>
         </div>
@@ -688,8 +691,11 @@ export default function Game({ roomCode, playerId, onLeave }) {
                   <div className="player-stolen-row">
                     <span className="player-stolen-label">🩸 Roubado:</span>
                     <span className="player-stolen-name">{p.stolenAbility.name}</span>
-                    <span className="player-stolen-charges">×{p.stolenAbility.charges}</span>
+                    <span className="player-stolen-charges">{p.stolenAbility.rounds}🔄</span>
                   </div>
+                )}
+                {p.abilityDisabled && (
+                  <div className="player-ability-stolen">🩸 [A] roubada</div>
                 )}
               </div>
               <button
