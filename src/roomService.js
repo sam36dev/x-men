@@ -73,13 +73,11 @@ export async function submitVillainRoll(code, playerId, roll) {
   const villain = villains.find(v => v.id === vb.villainId)
   const villainRoll = Math.ceil(Math.random() * (villain?.diceType ?? 6))
 
-  let mine = false
-  await runTransaction(vBattleRef, (cur) => {
+  const txResult = await runTransaction(vBattleRef, (cur) => {
     if (!cur || cur.resolved) return undefined
-    mine = true
     return { ...cur, playerRoll: roll, villainRoll, resolved: true }
   })
-  if (!mine) return
+  if (!txResult.committed) return
 
   await _resolveVillainBattle(code, { ...vb, playerRoll: roll, villainRoll })
 }
@@ -176,14 +174,12 @@ function _rollsChance(chance) {
 async function _resolveBattle(code, battle) {
   const battleRef = ref(db, `rooms/${code}/battle`)
 
-  let mine = false
-  await runTransaction(battleRef, (cur) => {
+  const txResult = await runTransaction(battleRef, (cur) => {
     if (!cur || cur.resolved) return undefined
     if (cur.attackerRoll == null || cur.defenderRoll == null) return undefined
-    mine = true
     return { ...cur, resolved: true }
   })
-  if (!mine) return
+  if (!txResult.committed) return
 
   const { attackerId, defenderId } = battle
   let { attackerRoll, defenderRoll } = battle
@@ -336,14 +332,13 @@ async function _resolveBattle(code, battle) {
     defAbilityC: defCName,
   })
 
-  // Apply damage to loser HP
-  if (loserId && damage > 0) {
+  // Apply damage to loser HP + track loss streak (single transaction)
+  if (loserId) {
     await runTransaction(ref(db, `rooms/${code}/players/${loserId}`), (p) => {
       if (!p) return null
-      let newHp = Math.max(0, p.hp - damage)
-      // [C] C_SURVIVE_1 — prevent death, survive at 1 HP
+      let newHp = damage > 0 ? Math.max(0, p.hp - damage) : p.hp
       if (loserCEffect === 'C_SURVIVE_1' && newHp === 0) newHp = 1
-      return { ...p, hp: newHp, alive: newHp > 0 }
+      return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1 }
     })
   }
 
@@ -371,13 +366,12 @@ async function _resolveBattle(code, battle) {
     }
   }
 
-  // Track wins and consecutive losses
+  // Track wins for winner + reset their loss streak (single transaction)
   if (winnerId) {
-    await runTransaction(ref(db, `rooms/${code}/players/${winnerId}/wins`), (cur) => (cur || 0) + 1)
-    await runTransaction(ref(db, `rooms/${code}/players/${winnerId}/consecutiveLosses`), () => 0)
-  }
-  if (loserId) {
-    await runTransaction(ref(db, `rooms/${code}/players/${loserId}/consecutiveLosses`), (cur) => (cur || 0) + 1)
+    await runTransaction(ref(db, `rooms/${code}/players/${winnerId}`), (p) => {
+      if (!p) return null
+      return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
+    })
   }
 
   // Reset preB and cActive for both combatants after battle resolves
