@@ -369,7 +369,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
               <button
                 className={`my-b-btn ${me.preB ? 'my-b-btn--on' : ''}`}
                 onClick={() => togglePreB(roomCode, playerId)}
-                disabled={!!isInBattle}
+                disabled={!!isInBattle || (!me.preB && (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1))}
               >
                 <span className="my-b-btn__tag">[B]</span>
                 <span className="my-b-btn__name">{myChar.abilityB.name}</span>
@@ -601,6 +601,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                     <button
                       className={`host-b-btn ${side.player?.preB ? 'host-b-btn--on' : ''}`}
                       onClick={() => togglePreB(roomCode, side.pid)}
+                      disabled={!side.player?.preB && (side.player?.preBUsedOnTurn ?? 0) === (side.player?.turn ?? 1)}
                     >
                       {side.player?.preB ? '✓ ' : ''}{side.char.abilityB.name}
                     </button>

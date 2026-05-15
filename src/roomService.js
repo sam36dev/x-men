@@ -24,7 +24,7 @@ export async function createRoom(playerId, playerName) {
     status: 'lobby',
     createdAt: Date.now(),
     players: {
-      [playerId]: { name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false, turn: 1 },
+      [playerId]: { name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false, turn: 1, preBUsedOnTurn: 0 },
     },
   })
   return code
@@ -37,7 +37,7 @@ export async function joinRoom(code, playerId, playerName) {
   const count = Object.keys(room.players || {}).length
   if (count >= 8) throw new Error('Sala cheia (máximo 8 jogadores)')
   await update(ref(db, `rooms/${code}/players/${playerId}`), {
-    name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false, turn: 1,
+    name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0, consecutiveLosses: 0, cActive: false, preB: false, turn: 1, preBUsedOnTurn: 0,
   })
 }
 
@@ -148,7 +148,12 @@ export async function changeTurn(code, playerId, delta) {
 }
 
 export async function togglePreB(code, playerId) {
-  await runTransaction(ref(db, `rooms/${code}/players/${playerId}/preB`), (cur) => !cur)
+  await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+    if (!p) return null
+    // Block re-activation if [B] was already used this turn
+    if (!p.preB && (p.preBUsedOnTurn ?? 0) === (p.turn ?? 1)) return p
+    return { ...p, preB: !p.preB }
+  })
 }
 
 export async function toggleCAbility(code, playerId) {
@@ -219,8 +224,8 @@ async function _resolveBattle(code, battle) {
   if ((attPlayer?.preB && attChar?.id === 7) || (defPlayer?.preB && defChar?.id === 7)) {
     const fleeId = (attPlayer?.preB && attChar?.id === 7) ? attackerId : defenderId
     await update(battleRef, { fled: fleeId })
-    await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false })
-    await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false })
+    await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false, ...(attPlayer?.preB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
+    await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false, ...(defPlayer?.preB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
     setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 3500)
     return
   }
@@ -459,9 +464,9 @@ async function _resolveBattle(code, battle) {
     })
   }
 
-  // Reset preB and cActive for both combatants after battle resolves
-  await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false })
-  await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false })
+  // Reset preB and cActive; record which turn [B] was used so it can't be reused same turn
+  await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false, ...(attPlayer?.preB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
+  await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false, ...(defPlayer?.preB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
 
   clearTimeout(ensureCleared)
   setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 4000)
