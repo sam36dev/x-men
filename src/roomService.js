@@ -397,9 +397,11 @@ async function _resolveBattle(code, battle) {
   }
 
   // HEAL_HALF — loser recovers damage/2 after taking damage (own [A] or stolen)
+  // Delay lets the damage render first so clients see HP go down, then back up
   if (loserId && damage > 0 && (loserEffect === 'HEAL_HALF' || (loserId === attackerId ? attStolenEff : defStolenEff) === 'HEAL_HALF')) {
     const heal = Math.floor(damage / 2)
     if (heal > 0) {
+      await new Promise(r => setTimeout(r, 900))
       await runTransaction(ref(db, `rooms/${code}/players/${loserId}`), (p) => {
         if (!p) return null
         const newHp = Math.min(100, p.hp + heal)
