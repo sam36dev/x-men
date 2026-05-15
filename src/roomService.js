@@ -376,8 +376,10 @@ async function _resolveBattle(code, battle) {
     if (loserCEffect === 'C_DODGE_50' && Math.random() < 0.5) damage = 0
   }
 
-  const attAbilityName = attActivated && attChar?.ability ? attChar.ability.name : null
-  const defAbilityName = defActivated && defChar?.ability ? defChar.ability.name : null
+  const attAbilityName = attActivated && attChar?.ability
+    && !(attEffect === 'HEAL_HALF' && loserId !== attackerId) ? attChar.ability.name : null
+  const defAbilityName = defActivated && defChar?.ability
+    && !(defEffect === 'HEAL_HALF' && loserId !== defenderId) ? defChar.ability.name : null
   const attBName = attPlayer?.preB && attChar?.abilityB?.effect !== 'B_MOVEMENT' ? attChar?.abilityB?.name : null
   const defBName = defPlayer?.preB && defChar?.abilityB?.effect !== 'B_MOVEMENT' ? defChar?.abilityB?.name : null
   const attCName = attCEffect && attChar?.abilityC ? attChar.abilityC.name : null
