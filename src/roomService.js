@@ -394,12 +394,25 @@ async function _resolveBattle(code, battle) {
     defAbilityC: defCName,
   })
 
-  // Apply damage to loser HP + track loss streak (single transaction)
+  // Vampira Toque Vampírico flags — needed inside transactions below
+  const doAttSteal = attChar?.id === 7 && winnerId === attackerId && damage >= 4 && defChar?.ability
+  const doDefSteal = defChar?.id === 7 && winnerId === defenderId && damage >= 4 && attChar?.ability
+  const isVampiraAtt = attChar?.id === 7
+  const isVampiraDef = defChar?.id === 7
+
+  // Apply damage to loser HP + track loss streak + consume Vampira charge if she lost
   if (loserId) {
+    const vampiraLost = (loserId === attackerId ? isVampiraAtt : isVampiraDef)
+    const loserStolenUsed = vampiraLost ? (loserId === attackerId ? attStolenEff : defStolenEff) : null
     await runTransaction(ref(db, `rooms/${code}/players/${loserId}`), (p) => {
       if (!p) return null
       let newHp = damage > 0 ? Math.max(0, p.hp - damage) : p.hp
       if (loserCEffect === 'C_SURVIVE_1' && newHp === 0) newHp = 1
+      if (vampiraLost && loserStolenUsed) {
+        const ch = Math.max(0, (p.stolenAbility?.charges ?? 0) - 1)
+        const sa = ch <= 0 ? null : { ...p.stolenAbility, charges: ch }
+        return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1, stolenAbility: sa }
+      }
       return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1 }
     })
   }
@@ -430,40 +443,45 @@ async function _resolveBattle(code, battle) {
     }
   }
 
-  // Track wins for winner + reset their loss streak (single transaction)
+  // Track wins for winner + reset loss streak + handle Vampira steal/consume if she won
   if (winnerId) {
+    const vampiraWon = (winnerId === attackerId ? isVampiraAtt : isVampiraDef)
+    const winnerStolenUsed = vampiraWon ? (winnerId === attackerId ? attStolenEff : defStolenEff) : null
+    const doWinnerSteal = winnerId === attackerId ? doAttSteal : doDefSteal
+    const opponentChar = winnerId === attackerId ? defChar : attChar
     await runTransaction(ref(db, `rooms/${code}/players/${winnerId}`), (p) => {
       if (!p) return null
+      if (vampiraWon) {
+        let ch = p.stolenAbility?.charges ?? 0
+        if (winnerStolenUsed) ch = Math.max(0, ch - 1)
+        let sa
+        if (doWinnerSteal) {
+          sa = p.stolenAbility?.effect
+            ? { ...p.stolenAbility, charges: ch + 3 }
+            : { effect: opponentChar.ability.effect, name: opponentChar.ability.name, charges: ch + 3 }
+        } else {
+          sa = ch <= 0 ? null : { ...p.stolenAbility, charges: ch }
+        }
+        return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0, stolenAbility: sa }
+      }
       return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
     })
   }
 
-  // Vampira Toque Vampírico — steal opponent [A] on 4+ damage win; consume 1 charge if used
-  const doAttSteal = attChar?.id === 7 && winnerId === attackerId && damage >= 4 && defChar?.ability
-  const doDefSteal = defChar?.id === 7 && winnerId === defenderId && damage >= 4 && attChar?.ability
-  if (doAttSteal || attStolenEff) {
-    await runTransaction(ref(db, `rooms/${code}/players/${attackerId}/stolenAbility`), (cur) => {
-      let charges = cur?.charges ?? 0
-      if (attStolenEff) charges = Math.max(0, charges - 1)
-      if (doAttSteal) {
-        return cur?.effect
-          ? { ...cur, charges: charges + 3 }
-          : { effect: defChar.ability.effect, name: defChar.ability.name, charges: charges + 3 }
-      }
-      return charges <= 0 ? null : { ...cur, charges }
-    })
-  }
-  if (doDefSteal || defStolenEff) {
-    await runTransaction(ref(db, `rooms/${code}/players/${defenderId}/stolenAbility`), (cur) => {
-      let charges = cur?.charges ?? 0
-      if (defStolenEff) charges = Math.max(0, charges - 1)
-      if (doDefSteal) {
-        return cur?.effect
-          ? { ...cur, charges: charges + 3 }
-          : { effect: attChar.ability.effect, name: attChar.ability.name, charges: charges + 3 }
-      }
-      return charges <= 0 ? null : { ...cur, charges }
-    })
+  // TIE case — Vampira still consumes a charge if she had one active
+  if (!winnerId) {
+    if (attStolenEff && isVampiraAtt) {
+      await runTransaction(ref(db, `rooms/${code}/players/${attackerId}/stolenAbility`), (cur) => {
+        const ch = Math.max(0, (cur?.charges ?? 0) - 1)
+        return ch <= 0 ? null : { ...cur, charges: ch }
+      })
+    }
+    if (defStolenEff && isVampiraDef) {
+      await runTransaction(ref(db, `rooms/${code}/players/${defenderId}/stolenAbility`), (cur) => {
+        const ch = Math.max(0, (cur?.charges ?? 0) - 1)
+        return ch <= 0 ? null : { ...cur, charges: ch }
+      })
+    }
   }
 
   // Reset preB and cActive; record which turn [B] was used so it can't be reused same turn
