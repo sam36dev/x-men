@@ -21,7 +21,7 @@ function ConfirmModal({ onConfirm, onCancel }) {
 }
 
 const FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
-function face(n, d) { return d === 6 ? FACES[n - 1] : n }
+function face(n, d) { return d === 6 && n >= 1 && n <= 6 ? FACES[n - 1] : n }
 
 function DiceFace({ value, diceType, color, rolling, selected }) {
   // During rolling always show unicode dice faces regardless of dice type
@@ -112,17 +112,22 @@ export default function Game({ roomCode, playerId, onLeave }) {
     if (prev && prev.resolved && !cur) {
       const { attackerId, defenderId, attackerRoll, defenderRoll,
               attAbility, defAbility, attAbilityB, defAbilityB,
-              attAbilityC, defAbilityC, fled } = prev
+              attAbilityC, defAbilityC, fled,
+              resolvedLoserId, resolvedDamage,
+              effectiveAttackerRoll, effectiveDefenderRoll } = prev
       if (fled) {
         setResult({ fled, attackerId, defenderId })
         setMyRoll(null)
         setTimeout(() => setResult(null), 3500)
       } else if (attackerRoll !== null && defenderRoll !== null) {
-        const damage = Math.abs(attackerRoll - defenderRoll)
-        const loserId = attackerRoll > defenderRoll ? defenderId
-          : attackerRoll < defenderRoll ? attackerId : null
+        const effAtt = effectiveAttackerRoll ?? attackerRoll
+        const effDef = effectiveDefenderRoll ?? defenderRoll
+        const damage = resolvedDamage ?? Math.abs(effAtt - effDef)
+        const loserId = resolvedLoserId !== undefined
+          ? (resolvedLoserId || null)
+          : (effAtt > effDef ? defenderId : effAtt < effDef ? attackerId : null)
         setResult({
-          attackerRoll, defenderRoll, damage, loserId, attackerId, defenderId,
+          attackerRoll: effAtt, defenderRoll: effDef, damage, loserId, attackerId, defenderId,
           attAbility: attAbility ?? null, defAbility: defAbility ?? null,
           attAbilityB: attAbilityB ?? null, defAbilityB: defAbilityB ?? null,
           attAbilityC: attAbilityC ?? null, defAbilityC: defAbilityC ?? null,
@@ -254,7 +259,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
         const final = Math.ceil(Math.random() * effectiveDiceType)
         setMyRoll(final)
         setRolling(false)
-        submitRoll(roomCode, playerId, final)
+        submitRoll(roomCode, playerId, final, me?.preB ?? false)
       }
     }, 80)
   }

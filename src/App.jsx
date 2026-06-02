@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { getPlayerId } from './firebase'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from './firebase'
+import { logout } from './userService'
+import Auth from './components/Auth'
 import Home from './components/Home'
 import Lobby from './components/Lobby'
 import Game from './components/Game'
 import CharacterGrid from './components/CharacterGrid'
 import CardDetail from './components/CardDetail'
 import './App.css'
-
-const playerId = getPlayerId()
 
 function parseUrl() {
   const path = window.location.pathname
@@ -26,44 +27,67 @@ function pushUrl(screen, roomCode) {
 }
 
 export default function App() {
+  const [user,         setUser]         = useState(undefined) // undefined = checking auth
   const initial = parseUrl()
   const [screen,       setScreen]       = useState(initial.screen)
   const [roomCode,     setRoomCode]     = useState(initial.roomCode)
   const [selectedCard, setSelectedCard] = useState(null)
 
-  // Sync URL → state when user hits Back/Forward
+  // Listen to Firebase Auth state
+  useEffect(() => {
+    if (!auth) { setUser(null); return }
+    return onAuthStateChanged(auth, u => setUser(u ?? null))
+  }, [])
+
+  // Browser back/forward
   useEffect(() => {
     function onPop() {
       const { screen, roomCode } = parseUrl()
-      setScreen(screen)
-      setRoomCode(roomCode)
+      setScreen(screen); setRoomCode(roomCode)
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
   function enterRoom(code) {
-    setRoomCode(code)
-    setScreen('lobby')
-    pushUrl('lobby', code)
+    setRoomCode(code); setScreen('lobby'); pushUrl('lobby', code)
   }
-
   function goToGame() {
-    setScreen('game')
-    pushUrl('game', roomCode)
+    setScreen('game'); pushUrl('game', roomCode)
+  }
+  function goHome() {
+    setRoomCode(null); setScreen('home'); pushUrl('home', null)
+  }
+  async function handleLogout() {
+    await logout(); setScreen('home'); setRoomCode(null)
   }
 
-  function goHome() {
-    setRoomCode(null)
-    setScreen('home')
-    pushUrl('home', null)
-  }
+  // Checking auth state — show minimal loading screen
+  if (user === undefined) return (
+    <div style={{
+      minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: '#07111a',
+    }}>
+      <span style={{ color: '#FFCC00', fontFamily: 'Bangers, cursive', fontSize: '1.5rem', letterSpacing: '0.2em' }}>
+        X-MEN…
+      </span>
+    </div>
+  )
+
+  // Not logged in
+  if (!user) return <div className="app"><Auth onAuth={setUser} /></div>
+
+  const playerId   = user.uid
+  const playerName = user.displayName ?? 'Jogador'
 
   return (
     <div className="app">
       {screen === 'home' && (
         <Home
           playerId={playerId}
+          playerName={playerName}
+          user={user}
+          onLogout={handleLogout}
           onEnterRoom={enterRoom}
           onViewCards={() => setScreen('cards')}
         />

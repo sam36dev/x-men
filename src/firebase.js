@@ -1,7 +1,9 @@
 import { initializeApp } from 'firebase/app'
 import { getDatabase } from 'firebase/database'
+import { getAuth } from 'firebase/auth'
 
 export let db = null
+export let auth = null
 
 const apiKey = import.meta.env.VITE_FIREBASE_API_KEY
 const databaseURL = import.meta.env.VITE_FIREBASE_DATABASE_URL
@@ -18,19 +20,9 @@ if (apiKey && databaseURL) {
       appId:             import.meta.env.VITE_FIREBASE_APP_ID,
     })
     db = getDatabase(app)
+    auth = getAuth(app)
   } catch (e) {
     console.warn('Firebase não configurado:', e.message)
   }
 }
 
-// Player ID persists per browser session (no login needed)
-export function getPlayerId() {
-  let id = sessionStorage.getItem('xmen_pid')
-  if (!id) {
-    id = crypto.randomUUID
-      ? crypto.randomUUID()
-      : Math.random().toString(36).slice(2) + Date.now().toString(36)
-    sessionStorage.setItem('xmen_pid', id)
-  }
-  return id
-}

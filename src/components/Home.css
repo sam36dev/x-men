@@ -5,8 +5,63 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1.25rem;
+  padding-top: 3.5rem;
   background: radial-gradient(ellipse at top, #0d1e3d 0%, #070e1a 65%);
   gap: 0;
+}
+
+.home-user {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  background: rgba(5, 15, 35, 0.85);
+  border-bottom: 1px solid rgba(21, 101, 192, 0.2);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.home-user__info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.home-user__name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9rem;
+  color: #FFCC00;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.home-user__trophies {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.home-user__logout {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.45);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.home-user__logout:hover {
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.4);
 }
 
 .home-logo {

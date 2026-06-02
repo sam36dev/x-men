@@ -142,9 +142,13 @@ export async function healPlayer(code, targetPlayerId, amount = 2) {
 }
 
 export async function attackPlayer(code, attackerId, defenderId) {
+  const playersSnap = await get(ref(db, `rooms/${code}/players`))
+  const playersData = playersSnap.val() || {}
+  const attackerCharId = playersData[attackerId]?.characterId ?? null
+  const defenderCharId = playersData[defenderId]?.characterId ?? null
   await set(ref(db, `rooms/${code}/battle`), {
-    attackerId,
-    defenderId,
+    attackerId, defenderId,
+    attackerCharId, defenderCharId,
     resolved: false,
   })
 }
@@ -166,7 +170,7 @@ export async function toggleCAbility(code, playerId) {
   await runTransaction(ref(db, `rooms/${code}/players/${playerId}/cActive`), (cur) => !cur)
 }
 
-export async function submitRoll(code, playerId, roll) {
+export async function submitRoll(code, playerId, roll, preB) {
   const battleRef = ref(db, `rooms/${code}/battle`)
   const snap = await get(battleRef)
   const battle = snap.val()
@@ -174,8 +178,12 @@ export async function submitRoll(code, playerId, roll) {
 
   const isAttacker = battle.attackerId === playerId
   const myKey = isAttacker ? 'attackerRoll' : 'defenderRoll'
+  const myPrebKey = isAttacker ? 'attackerPreB' : 'defenderPreB'
 
-  await update(ref(db), { [`rooms/${code}/battle/${myKey}`]: roll })
+  await update(ref(db), {
+    [`rooms/${code}/battle/${myKey}`]: roll,
+    [`rooms/${code}/battle/${myPrebKey}`]: preB ?? false,
+  })
 
   const afterSnap = await get(battleRef)
   const after = afterSnap.val()
@@ -203,9 +211,39 @@ async function _resolveBattle(code, battle) {
   const txResult = await runTransaction(battleRef, (cur) => {
     if (!cur || cur.resolved) return undefined
     if (cur.attackerRoll == null || cur.defenderRoll == null) return undefined
-    return { ...cur, resolved: true }
+
+    // Compute effective rolls + winner atomically from preB captured at roll-time.
+    // C effects and B_REROLL can't run here; the full resolution below may
+    // overwrite resolvedDamage, but resolvedLoserId will always be correct.
+    const txAttChar = characters.find(c => c.id === cur.attackerCharId)
+    const txDefChar = characters.find(c => c.id === cur.defenderCharId)
+    let txAttB = (cur.attackerPreB ?? false) ? (txAttChar?.abilityB?.effect ?? null) : null
+    let txDefB = (cur.defenderPreB ?? false) ? (txDefChar?.abilityB?.effect ?? null) : null
+    if (txAttB === 'B_NINJA' && txDefB !== 'B_NINJA') txDefB = null
+    if (txDefB === 'B_NINJA' && txAttB !== 'B_NINJA') txAttB = null
+    let ea = cur.attackerRoll
+    let ed = cur.defenderRoll
+    if (txAttB === 'B_PLUS_2'  || txAttB === 'B_UPGRADE')   ea += 2
+    if (txAttB === 'B_DOUBLE_ROLL') ea *= 2
+    if (txAttB === 'B_NINJA')   ea += 3
+    if (txAttB === 'B_WEAKEN')  ed = Math.max(1, ed - 2)
+    if (txAttB === 'B_FORCE_ONE') ed = 1
+    if (txDefB === 'B_PLUS_2'  || txDefB === 'B_UPGRADE')   ed += 2
+    if (txDefB === 'B_DOUBLE_ROLL') ed *= 2
+    if (txDefB === 'B_NINJA')   ed += 3
+    if (txDefB === 'B_WEAKEN')  ea = Math.max(1, ea - 2)
+    if (txDefB === 'B_FORCE_ONE') ea = 1
+    const txLoserId = ea > ed ? cur.defenderId : ea < ed ? cur.attackerId : ''
+    return {
+      ...cur, resolved: true,
+      effectiveAttackerRoll: ea, effectiveDefenderRoll: ed,
+      resolvedLoserId: txLoserId, resolvedDamage: Math.abs(ea - ed),
+    }
   })
   if (!txResult.committed) return
+
+  // Use the committed snapshot — it has the correct preB, effective rolls, and loserId.
+  battle = txResult.snapshot.val()
 
   // Guarantee cleanup even if resolution throws midway
   const ensureCleared = setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 8000)
@@ -227,11 +265,13 @@ async function _resolveBattle(code, battle) {
   const defChar = characters.find(c => c.id === defPlayer?.characterId)
 
   // Vampira Voo — pre-declared [B] means she flees, no damage dealt to either side
-  if ((attPlayer?.preB && attChar?.id === 7) || (defPlayer?.preB && defChar?.id === 7)) {
-    const fleeId = (attPlayer?.preB && attChar?.id === 7) ? attackerId : defenderId
+  const attPreB = battle.attackerPreB ?? false
+  const defPreB = battle.defenderPreB ?? false
+  if ((attPreB && attChar?.id === 7) || (defPreB && defChar?.id === 7)) {
+    const fleeId = (attPreB && attChar?.id === 7) ? attackerId : defenderId
     await update(battleRef, { fled: fleeId })
-    await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false, ...(attPlayer?.preB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
-    await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false, ...(defPlayer?.preB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
+    await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false, ...(attPreB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
+    await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false, ...(defPreB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
     setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 3500)
     return
   }
@@ -266,9 +306,9 @@ async function _resolveBattle(code, battle) {
   if (attCEffect === 'C_MIND_SHIELD') activeDefEffect = null
   if (defCEffect === 'C_MIND_SHIELD') activeAttEffect = null
 
-  // [B] — pre-declared by each player before battle
-  let attBEffect = attPlayer?.preB ? (attChar?.abilityB?.effect ?? null) : null
-  let defBEffect = defPlayer?.preB ? (defChar?.abilityB?.effect ?? null) : null
+  // [B] — captured atomically with roll submission
+  let attBEffect = attPreB ? (attChar?.abilityB?.effect ?? null) : null
+  let defBEffect = defPreB ? (defChar?.abilityB?.effect ?? null) : null
 
   // B_NINJA cancels opponent's [B] (unless both have it — then both apply)
   if (attBEffect === 'B_NINJA' && defBEffect !== 'B_NINJA') defBEffect = null
@@ -387,8 +427,8 @@ async function _resolveBattle(code, battle) {
     && !(attEffect === 'HEAL_HALF' && loserId !== attackerId) ? attChar.ability.name : null
   const defAbilityName = defActivated && defChar?.ability
     && !(defEffect === 'HEAL_HALF' && loserId !== defenderId) ? defChar.ability.name : null
-  const attBName = attPlayer?.preB && attChar?.abilityB?.effect !== 'B_MOVEMENT' ? attChar?.abilityB?.name : null
-  const defBName = defPlayer?.preB && defChar?.abilityB?.effect !== 'B_MOVEMENT' ? defChar?.abilityB?.name : null
+  const attBName = attPreB && attChar?.abilityB?.effect !== 'B_MOVEMENT' ? attChar?.abilityB?.name : null
+  const defBName = defPreB && defChar?.abilityB?.effect !== 'B_MOVEMENT' ? defChar?.abilityB?.name : null
   const attCName = attCEffect && attChar?.abilityC ? attChar.abilityC.name : null
   const defCName = defCEffect && defChar?.abilityC ? defChar.abilityC.name : null
 
@@ -399,6 +439,9 @@ async function _resolveBattle(code, battle) {
     defAbilityB: defBName,
     attAbilityC: attCName,
     defAbilityC: defCName,
+    resolvedDamage: damage,
+    effectiveAttackerRoll: attackerRoll,
+    effectiveDefenderRoll: defenderRoll,
   })
 
   // Vampira Toque Vampírico flags
@@ -535,8 +578,8 @@ async function _resolveBattle(code, battle) {
   }
 
   // Reset preB and cActive; record which turn [B] was used so it can't be reused same turn
-  await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false, ...(attPlayer?.preB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
-  await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false, ...(defPlayer?.preB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
+  await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false, ...(attPreB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
+  await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false, ...(defPreB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
 
   clearTimeout(ensureCleared)
   setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 4000)
