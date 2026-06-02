@@ -101,3 +101,10 @@ export async function onVillainDefeated(uid, villainId) {
 export async function onFirstGame(uid) {
   return await awardTrophy(uid, 'first_game') ? ['first_game'] : []
 }
+
+// Fetch all users for ranking
+export async function getAllUsers() {
+  const snap = await get(ref(db, 'users'))
+  if (!snap.exists()) return []
+  return Object.entries(snap.val()).map(([uid, data]) => ({ uid, ...data }))
+}

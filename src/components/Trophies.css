@@ -1,0 +1,229 @@
+.trophies-page {
+  min-height: 100dvh;
+  background: radial-gradient(ellipse at top, #0d1e3d 0%, #070e1a 65%);
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+}
+
+/* ── Top bar ── */
+.trophies-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(5, 15, 35, 0.85);
+  border-bottom: 1px solid rgba(21, 101, 192, 0.2);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.trophies-back {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.trophies-back:hover { color: #fff; border-color: rgba(255,255,255,0.35); }
+
+.trophies-topbar__title {
+  font-family: 'Bangers', cursive;
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  color: #FFCC00;
+  text-shadow: 0 0 12px rgba(255,204,0,0.5);
+}
+
+.trophies-topbar__count {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.04em;
+}
+
+/* ── Tabs ── */
+.trophies-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(21, 101, 192, 0.2);
+  background: rgba(5, 15, 35, 0.4);
+}
+
+.trophies-tab {
+  flex: 1;
+  padding: 0.8rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+.trophies-tab--active {
+  color: #FFCC00;
+  background: rgba(255, 204, 0, 0.06);
+  border-bottom: 2px solid #FFCC00;
+}
+.trophies-tab:not(.trophies-tab--active):hover {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* ── Content area ── */
+.trophies-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.trophies-loading,
+.trophies-empty {
+  text-align: center;
+  color: rgba(255,255,255,0.35);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9rem;
+  margin-top: 2rem;
+}
+
+/* ── Trophy sections (by category) ── */
+.trophy-section__label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 204, 0, 0.6);
+  margin: 0 0 0.75rem;
+}
+
+.trophy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 0.6rem;
+}
+
+.trophy-card {
+  background: rgba(10, 25, 60, 0.6);
+  border: 1px solid rgba(21, 101, 192, 0.2);
+  border-radius: 10px;
+  padding: 0.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.trophy-card--earned {
+  border-color: rgba(255, 204, 0, 0.4);
+  box-shadow: 0 0 10px rgba(255, 204, 0, 0.1);
+}
+
+.trophy-card--locked {
+  opacity: 0.4;
+}
+
+.trophy-card__icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.trophy-card__name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.trophy-card__desc {
+  font-size: 0.55rem;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.3;
+}
+
+/* ── Ranking ── */
+.ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(10, 25, 60, 0.5);
+  border: 1px solid rgba(21, 101, 192, 0.15);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  transition: border-color 0.2s;
+}
+
+.rank-row--me {
+  border-color: rgba(255, 204, 0, 0.45);
+  background: rgba(255, 204, 0, 0.05);
+}
+
+.rank-row__pos {
+  font-size: 1.3rem;
+  min-width: 2rem;
+  text-align: center;
+  line-height: 1;
+}
+
+.rank-row__num {
+  font-family: 'Bangers', cursive;
+  font-size: 1rem;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.05em;
+}
+
+.rank-row__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.rank-row__name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.rank-row__you {
+  font-size: 0.7rem;
+  color: #FFCC00;
+  letter-spacing: 0.06em;
+  margin-left: 0.4rem;
+  font-style: normal;
+}
+
+.rank-row__stats {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.35);
+  font-family: 'Oswald', sans-serif;
+}
+
+.rank-row__trophies {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9rem;
+  color: rgba(255, 204, 0, 0.85);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}

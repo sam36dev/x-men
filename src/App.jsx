@@ -8,6 +8,7 @@ import Lobby from './components/Lobby'
 import Game from './components/Game'
 import CharacterGrid from './components/CharacterGrid'
 import CardDetail from './components/CardDetail'
+import Trophies from './components/Trophies'
 import './App.css'
 
 function parseUrl() {
@@ -90,7 +91,11 @@ export default function App() {
           onLogout={handleLogout}
           onEnterRoom={enterRoom}
           onViewCards={() => setScreen('cards')}
+          onViewTrophies={() => setScreen('trophies')}
         />
+      )}
+      {screen === 'trophies' && (
+        <Trophies user={user} onBack={() => setScreen('home')} />
       )}
       {screen === 'lobby' && (
         <Lobby

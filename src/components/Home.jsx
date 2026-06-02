@@ -5,7 +5,7 @@ import { db } from '../firebase'
 import { TROPHIES } from '../data/trophies'
 import './Home.css'
 
-export default function Home({ playerId, playerName, user, onLogout, onEnterRoom, onViewCards }) {
+export default function Home({ playerId, playerName, user, onLogout, onEnterRoom, onViewCards, onViewTrophies }) {
   const [mode,      setMode]      = useState(null) // 'create' | 'join'
   const [joinCode,  setJoinCode]  = useState('')
   const [error,     setError]     = useState('')
@@ -110,9 +110,14 @@ export default function Home({ playerId, playerName, user, onLogout, onEnterRoom
         {error && <p className="home-error">⚠ {error}</p>}
       </div>
 
-      <button className="home-cards-link" onClick={onViewCards}>
-        🃏 Ver cartas dos personagens
-      </button>
+      <div className="home-links">
+        <button className="home-cards-link" onClick={onViewTrophies}>
+          🏆 Ver troféus e ranking
+        </button>
+        <button className="home-cards-link" onClick={onViewCards}>
+          🃏 Ver cartas dos personagens
+        </button>
+      </div>
     </div>
   )
 }
