@@ -133,6 +133,10 @@ export async function clearBattle(code) {
   await remove(ref(db, `rooms/${code}/villainBattle`))
 }
 
+export async function unlockVillain(code, villainId) {
+  await update(ref(db, `rooms/${code}/unlockedVillains`), { [villainId]: true })
+}
+
 export async function healPlayer(code, targetPlayerId, amount = 2) {
   await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}`), (p) => {
     if (!p) return null

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -742,37 +742,55 @@ export default function Game({ roomCode, playerId, onLeave }) {
             const currentHp = villainHp[v.id] ?? v.hp
             const defeated = currentHp <= 0
             const hpPct = Math.max(0, (currentHp / v.hp) * 100)
+            const needsUnlock = v.id === 1 || v.id === 2
+            const isLocked = needsUnlock && !room.unlockedVillains?.[v.id]
             return (
               <div
                 key={v.id}
-                className={`villain-card villain-card--${v.difficulty} ${defeated ? 'villain-card--defeated' : ''}`}
+                className={`villain-card villain-card--${v.difficulty} ${defeated ? 'villain-card--defeated' : ''} ${isLocked ? 'villain-card--locked' : ''}`}
                 style={{ '--vcolor': v.color }}
               >
                 <div className="villain-card__img-wrap">
                   <img src={v.image} alt={v.name} onError={e => { e.target.style.display = 'none' }} />
-                  <span className="villain-card__fallback">{v.typeIcon}</span>
+                  <span className="villain-card__fallback">{isLocked ? '🔒' : v.typeIcon}</span>
                 </div>
                 <div className="villain-card__info">
                   <div className="villain-card__header">
                     <span className="villain-card__name">{v.name}</span>
-                    <span className="villain-card__diff">{defeated ? '💀 Derrotado' : v.difficultyLabel}</span>
+                    <span className="villain-card__diff">
+                      {isLocked ? '🔒 Bloqueado' : defeated ? '💀 Derrotado' : v.difficultyLabel}
+                    </span>
                   </div>
                   <span className="villain-card__mechanic">{v.mechanic}</span>
-                  <div className="villain-card__hprow">
-                    <div className="villain-hp-bar">
-                      <div className="villain-hp-bar__fill" style={{ width: `${hpPct}%` }} />
+                  {!isLocked && (
+                    <div className="villain-card__hprow">
+                      <div className="villain-hp-bar">
+                        <div className="villain-hp-bar__fill" style={{ width: `${hpPct}%` }} />
+                      </div>
+                      <span className="villain-card__hp">❤️ {currentHp}/{v.hp}</span>
                     </div>
-                    <span className="villain-card__hp">❤️ {currentHp}/{v.hp}</span>
-                  </div>
+                  )}
                 </div>
-                <button
-                  className="villain-attack-btn"
-                  style={{ '--vc': v.color }}
-                  disabled={!!battle || !!villainBattle || !me?.alive || defeated}
-                  onClick={() => attackVillain(roomCode, playerId, v.id)}
-                >
-                  ⚔️
-                </button>
+                {isLocked ? (
+                  isHost && (
+                    <button
+                      className="villain-unlock-btn"
+                      style={{ '--vc': v.color }}
+                      onClick={() => unlockVillain(roomCode, v.id)}
+                    >
+                      🔓
+                    </button>
+                  )
+                ) : (
+                  <button
+                    className="villain-attack-btn"
+                    style={{ '--vc': v.color }}
+                    disabled={!!battle || !!villainBattle || !me?.alive || defeated}
+                    onClick={() => attackVillain(roomCode, playerId, v.id)}
+                  >
+                    ⚔️
+                  </button>
+                )}
               </div>
             )
           })}

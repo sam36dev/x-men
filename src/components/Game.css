@@ -487,6 +487,12 @@
   filter: grayscale(0.9);
 }
 
+.villain-card--locked {
+  opacity: 0.55;
+  filter: grayscale(0.6);
+  border-left-color: rgba(255,255,255,0.15);
+}
+
 .villain-card--chefao {
   background: rgba(255, 102, 0, 0.05);
   border-color: rgba(255, 102, 0, 0.2);
@@ -625,6 +631,28 @@
 .villain-attack-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.villain-unlock-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(255, 204, 0, 0.1);
+  border: 1.5px solid rgba(255, 204, 0, 0.5);
+  color: #FFCC00;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.villain-unlock-btn:active {
+  background: rgba(255, 204, 0, 0.2);
+  transform: scale(0.9);
 }
 
 /* Opponents */
