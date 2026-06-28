@@ -18,7 +18,7 @@ export const characters = [
     alias: "Scott Summers",
     image: "https://upload.wikimedia.org/wikipedia/en/thumb/e/e9/Cyclops_%28Scott_Summers_circa_2019%29.png/500px-Cyclops_%28Scott_Summers_circa_2019%29.png",
     powers: ["Raio Óptico Devastador", "Líder Nato", "Resistência Extrema", "Controle de Energia Óptica"],
-    type: "Energia", typeIcon: "⚡", hp: 100, diceType: 8, multiplier: 11,
+    type: "Energia", typeIcon: "⚡", hp: 100, diceType: 6, multiplier: 11,
     color: "#FF4444", gradient: "linear-gradient(160deg, #3d0000 0%, #1a0000 50%, #0d0000 100%)",
     team: "X-Men", number: "002",
     ability:  { name: "Raio Certeiro",        description: "Vencedor causa no mínimo 3 de dano",                   effect: "MIN_DAMAGE_3" },

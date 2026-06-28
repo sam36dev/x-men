@@ -22,7 +22,7 @@
 
 ---
 
-### 2. Ciclope — D8
+### 2. Ciclope — D6
 
 | Slot | Nome | Efeito |
 |------|------|--------|
