@@ -365,7 +365,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
               </span>
             </div>
             <div className="player-tokens">
-              <span className="player-tokens__coins">🪙 ×{me.tokens || 0}</span>
+              <span className="player-tokens__coins"><span className="xtoken" aria-label="token">X</span> ×{me.tokens || 0}</span>
               <span className="player-tokens__chance">{myChar.ability ? getChance(me, players) : '—'}</span>
               {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
               {isHost && (
@@ -707,7 +707,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                   )}
                 </div>
                 <div className="player-tokens">
-                  <span className="player-tokens__coins">🪙 ×{p.tokens || 0}</span>
+                  <span className="player-tokens__coins"><span className="xtoken" aria-label="token">X</span> ×{p.tokens || 0}</span>
                   <span className="player-tokens__chance">{char?.ability ? getChance(p, players) : '—'}</span>
                   {isHost && p.alive && (
                     <>

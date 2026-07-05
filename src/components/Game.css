@@ -892,6 +892,28 @@
   font-size: 0.65rem;
   color: rgba(255, 204, 0, 0.75);
   letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.xtoken {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #000;
+  border: 2px solid #FFCC00;
+  color: #CC0000;
+  font-family: 'Bangers', cursive;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1;
+  flex-shrink: 0;
+  text-shadow: none;
+  box-shadow: 0 0 4px rgba(255, 204, 0, 0.4);
 }
 
 .player-wins-count {
