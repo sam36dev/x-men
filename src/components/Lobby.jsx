@@ -87,7 +87,20 @@ export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
 
       {!me?.characterId && (
         <div className="lobby-pick">
-          <h3 className="lobby-section-title">Escolha seu personagem</h3>
+          <div className="lobby-pick-header">
+            <h3 className="lobby-section-title">Escolha seu personagem</h3>
+            <button
+              className="lobby-random-btn"
+              onClick={() => {
+                const available = characters.filter(c => !takenIds.includes(c.id))
+                if (available.length === 0) return
+                const pick = available[Math.floor(Math.random() * available.length)]
+                selectCharacter(roomCode, playerId, pick.id)
+              }}
+            >
+              🎲 Aleatório
+            </button>
+          </div>
           <div className="lobby-char-grid">
             {characters.map(char => {
               const taken = takenIds.includes(char.id)

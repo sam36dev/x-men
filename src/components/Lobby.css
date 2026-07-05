@@ -131,6 +131,36 @@
   flex: 1;
 }
 
+.lobby-pick-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.lobby-pick-header .lobby-section-title {
+  margin-bottom: 0;
+}
+
+.lobby-random-btn {
+  background: rgba(255, 204, 0, 0.12);
+  border: 1.5px solid rgba(255, 204, 0, 0.5);
+  border-radius: 8px;
+  color: #FFCC00;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.lobby-random-btn:active {
+  background: rgba(255, 204, 0, 0.25);
+  transform: scale(0.96);
+}
+
 .lobby-char-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
