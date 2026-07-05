@@ -206,7 +206,7 @@ export async function submitRoll(code, playerId, roll, preB) {
 }
 
 function _abilityChance(player, allPlayers) {
-  const base = 20
+  const base = 0
   const tokenBonus = (player.tokens || 0) * 10
   const maxWins = Math.max(...allPlayers.map(p => p.wins || 0))
   const leaderBonus = maxWins > 0 && (player.wins || 0) === maxWins ? 10 : 0

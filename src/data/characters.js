@@ -128,7 +128,7 @@ export const characters = [
     alias: "Betsy Braddock",
     image: "https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Psylocke_%28Betsy_Braddock%29.png/500px-Psylocke_%28Betsy_Braddock%29.png",
     powers: ["Lâmina Psíquica", "Telepatia", "Artes Marciais Ninja", "Projeção Psíquica"],
-    type: "Psíquico", typeIcon: "🗡️", hp: 100, diceType: 8, multiplier: 12,
+    type: "Psíquico", typeIcon: "🗡️", hp: 100, diceType: 6, multiplier: 12,
     color: "#CC44FF", gradient: "linear-gradient(160deg, #1a0030 0%, #0d0018 50%, #07000c 100%)",
     team: "X-Men", number: "010",
     ability:  { name: "Lâmina Perfurante",    description: "Dano ignora ARMOR e SHIELD do oponente",               effect: "PIERCE"       },
