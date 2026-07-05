@@ -89,6 +89,59 @@ function cConditionLabel(condition) {
   return labels[condition] ?? condition
 }
 
+function AbilityModal({ char, onClose }) {
+  if (!char) return null
+  return (
+    <div className="ability-overlay" onClick={onClose}>
+      <div className="ability-modal" onClick={e => e.stopPropagation()}>
+        <div className="ability-modal__header" style={{ background: char.gradient }}>
+          <div className="ability-modal__img-wrap">
+            <img src={char.image} alt={char.name} onError={e => { e.target.style.display = 'none' }} />
+            <span className="ability-modal__fallback">{char.name.charAt(0)}</span>
+          </div>
+          <div>
+            <div className="ability-modal__name" style={{ color: char.color }}>{char.name}</div>
+            <div className="ability-modal__alias">{char.alias} · D{char.diceType}</div>
+          </div>
+          <button className="ability-modal__close" onClick={onClose}>✕</button>
+        </div>
+        <div className="ability-modal__body">
+          {char.ability && (
+            <div className="ability-row ability-row--a">
+              <span className="ability-row__tag">[A]</span>
+              <div className="ability-row__content">
+                <span className="ability-row__name">{char.ability.name}</span>
+                <span className="ability-row__desc">{char.ability.description}</span>
+                <span className="ability-row__note">~{char.multiplier || 0}% de chance (tokens dão +10% cada)</span>
+              </div>
+            </div>
+          )}
+          {char.abilityB && (
+            <div className="ability-row ability-row--b">
+              <span className="ability-row__tag">[B]</span>
+              <div className="ability-row__content">
+                <span className="ability-row__name">{char.abilityB.name}</span>
+                <span className="ability-row__desc">{char.abilityB.description}</span>
+                <span className="ability-row__note">Declare antes de rolar · 1× por turno</span>
+              </div>
+            </div>
+          )}
+          {char.abilityC && (
+            <div className="ability-row ability-row--c">
+              <span className="ability-row__tag">[C]</span>
+              <div className="ability-row__content">
+                <span className="ability-row__name">{char.abilityC.name}</span>
+                <span className="ability-row__desc">{char.abilityC.description}</span>
+                <span className="ability-row__note">Condição: {cConditionLabel(char.abilityC.condition)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Game({ roomCode, playerId, onLeave }) {
   const [room, setRoom] = useState(null)
   const [myRoll, setMyRoll] = useState(null)
@@ -104,6 +157,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const [villainDiceDisplay2, setVillainDiceDisplay2] = useState(null)
   const [villainResult, setVillainResult] = useState(null)
   const [forgeTarget, setForgeTarget] = useState(null)
+  const [showAbility, setShowAbility] = useState(false)
   const prevBattleRef = useRef(null)
   const prevOppRollRef = useRef(null)
   const prevVillainBattleRef = useRef(null)
@@ -332,6 +386,8 @@ export default function Game({ roomCode, playerId, onLeave }) {
         <ConfirmModal onConfirm={handleLeave} onCancel={() => setConfirmLeave(false)} />
       )}
 
+      {showAbility && <AbilityModal char={myChar} onClose={() => setShowAbility(false)} />}
+
       {/* Top bar */}
       <div className="game-topbar">
         <span className="game-room">SALA: <strong>{roomCode}</strong></span>
@@ -344,9 +400,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
       {/* My card */}
       {me && myChar && (
         <div className="game-mycard" style={{ '--accent': myChar.color }}>
-          <div className="game-mycard__img-wrap">
+          <div className="game-mycard__img-wrap" onClick={() => setShowAbility(true)} style={{ cursor: 'pointer' }} title="Ver habilidades">
             <img src={myChar.image} alt={myChar.name} onError={e => { e.target.style.display = 'none' }} />
             <span className="game-mycard__fallback">{myChar.name.charAt(0)}</span>
+            <span className="game-mycard__ability-hint">📖</span>
           </div>
           <div className="game-mycard__info">
             <span className="game-mycard__char" style={{ color: myChar.color }}>{myChar.name} <span className="player-wins-count">({me.wins || 0})</span></span>
