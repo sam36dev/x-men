@@ -284,18 +284,16 @@ export default function Game({ roomCode, playerId, onLeave }) {
 
   function rollDiceVillain() {
     if (villainRolling || myVillainRoll !== null || !myChar) return
-    setVillainRolling(false)
+    setVillainRolling(true)
     let ticks = 0
-    let rolling = true
-    setMyVillainRoll(Math.ceil(Math.random() * effectiveDiceType))
     const interval = setInterval(() => {
       ticks++
-      setMyVillainRoll(Math.ceil(Math.random() * effectiveDiceType))
+      const v = Math.ceil(Math.random() * effectiveDiceType)
+      setMyVillainRoll(v)
       if (ticks >= 12) {
         clearInterval(interval)
-        const final = Math.ceil(Math.random() * effectiveDiceType)
-        setMyVillainRoll(final)
-        submitVillainRoll(roomCode, playerId, final)
+        setVillainRolling(false)
+        submitVillainRoll(roomCode, playerId, v)
       }
     }, 80)
   }
@@ -534,10 +532,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
             <div className="battle-panel__side">
               <span className="battle-panel__label">Você · D{effectiveDiceType}</span>
               <DiceFace
-                value={myVillainRoll}
+                value={villainBattle.playerRoll ?? myVillainRoll}
                 diceType={effectiveDiceType}
                 color={myChar?.color ?? '#FFD700'}
-                rolling={myVillainRoll !== null && villainBattle.playerRoll == null}
+                rolling={villainRolling}
               />
               {villainBattle.playerRoll == null && myVillainRoll === null && (
                 <button className="battle-roll-btn" style={{ '--c': myChar?.color }} onClick={rollDiceVillain}>
