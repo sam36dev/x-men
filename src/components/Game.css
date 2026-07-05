@@ -655,6 +655,94 @@
   transform: scale(0.9);
 }
 
+/* Forge */
+.forge-btn {
+  margin-top: 0.4rem;
+  background: rgba(255, 140, 0, 0.12);
+  border: 1px solid rgba(255, 140, 0, 0.4);
+  border-radius: 6px;
+  color: #ffaa44;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.forge-btn:active { background: rgba(255, 140, 0, 0.25); }
+
+.forge-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  background: rgba(10, 20, 50, 0.85);
+  border: 1px solid rgba(255, 140, 0, 0.3);
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.forge-item-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 140, 0, 0.06);
+  border: 1px solid rgba(255, 140, 0, 0.2);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+  width: 100%;
+}
+.forge-item-btn:active { background: rgba(255, 140, 0, 0.2); }
+
+.forge-item-btn__num {
+  font-family: 'Bangers', cursive;
+  font-size: 1rem;
+  color: #ffaa44;
+  min-width: 1rem;
+  text-align: center;
+}
+.forge-item-btn__icon { font-size: 0.9rem; }
+.forge-item-btn__name {
+  flex: 1;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.72rem;
+  color: #fff;
+  letter-spacing: 0.03em;
+}
+.forge-item-btn__bonus {
+  font-family: 'Bangers', cursive;
+  font-size: 0.85rem;
+  color: #4cff88;
+  letter-spacing: 0.05em;
+}
+
+.player-forge-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.72rem;
+  color: #ffaa44;
+  letter-spacing: 0.04em;
+}
+
+.forge-clear-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.3);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  line-height: 1;
+}
+.forge-clear-btn:hover { color: #ff6666; }
+
 /* Opponents */
 .game-opponents {
   padding: 0.75rem;

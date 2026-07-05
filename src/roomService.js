@@ -137,6 +137,14 @@ export async function unlockVillain(code, villainId) {
   await update(ref(db, `rooms/${code}/unlockedVillains`), { [villainId]: true })
 }
 
+export async function giveForgeItem(code, playerId, item) {
+  await update(ref(db, `rooms/${code}/players/${playerId}`), { forgeItem: item })
+}
+
+export async function clearForgeItem(code, playerId) {
+  await update(ref(db, `rooms/${code}/players/${playerId}`), { forgeItem: null })
+}
+
 export async function healPlayer(code, targetPlayerId, amount = 2) {
   await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}`), (p) => {
     if (!p) return null

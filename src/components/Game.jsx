@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, giveForgeItem, clearForgeItem } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -19,6 +19,15 @@ function ConfirmModal({ onConfirm, onCancel }) {
     </div>
   )
 }
+
+const FORGE_ITEMS = [
+  { id: 1, name: 'Nada acontece',      icon: '—',  diceBonus: 0 },
+  { id: 2, name: 'Lança da Okoye',     icon: '🗡️', diceBonus: 1 },
+  { id: 3, name: 'Espada do Noturno',  icon: '⚔️', diceBonus: 2 },
+  { id: 4, name: 'Escudo do Capitão',  icon: '🛡️', diceBonus: 0 },
+  { id: 5, name: 'Bomba',              icon: '💣', diceBonus: 0 },
+  { id: 6, name: 'Raio da Tempestade', icon: '⚡', diceBonus: 3 },
+]
 
 const FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
 function face(n, d) { return d === 6 && n >= 1 && n <= 6 ? FACES[n - 1] : n }
@@ -94,6 +103,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const [villainDiceDisplay, setVillainDiceDisplay] = useState(null)
   const [villainDiceDisplay2, setVillainDiceDisplay2] = useState(null)
   const [villainResult, setVillainResult] = useState(null)
+  const [forgeTarget, setForgeTarget] = useState(null)
   const prevBattleRef = useRef(null)
   const prevOppRollRef = useRef(null)
   const prevVillainBattleRef = useRef(null)
@@ -250,16 +260,19 @@ export default function Game({ roomCode, playerId, onLeave }) {
   function rollDice() {
     if (rolling || myRoll !== null || !myChar) return
     setRolling(true)
+    const forgeBonus = me?.forgeItem?.diceBonus ?? 0
     let ticks = 0
     const interval = setInterval(() => {
       ticks++
       setMyRoll(Math.ceil(Math.random() * effectiveDiceType))
       if (ticks >= 12) {
         clearInterval(interval)
-        const final = Math.ceil(Math.random() * effectiveDiceType)
+        const base = Math.ceil(Math.random() * effectiveDiceType)
+        const final = base + forgeBonus
         setMyRoll(final)
         setRolling(false)
         submitRoll(roomCode, playerId, final, me?.preB ?? false)
+        if (forgeBonus > 0 || me?.forgeItem) clearForgeItem(roomCode, playerId)
       }
     }, 80)
   }
@@ -410,6 +423,32 @@ export default function Game({ roomCode, playerId, onLeave }) {
             )}
             {me.abilityDisabled && (
               <div className="player-ability-stolen">🩸 [A] roubada pela Vampira</div>
+            )}
+            {me.forgeItem && me.forgeItem.id !== 1 && (
+              <div className="player-forge-item">
+                {me.forgeItem.icon} {me.forgeItem.name}{me.forgeItem.diceBonus > 0 ? ` (+${me.forgeItem.diceBonus} dado)` : ''}
+                {isHost && <button className="forge-clear-btn" onClick={() => clearForgeItem(roomCode, me.id)}>✕</button>}
+              </div>
+            )}
+            {isHost && (
+              <button className="forge-btn" onClick={() => setForgeTarget(t => t === me.id ? null : me.id)}>
+                🔨 Forge{forgeTarget === me.id ? ' ▲' : ' ▼'}
+              </button>
+            )}
+            {forgeTarget === me.id && (
+              <div className="forge-picker">
+                {FORGE_ITEMS.map(item => (
+                  <button key={item.id} className="forge-item-btn" onClick={() => {
+                    giveForgeItem(roomCode, me.id, item)
+                    setForgeTarget(null)
+                  }}>
+                    <span className="forge-item-btn__num">{item.id}</span>
+                    <span className="forge-item-btn__icon">{item.icon}</span>
+                    <span className="forge-item-btn__name">{item.name}</span>
+                    {item.diceBonus > 0 && <span className="forge-item-btn__bonus">+{item.diceBonus}</span>}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -704,6 +743,32 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 )}
                 {p.abilityDisabled && (
                   <div className="player-ability-stolen">🩸 [A] roubada</div>
+                )}
+                {p.forgeItem && p.forgeItem.id !== 1 && (
+                  <div className="player-forge-item">
+                    {p.forgeItem.icon} {p.forgeItem.name}{p.forgeItem.diceBonus > 0 ? ` (+${p.forgeItem.diceBonus} dado)` : ''}
+                    {isHost && <button className="forge-clear-btn" onClick={() => clearForgeItem(roomCode, p.id)}>✕</button>}
+                  </div>
+                )}
+                {isHost && (
+                  <button className="forge-btn" onClick={() => setForgeTarget(t => t === p.id ? null : p.id)}>
+                    🔨 Forge{forgeTarget === p.id ? ' ▲' : ' ▼'}
+                  </button>
+                )}
+                {forgeTarget === p.id && (
+                  <div className="forge-picker">
+                    {FORGE_ITEMS.map(item => (
+                      <button key={item.id} className="forge-item-btn" onClick={() => {
+                        giveForgeItem(roomCode, p.id, item)
+                        setForgeTarget(null)
+                      }}>
+                        <span className="forge-item-btn__num">{item.id}</span>
+                        <span className="forge-item-btn__icon">{item.icon}</span>
+                        <span className="forge-item-btn__name">{item.name}</span>
+                        {item.diceBonus > 0 && <span className="forge-item-btn__bonus">+{item.diceBonus}</span>}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
               <button
