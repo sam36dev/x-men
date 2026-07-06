@@ -342,10 +342,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
     let ticks = 0
     const interval = setInterval(() => {
       ticks++
-      const v = Math.ceil(Math.random() * effectiveDiceType)
-      setMyVillainRoll(v)
       if (ticks >= 12) {
         clearInterval(interval)
+        const v = Math.ceil(Math.random() * effectiveDiceType)
+        setMyVillainRoll(v)
         setVillainRolling(false)
         submitVillainRoll(roomCode, playerId, v)
       }
@@ -594,7 +594,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 color={myChar?.color ?? '#FFD700'}
                 rolling={villainRolling}
               />
-              {villainBattle.playerRoll == null && myVillainRoll === null && (
+              {villainBattle.playerRoll == null && myVillainRoll === null && !villainRolling && (
                 <button className="battle-roll-btn" style={{ '--c': myChar?.color }} onClick={rollDiceVillain}>
                   🎲 Rolar
                 </button>
