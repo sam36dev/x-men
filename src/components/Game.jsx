@@ -49,8 +49,8 @@ function DiceFace({ value, diceType, color, rolling, selected }) {
   )
 }
 
-function getChance(player, allPlayers) {
-  const base = 0
+function getChance(player, char, allPlayers) {
+  const base = char?.multiplier ?? 0
   const tokenBonus = (player.tokens || 0) * 10
   const maxWins = Math.max(...allPlayers.map(p => p.wins || 0))
   const leaderBonus = maxWins > 0 && (player.wins || 0) === maxWins ? 10 : 0
@@ -338,8 +338,12 @@ export default function Game({ roomCode, playerId, onLeave }) {
     : null
   const flashColor = result ? (resultWinnerChar?.color ?? '#FFCC00') : null
 
-  // Wolverine upgrades to D10 when HP ≤ 30
-  const effectiveDiceType = myChar?.id === 1 && (me?.hp ?? 100) <= 30 ? 10 : (myChar?.diceType ?? 6)
+  const isTransformed = myChar?.transformation != null && (me?.hp ?? 100) <= (myChar.transformation.triggersAt ?? 999)
+  const transformedChar = isTransformed ? { ...myChar, ...myChar.transformation } : myChar
+  // Wolverine upgrades to D10 when HP ≤ 30; Jean Grey transforms to Phoenix (D10)
+  const effectiveDiceType = myChar?.id === 1 && (me?.hp ?? 100) <= 30 ? 10
+    : isTransformed ? (myChar.transformation.diceType ?? myChar.diceType ?? 6)
+    : (myChar?.diceType ?? 6)
 
   function rollDice() {
     if (rolling || myRoll !== null || !myChar) return
@@ -437,15 +441,19 @@ export default function Game({ roomCode, playerId, onLeave }) {
 
       {/* My card */}
       {me && myChar && (
-        <div className="game-mycard" style={{ '--accent': myChar.color }}>
+        <div className="game-mycard" style={{ '--accent': transformedChar.color }}>
           <div className="game-mycard__img-wrap" onClick={() => setShowAbility(true)} style={{ cursor: 'pointer' }} title="Ver habilidades">
             <img src={myChar.image} alt={myChar.name} onError={e => { e.target.style.display = 'none' }} />
             <span className="game-mycard__fallback">{myChar.name.charAt(0)}</span>
             <span className="game-mycard__ability-hint">📖</span>
           </div>
           <div className="game-mycard__info">
-            <span className="game-mycard__char" style={{ color: myChar.color }}>{myChar.name} <span className="player-wins-count">({me.wins || 0})</span></span>
-            <span className="game-mycard__player">{me.name} · D{myChar.diceType}</span>
+            <span className="game-mycard__char" style={{ color: transformedChar.color }}>
+              {isTransformed ? transformedChar.name : myChar.name}
+              {isTransformed && <span className="transformation-badge"> {transformedChar.typeIcon}</span>}
+              {' '}<span className="player-wins-count">({me.wins || 0})</span>
+            </span>
+            <span className="game-mycard__player">{me.name} · D{effectiveDiceType}{isTransformed ? ' ⬆️' : ''}</span>
             <div className="game-mycard__hprow">
               <div className="game-hp-bar">
                 <div
@@ -459,7 +467,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
             </div>
             <div className="player-tokens">
               <span className="player-tokens__coins"><span className="xtoken" aria-label="token">X</span> ×{me.tokens || 0}</span>
-              <span className="player-tokens__chance">{myChar.ability ? getChance(me, players) : '—'}</span>
+              <span className="player-tokens__chance">{myChar.ability ? getChance(me, myChar, players) : '—'}</span>
               {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
               {isHost && (
                 <>
@@ -831,7 +839,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 </div>
                 <div className="player-tokens">
                   <span className="player-tokens__coins"><span className="xtoken" aria-label="token">X</span> ×{p.tokens || 0}</span>
-                  <span className="player-tokens__chance">{char?.ability ? getChance(p, players) : '—'}</span>
+                  <span className="player-tokens__chance">{char?.ability ? getChance(p, char, players) : '—'}</span>
                   {isHost && p.alive && (
                     <>
                       <button className="give-token-btn" onClick={() => giveToken(roomCode, p.id)} title="Dar token">+</button>

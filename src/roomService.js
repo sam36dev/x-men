@@ -326,8 +326,8 @@ function _isCActive(player, char) {
   return false
 }
 
-function _abilityChance(player, allPlayers) {
-  const base = 0
+function _abilityChance(player, char, allPlayers) {
+  const base = char?.multiplier ?? 0
   const tokenBonus = (player.tokens || 0) * 10
   const maxWins = Math.max(...allPlayers.map(p => p.wins || 0))
   const leaderBonus = maxWins > 0 && (player.wins || 0) === maxWins ? 10 : 0
@@ -409,8 +409,8 @@ async function _resolveBattle(code, battle) {
     return
   }
 
-  const attChance = attPlayer ? _abilityChance(attPlayer, allPlayers) : 0
-  const defChance = defPlayer ? _abilityChance(defPlayer, allPlayers) : 0
+  const attChance = attPlayer ? _abilityChance(attPlayer, attChar, allPlayers) : 0
+  const defChance = defPlayer ? _abilityChance(defPlayer, defChar, allPlayers) : 0
 
   // abilityDisabled = true means Vampira currently holds this player's [A] ability
   let attEffect = attPlayer?.abilityDisabled ? null : (attChar?.ability?.effect ?? null)
