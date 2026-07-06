@@ -1046,6 +1046,17 @@
   letter-spacing: 0.04em;
 }
 .mission-complete-btn:hover { background: rgba(100, 220, 100, 0.22); }
+.mission-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0;
+  line-height: 1;
+  margin-left: auto;
+  opacity: 0.6;
+}
+.mission-toggle-btn:hover { opacity: 1; }
 
 /* Bomb */
 .bomb-assign-btn {

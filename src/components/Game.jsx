@@ -214,6 +214,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const [villainResult, setVillainResult] = useState(null)
   const [forgeTarget, setForgeTarget] = useState(null)
   const [luckTarget, setLuckTarget] = useState(null)
+  const [missionHidden, setMissionHidden] = useState(false)
   const [showAbility, setShowAbility] = useState(false)
   const [bombDetonate, setBombDetonate] = useState(null) // { playerId, playerName }
   const prevBattleRef = useRef(null)
@@ -561,16 +562,25 @@ export default function Game({ roomCode, playerId, onLeave }) {
             {me.missionId && (
               <div className="player-mission">
                 <span className="player-mission__label">🎯</span>
-                <span className={`player-mission__name ${me.missionCompleted ? 'player-mission__name--done' : ''}`}>
-                  {MISSIONS.find(m => m.id === me.missionId)?.name}
-                </span>
-                {(MISSIONS.find(m => m.id === me.missionId)?.goal ?? 1) > 1 && (
-                  <span className="player-mission__progress">{me.missionProgress ?? 0}/{MISSIONS.find(m => m.id === me.missionId)?.goal}</span>
+                {missionHidden ? (
+                  <span className="player-mission__name" style={{ color: '#666' }}>oculta</span>
+                ) : (
+                  <>
+                    <span className={`player-mission__name ${me.missionCompleted ? 'player-mission__name--done' : ''}`}>
+                      {MISSIONS.find(m => m.id === me.missionId)?.name}
+                    </span>
+                    {(MISSIONS.find(m => m.id === me.missionId)?.goal ?? 1) > 1 && (
+                      <span className="player-mission__progress">{me.missionProgress ?? 0}/{MISSIONS.find(m => m.id === me.missionId)?.goal}</span>
+                    )}
+                    {me.missionCompleted && <span className="player-mission__done">✓</span>}
+                    {isHost && !me.missionCompleted && MISSIONS.find(m => m.id === me.missionId)?.auto === null && (
+                      <button className="mission-complete-btn" onClick={() => completeMission(roomCode, me.id)}>✓ Concluir</button>
+                    )}
+                  </>
                 )}
-                {me.missionCompleted && <span className="player-mission__done">✓</span>}
-                {isHost && !me.missionCompleted && MISSIONS.find(m => m.id === me.missionId)?.auto === null && (
-                  <button className="mission-complete-btn" onClick={() => completeMission(roomCode, me.id)}>✓ Concluir</button>
-                )}
+                <button className="mission-toggle-btn" onClick={() => setMissionHidden(h => !h)}>
+                  {missionHidden ? '👁' : '🙈'}
+                </button>
               </div>
             )}
             {me?.bomb && (
