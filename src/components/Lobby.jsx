@@ -39,7 +39,7 @@ export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
   const players = Object.entries(room.players || {}).map(([id, p]) => ({ id, ...p }))
   const me = players.find(p => p.id === playerId)
   const isHost = room.hostId === playerId
-  const allReady = players.length >= 2 && players.every(p => p.characterId)
+  const allReady = players.length >= 1 && players.every(p => p.characterId)
   const takenIds = players.map(p => p.characterId).filter(Boolean)
 
   async function handleLeave() {
@@ -149,9 +149,7 @@ export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
 
       {room.status !== 'playing' && isHost && !allReady && (
         <p className="lobby-wait">
-          {players.length < 2
-            ? 'Aguardando mais jogadores entrarem…'
-            : 'Aguardando todos escolherem personagem…'}
+          {'Aguardando todos escolherem personagem…'}
         </p>
       )}
 
