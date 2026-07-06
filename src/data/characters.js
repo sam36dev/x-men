@@ -44,7 +44,7 @@ export const characters = [
     alias: "Jean Grey",
     image: "https://upload.wikimedia.org/wikipedia/en/thumb/2/22/Jean_Grey_%28New_X-Men%29.png/500px-Jean_Grey_%28New_X-Men%29.png",
     powers: ["Telepatia Avançada", "Telecinese", "Barreira Psíquica", "Ligação Mental"],
-    type: "Psíquico", typeIcon: "🔮", hp: 100, diceType: 8, multiplier: 10,
+    type: "Psíquico", typeIcon: "🔮", hp: 100, diceType: 6, multiplier: 10,
     color: "#FF9944", gradient: "linear-gradient(160deg, #2a0800 0%, #150400 50%, #0a0200 100%)",
     team: "X-Men", number: "004",
     transformation: {
