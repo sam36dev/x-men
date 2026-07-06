@@ -337,7 +337,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
   const [luckTarget, setLuckTarget] = useState(null)
   const [missionHidden, setMissionHidden] = useState(false)
   const [localPlayerIds, setLocalPlayerIds] = useState([])
+  const [activeControllerId, setActiveControllerId] = useState(null) // null = own player
   const isTester = user?.displayName === 'tester'
+  const activeId = isTester && activeControllerId ? activeControllerId : playerId
   const [showAbility, setShowAbility] = useState(false)
   const [bombDetonate, setBombDetonate] = useState(null) // { playerId, playerName }
   const prevBattleRef = useRef(null)
@@ -389,7 +391,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
 
   // Opponent dice animation when their roll arrives
   const currentOppRoll = room?.battle
-    ? (room.battle.attackerId === playerId ? room.battle.defenderRoll : room.battle.attackerRoll)
+    ? (room.battle.attackerId === activeId ? room.battle.defenderRoll : room.battle.attackerRoll)
     : null
 
   useEffect(() => {
@@ -460,8 +462,8 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
   const myChar = characters.find(c => c.id === me?.characterId)
   const battle = room.battle
   const isHost = room.hostId === playerId
-  const isInBattle = battle && (battle.attackerId === playerId || battle.defenderId === playerId)
-  const isAttacker = battle?.attackerId === playerId
+  const isInBattle = battle && (battle.attackerId === activeId || battle.defenderId === activeId)
+  const isAttacker = battle?.attackerId === activeId
 
   const battleOpponentId = battle ? (isAttacker ? battle.defenderId : battle.attackerId) : null
   const battleOpponent = players.find(p => p.id === battleOpponentId)
@@ -495,43 +497,52 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     : me?.luckCard?.effect === 'dice_d20'          ? 20
     : baseDiceType
 
+  // Active controlled player (tester feature)
+  const activeP    = players.find(p => p.id === activeId) ?? me
+  const activeChar = characters.find(c => c.id === activeP?.characterId) ?? myChar
+  const activeEffectiveDiceType =
+    activeP?.luckCard?.effect === 'dice_d8'            ? 8
+    : activeP?.luckCard?.effect === 'dice_d12_until_12' ? 12
+    : activeP?.luckCard?.effect === 'dice_d20'          ? 20
+    : (activeChar?.id === 1 && (activeP?.hp ?? 100) <= 30 ? 10 : (activeChar?.diceType ?? 6))
+
   function rollDice() {
-    if (rolling || myRoll !== null || !myChar) return
+    if (rolling || myRoll !== null || !activeChar) return
     setRolling(true)
-    const forgeBonus = me?.forgeItem?.diceBonus ?? 0
+    const forgeBonus = activeP?.forgeItem?.diceBonus ?? 0
     let ticks = 0
     const interval = setInterval(() => {
       ticks++
-      setMyRoll(Math.ceil(Math.random() * effectiveDiceType))
+      setMyRoll(Math.ceil(Math.random() * activeEffectiveDiceType))
       if (ticks >= 12) {
         clearInterval(interval)
-        const base = Math.ceil(Math.random() * effectiveDiceType)
+        const base = Math.ceil(Math.random() * activeEffectiveDiceType)
         const final = base + forgeBonus
         setMyRoll(final)
         setRolling(false)
-        submitRoll(roomCode, playerId, final, me?.preB ?? false)
-        if (forgeBonus > 0 || me?.forgeItem) clearForgeItem(roomCode, playerId)
+        submitRoll(roomCode, activeId, final, activeP?.preB ?? false)
+        if (forgeBonus > 0 || activeP?.forgeItem) clearForgeItem(roomCode, activeId)
       }
     }, 80)
   }
 
   const villainBattle = room.villainBattle
-  const isInVillainBattle = villainBattle?.playerId === playerId
+  const isInVillainBattle = villainBattle?.playerId === activeId
   const activeVillain = villainBattle ? villains.find(v => v.id === villainBattle.villainId) : null
   const villainHp = room.villainHp ?? {}
 
   function rollDiceVillain() {
-    if (villainRolling || myVillainRoll !== null || !myChar) return
+    if (villainRolling || myVillainRoll !== null || !activeChar) return
     setVillainRolling(true)
     let ticks = 0
     const interval = setInterval(() => {
       ticks++
       if (ticks >= 12) {
         clearInterval(interval)
-        const v = Math.ceil(Math.random() * effectiveDiceType)
+        const v = Math.ceil(Math.random() * activeEffectiveDiceType)
         setMyVillainRoll(v)
         setVillainRolling(false)
-        submitVillainRoll(roomCode, playerId, v)
+        submitVillainRoll(roomCode, activeId, v)
       }
     }, 80)
   }
@@ -546,7 +557,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
 
   function resolveActivatedAbility() {
     if (!result) return null
-    const iAmAttacker = result.attackerId === playerId
+    const iAmAttacker = result.attackerId === activeId
     const names = [
       iAmAttacker ? result.attAbility  : result.defAbility,
       iAmAttacker ? result.defAbility  : result.attAbility,
@@ -592,7 +603,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
       {/* My card */}
       {me && myChar && (
         <div className="game-mycard" style={{ '--accent': transformedChar.color }}>
-          <div className="game-mycard__img-wrap" onClick={() => setShowAbility(true)} style={{ cursor: 'pointer' }} title="Ver habilidades">
+          <div className="game-mycard__img-wrap" onClick={() => { setShowAbility(true); if (isTester) setActiveControllerId(null) }} style={{ cursor: 'pointer' }} title="Ver habilidades">
             <img src={myChar.image} alt={myChar.name} onError={e => { e.target.style.display = 'none' }} />
             <span className="game-mycard__fallback">{myChar.name.charAt(0)}</span>
             <span className="game-mycard__ability-hint">📖</span>
@@ -885,12 +896,12 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         <div className="battle-panel">
           <h3 className="battle-panel__title">⚔️ Enfrentando {activeVillain?.name}!</h3>
           <div className="battle-cards">
-            <div className="battle-char battle-char--att" style={{ '--cc': myChar?.color }}>
+            <div className="battle-char battle-char--att" style={{ '--cc': activeChar?.color }}>
               <div className="battle-char__img-wrap">
-                <img src={myChar?.image} alt={myChar?.name} onError={e => { e.target.style.display = 'none' }} />
-                <span className="battle-char__fallback">{myChar?.name?.charAt(0)}</span>
+                <img src={activeChar?.image} alt={activeChar?.name} onError={e => { e.target.style.display = 'none' }} />
+                <span className="battle-char__fallback">{activeChar?.name?.charAt(0)}</span>
               </div>
-              <span className="battle-char__name" style={{ color: myChar?.color }}>{myChar?.name}</span>
+              <span className="battle-char__name" style={{ color: activeChar?.color }}>{activeChar?.name}</span>
             </div>
             <div className="battle-cards__vs">VS</div>
             <div className="battle-char battle-char--def" style={{ '--cc': activeVillain?.color }}>
@@ -903,15 +914,15 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
           </div>
           <div className="battle-panel__row">
             <div className="battle-panel__side">
-              <span className="battle-panel__label">Você · D{effectiveDiceType}</span>
+              <span className="battle-panel__label">{activeP?.name ?? 'Você'} · D{activeEffectiveDiceType}</span>
               <DiceFace
                 value={villainBattle.playerRoll ?? myVillainRoll}
-                diceType={effectiveDiceType}
-                color={myChar?.color ?? '#FFD700'}
+                diceType={activeEffectiveDiceType}
+                color={activeChar?.color ?? '#FFD700'}
                 rolling={villainRolling}
               />
               {villainBattle.playerRoll == null && myVillainRoll === null && !villainRolling && (
-                <button className="battle-roll-btn" style={{ '--c': myChar?.color }} onClick={rollDiceVillain}>
+                <button className="battle-roll-btn" style={{ '--c': activeChar?.color }} onClick={rollDiceVillain}>
                   🎲 Rolar
                 </button>
               )}
@@ -952,17 +963,17 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
       {isInBattle && battle && (
         <div className="battle-panel">
           <h3 className="battle-panel__title">
-            {isAttacker ? '⚔️ Você está atacando!' : '🛡️ Você foi atacado!'}
+            {isAttacker ? `⚔️ ${activeP?.name ?? 'Você'} está atacando!` : `🛡️ ${activeP?.name ?? 'Você'} foi atacado!`}
           </h3>
 
           {/* Character cards */}
           <div className="battle-cards">
-            <div className="battle-char battle-char--att" style={{ '--cc': myChar?.color }}>
+            <div className="battle-char battle-char--att" style={{ '--cc': activeChar?.color }}>
               <div className="battle-char__img-wrap">
-                <img src={myChar?.image} alt={myChar?.name} onError={e => { e.target.style.display = 'none' }} />
-                <span className="battle-char__fallback">{myChar?.name?.charAt(0)}</span>
+                <img src={activeChar?.image} alt={activeChar?.name} onError={e => { e.target.style.display = 'none' }} />
+                <span className="battle-char__fallback">{activeChar?.name?.charAt(0)}</span>
               </div>
-              <span className="battle-char__name" style={{ color: myChar?.color }}>{myChar?.name}</span>
+              <span className="battle-char__name" style={{ color: activeChar?.color }}>{activeChar?.name}</span>
             </div>
 
             <div className="battle-cards__vs">VS</div>
@@ -979,10 +990,10 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
           {/* Dice row */}
           <div className="battle-panel__row">
             <div className="battle-panel__side">
-              <span className="battle-panel__label">Você · D{effectiveDiceType}</span>
-              <DiceFace value={myBattleRoll ?? myRoll} diceType={effectiveDiceType} color={myChar?.color ?? '#FFD700'} rolling={rolling} />
+              <span className="battle-panel__label">{activeP?.name ?? 'Você'} · D{activeEffectiveDiceType}</span>
+              <DiceFace value={myBattleRoll ?? myRoll} diceType={activeEffectiveDiceType} color={activeChar?.color ?? '#FFD700'} rolling={rolling} />
               {myBattleRoll == null && myRoll === null && (
-                <button className="battle-roll-btn" style={{ '--c': myChar?.color }} onClick={rollDice} disabled={rolling}>
+                <button className="battle-roll-btn" style={{ '--c': activeChar?.color }} onClick={rollDice} disabled={rolling}>
                   {rolling ? '…' : '🎲 Rolar'}
                 </button>
               )}
@@ -1017,7 +1028,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                   {side.char?.typeIcon} {side.char?.name}
                 </span>
                 {side.char?.abilityB && (side.char.abilityB.effect !== 'B_MOVEMENT' || side.char?.id === 7) ? (
-                  side.pid === playerId ? (
+                  side.pid === activeId ? (
                     // Own side — interactive toggle
                     <button
                       className={`host-b-btn ${side.player?.preB ? 'host-b-btn--on' : ''}`}
@@ -1049,12 +1060,18 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
           const char = characters.find(c => c.id === p.characterId)
           const inBattle = battle && (battle.attackerId === p.id || battle.defenderId === p.id)
           return (
-            <div key={p.id} className="opponent-row">
-              <div className="opponent-row__img-wrap">
+            <div key={p.id} className={`opponent-row ${isTester && activeId === p.id ? 'opponent-row--active' : ''}`}>
+              <div className="opponent-row__img-wrap"
+                onClick={isTester ? () => setActiveControllerId(p.id) : undefined}
+                style={isTester ? { cursor: 'pointer' } : undefined}
+              >
                 <img src={char?.image} alt={char?.name} onError={e => { e.target.style.display = 'none' }} />
                 <span className="opponent-row__fallback" style={{ color: char?.color }}>{char?.name?.charAt(0)}</span>
               </div>
-              <div className="opponent-row__info">
+              <div className="opponent-row__info"
+                onClick={isTester ? () => setActiveControllerId(p.id) : undefined}
+                style={isTester ? { cursor: 'pointer' } : undefined}
+              >
                 <span className="opponent-row__name">{p.name}</span>
                 <span className="opponent-row__char" style={{ color: char?.color }}>
                   {char?.typeIcon} {char?.name} · D{
@@ -1206,8 +1223,8 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               <button
                 className="attack-btn"
                 style={{ '--c': char?.color ?? '#FFD700' }}
-                onClick={() => { attackPlayer(roomCode, playerId, p.id); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                disabled={!!battle || inBattle || !me?.alive}
+                onClick={() => { attackPlayer(roomCode, activeId, p.id); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                disabled={!!battle || inBattle || !activeP?.alive}
               >
                 ⚔️
               </button>
@@ -1287,8 +1304,8 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                     <button
                       className="villain-attack-btn"
                       style={{ '--vc': v.color }}
-                      disabled={!!battle || (!!villainBattle && !villainBattle?.resolved) || !me?.alive || defeated}
-                      onClick={() => { attackVillain(roomCode, playerId, v.id); window.scrollTo({ top: 0, behavior: 'instant' }) }}
+                      disabled={!!battle || (!!villainBattle && !villainBattle?.resolved) || !activeP?.alive || defeated}
+                      onClick={() => { attackVillain(roomCode, activeId, v.id); window.scrollTo({ top: 0, behavior: 'instant' }) }}
                     >
                       ⚔️
                     </button>

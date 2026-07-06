@@ -1368,6 +1368,10 @@
   opacity: 0.35;
   filter: grayscale(0.8);
 }
+.opponent-row--active {
+  border-left: 3px solid #66ff88;
+  background: rgba(100, 255, 136, 0.05);
+}
 
 .opponent-row__img-wrap {
   width: 48px;
