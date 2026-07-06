@@ -541,6 +541,28 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 {isHost && <button className="forge-clear-btn" onClick={() => clearForgeItem(roomCode, me.id)}>✕</button>}
               </div>
             )}
+            {me?.bomb && (
+              <div className="bomb-row">
+                <span className="bomb-row__icon">💣</span>
+                <div className="bomb-counter">
+                  {[1,2,3,4,5].map(n => (
+                    <span key={n} className={`bomb-pip ${n <= me.bomb.counter ? 'bomb-pip--lit' : ''}`} />
+                  ))}
+                </div>
+                <span className="bomb-counter__val">{me.bomb.counter}/5</span>
+                {isHost && me.bomb.counter < 5 && (
+                  <button className="bomb-tick-btn" onClick={() => tickBomb(roomCode, me.id)}>+1</button>
+                )}
+                {isHost && me.bomb.counter >= 5 && (
+                  <button className="bomb-explode-btn" onClick={() => setBombDetonate({ playerId: me.id, playerName: me.name })}>
+                    💥 Explodir
+                  </button>
+                )}
+                {isHost && (
+                  <button className="bomb-remove-btn" onClick={() => removeBomb(roomCode, me.id)} title="Remover bomba">✕</button>
+                )}
+              </div>
+            )}
             {isHost && (
               <button className="forge-btn" onClick={() => setForgeTarget(t => t === me.id ? null : me.id)}>
                 🔨 Forge{forgeTarget === me.id ? ' ▲' : ' ▼'}
