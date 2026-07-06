@@ -174,7 +174,12 @@ export async function attackPlayer(code, attackerId, defenderId) {
 }
 
 export async function changeTurn(code, playerId, delta) {
-  await runTransaction(ref(db, `rooms/${code}/players/${playerId}/turn`), (cur) => Math.max(1, (cur || 1) + delta))
+  await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+    if (!p) return null
+    const newTurn = Math.max(1, (p.turn || 1) + delta)
+    const newTokens = delta > 0 ? (p.tokens || 0) + 1 : (p.tokens || 0)
+    return { ...p, turn: newTurn, tokens: newTokens }
+  })
 }
 
 export async function togglePreB(code, playerId) {
