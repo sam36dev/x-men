@@ -493,11 +493,7 @@ function _isCActive(player, char) {
 }
 
 function _abilityChance(player, char, allPlayers) {
-  const base = 0
-  const tokenBonus = (player.tokens || 0) * 10
-  const maxWins = Math.max(...allPlayers.map(p => p.wins || 0))
-  const leaderBonus = maxWins > 0 && (player.wins || 0) === maxWins ? 10 : 0
-  return Math.min(90, base + tokenBonus + leaderBonus)
+  return Math.min(90, (player.tokens || 0) * 10)
 }
 
 function _rollsChance(chance) {
