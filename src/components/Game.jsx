@@ -391,7 +391,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
       {/* Top bar */}
       <div className="game-topbar">
         <span className="game-room">SALA: <strong>{roomCode}</strong></span>
-        {isHost && (battle || villainBattle) && (
+        {(battle || villainBattle) && (
           <button className="game-clearbattle" onClick={() => clearBattle(roomCode)} title="Limpar batalha travada">🗑️ Limpar</button>
         )}
         <button className="game-leave" onClick={() => setConfirmLeave(true)}>Sair</button>
@@ -893,7 +893,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 </div>
                 <div className="villain-card__actions">
                   {isLocked ? (
-                    isHost && (
+                    isHost ? (
                       <button
                         className="villain-unlock-btn"
                         style={{ '--vc': v.color }}
@@ -901,12 +901,14 @@ export default function Game({ roomCode, playerId, onLeave }) {
                       >
                         🔓
                       </button>
+                    ) : (
+                      <button className="villain-attack-btn villain-attack-btn--locked" disabled>🔒</button>
                     )
                   ) : (
                     <button
                       className="villain-attack-btn"
                       style={{ '--vc': v.color }}
-                      disabled={!!battle || !!villainBattle || !me?.alive || defeated}
+                      disabled={!!battle || (!!villainBattle && !villainBattle?.resolved) || !me?.alive || defeated}
                       onClick={() => attackVillain(roomCode, playerId, v.id)}
                     >
                       ⚔️

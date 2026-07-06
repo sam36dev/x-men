@@ -774,6 +774,10 @@
   cursor: not-allowed;
 }
 
+.villain-attack-btn--locked {
+  border-color: rgba(255,255,255,0.15);
+}
+
 .villain-unlock-btn {
   flex-shrink: 0;
   width: 40px;
