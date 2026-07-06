@@ -302,16 +302,12 @@ export default function Game({ roomCode, playerId, onLeave }) {
     // Animate villain dice when villainRoll arrives
     if (cur?.resolved && cur.villainRoll != null && !prev?.resolved) {
       const hasDie2 = cur.villainRoll2 != null
-      const vAnimDt = villains.find(v => v.id === cur.villainId)?.diceType ?? 6
-      const rnd = () => Math.ceil(Math.random() * vAnimDt)
       setVillainRolling(true)
-      setVillainDiceDisplay(rnd())
-      if (hasDie2) setVillainDiceDisplay2(rnd())
+      setVillainDiceDisplay(null)
+      if (hasDie2) setVillainDiceDisplay2(null)
       let ticks = 0
       const interval = setInterval(() => {
         ticks++
-        setVillainDiceDisplay(rnd())
-        if (hasDie2) setVillainDiceDisplay2(rnd())
         if (ticks >= 12) {
           clearInterval(interval)
           setVillainDiceDisplay(cur.villainRoll)

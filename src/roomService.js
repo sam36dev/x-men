@@ -120,7 +120,8 @@ export async function submitVillainRoll(code, playerId, roll) {
 
   const txResult = await runTransaction(vBattleRef, (cur) => {
     if (!cur || cur.resolved) return undefined
-    return { ...cur, playerRoll: roll, villainRoll, villainRoll2: die2, resolved: true }
+    const villainRoll2 = die2 != null ? Math.min(die1, die2) : null
+    return { ...cur, playerRoll: roll, villainRoll, villainRoll2, resolved: true }
   })
   if (!txResult.committed) return
   console.log('[villain result]', { playerRoll: roll, villainRoll, die1, die2, villainDiceType })
