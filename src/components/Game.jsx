@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -89,6 +89,53 @@ function cConditionLabel(condition) {
   return labels[condition] ?? condition
 }
 
+function BombModal({ target, villainList, onConfirm, onClose }) {
+  const [selectedVillain, setSelectedVillain] = useState(null)
+  const [xmenPresent, setXmenPresent] = useState(false)
+  return (
+    <div className="ability-overlay" onClick={onClose}>
+      <div className="ability-modal bomb-modal" onClick={e => e.stopPropagation()}>
+        <div className="ability-modal__header" style={{ background: 'linear-gradient(135deg,#3d1000,#1a0800)' }}>
+          <span>💥 Detonar Bomba — {target.playerName}</span>
+          <button className="ability-modal__close" onClick={onClose}>✕</button>
+        </div>
+        <div className="ability-modal__body">
+          <p className="bomb-modal__label">Qual boss está na casa?</p>
+          <div className="bomb-modal__villains">
+            {villainList.map(v => (
+              <button
+                key={v.id}
+                className={`bomb-modal__villain-btn ${selectedVillain?.id === v.id ? 'bomb-modal__villain-btn--sel' : ''}`}
+                style={{ '--vc': v.color }}
+                onClick={() => setSelectedVillain(v)}
+              >
+                {v.typeIcon} {v.name}
+              </button>
+            ))}
+          </div>
+          <label className="bomb-modal__toggle">
+            <input type="checkbox" checked={xmenPresent} onChange={e => setXmenPresent(e.target.checked)} />
+            <span>X-Men presente na casa?</span>
+          </label>
+          {xmenPresent && (
+            <p className="bomb-modal__note">Boss −5 HP · {target.playerName} −5 HP</p>
+          )}
+          {!xmenPresent && selectedVillain && (
+            <p className="bomb-modal__note">Boss −10 HP</p>
+          )}
+          <button
+            className="bomb-modal__confirm"
+            disabled={!selectedVillain}
+            onClick={() => { onConfirm(selectedVillain.id, xmenPresent); onClose() }}
+          >
+            💥 Confirmar Explosão
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function AbilityModal({ char, onClose }) {
   if (!char) return null
   return (
@@ -158,6 +205,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const [villainResult, setVillainResult] = useState(null)
   const [forgeTarget, setForgeTarget] = useState(null)
   const [showAbility, setShowAbility] = useState(false)
+  const [bombDetonate, setBombDetonate] = useState(null) // { playerId, playerName }
   const prevBattleRef = useRef(null)
   const prevOppRollRef = useRef(null)
   const prevVillainBattleRef = useRef(null)
@@ -387,6 +435,14 @@ export default function Game({ roomCode, playerId, onLeave }) {
       )}
 
       {showAbility && <AbilityModal char={myChar} onClose={() => setShowAbility(false)} />}
+      {bombDetonate && (
+        <BombModal
+          target={bombDetonate}
+          villainList={villains.filter(v => (villainHp[v.id] ?? v.hp) > 0)}
+          onConfirm={(villainId, xmenPresent) => detonateBomb(roomCode, bombDetonate.playerId, villainId, xmenPresent)}
+          onClose={() => setBombDetonate(null)}
+        />
+      )}
 
       {/* Top bar */}
       <div className="game-topbar">
@@ -823,6 +879,34 @@ export default function Game({ roomCode, playerId, onLeave }) {
                         {item.diceBonus > 0 && <span className="forge-item-btn__bonus">+{item.diceBonus}</span>}
                       </button>
                     ))}
+                  </div>
+                )}
+                {/* Bomb controls (host only) */}
+                {isHost && !p.bomb && (
+                  <button className="bomb-assign-btn" onClick={() => assignBomb(roomCode, p.id)}>
+                    💣 Atribuir Bomba
+                  </button>
+                )}
+                {p.bomb && (
+                  <div className="bomb-row">
+                    <span className="bomb-row__icon">💣</span>
+                    <div className="bomb-counter">
+                      {[1,2,3,4,5].map(n => (
+                        <span key={n} className={`bomb-pip ${n <= p.bomb.counter ? 'bomb-pip--lit' : ''}`} />
+                      ))}
+                    </div>
+                    <span className="bomb-counter__val">{p.bomb.counter}/5</span>
+                    {isHost && p.bomb.counter < 5 && (
+                      <button className="bomb-tick-btn" onClick={() => tickBomb(roomCode, p.id)}>+1</button>
+                    )}
+                    {isHost && p.bomb.counter >= 5 && (
+                      <button className="bomb-explode-btn" onClick={() => setBombDetonate({ playerId: p.id, playerName: p.name })}>
+                        💥 Explodir
+                      </button>
+                    )}
+                    {isHost && (
+                      <button className="bomb-remove-btn" onClick={() => removeBomb(roomCode, p.id)} title="Remover bomba">✕</button>
+                    )}
                   </div>
                 )}
               </div>

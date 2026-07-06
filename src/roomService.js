@@ -201,6 +201,42 @@ export async function healVillain(code, villainId, amount = 2) {
   )
 }
 
+export async function assignBomb(code, playerId) {
+  await update(ref(db, `rooms/${code}/players/${playerId}`), { bomb: { counter: 0 } })
+}
+
+export async function removeBomb(code, playerId) {
+  await update(ref(db, `rooms/${code}/players/${playerId}`), { bomb: null })
+}
+
+export async function tickBomb(code, playerId) {
+  await runTransaction(ref(db, `rooms/${code}/players/${playerId}/bomb/counter`), (cur) =>
+    Math.min(5, (cur ?? 0) + 1)
+  )
+}
+
+export async function detonateBomb(code, playerId, villainId, xmenPresent) {
+  const villain = villains.find(v => v.id === villainId)
+  const maxHp = villain?.hp ?? 999
+  if (xmenPresent) {
+    await Promise.all([
+      runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
+        (cur) => Math.max(0, (cur ?? 0) - 5)),
+      runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+        if (!p) return null
+        const newHp = Math.max(0, (p.hp ?? 100) - 5)
+        return { ...p, hp: newHp, alive: newHp > 0, bomb: null }
+      }),
+    ])
+  } else {
+    await Promise.all([
+      runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
+        (cur) => Math.max(0, (cur ?? 0) - 10)),
+      update(ref(db, `rooms/${code}/players/${playerId}`), { bomb: null }),
+    ])
+  }
+}
+
 export async function giveForgeItem(code, playerId, item) {
   await update(ref(db, `rooms/${code}/players/${playerId}`), { forgeItem: item })
 }
