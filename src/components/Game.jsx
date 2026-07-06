@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, giveForgeItem, clearForgeItem } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -891,26 +891,37 @@ export default function Game({ roomCode, playerId, onLeave }) {
                     </div>
                   )}
                 </div>
-                {isLocked ? (
-                  isHost && (
+                <div className="villain-card__actions">
+                  {isLocked ? (
+                    isHost && (
+                      <button
+                        className="villain-unlock-btn"
+                        style={{ '--vc': v.color }}
+                        onClick={() => unlockVillain(roomCode, v.id)}
+                      >
+                        🔓
+                      </button>
+                    )
+                  ) : (
                     <button
-                      className="villain-unlock-btn"
+                      className="villain-attack-btn"
                       style={{ '--vc': v.color }}
-                      onClick={() => unlockVillain(roomCode, v.id)}
+                      disabled={!!battle || !!villainBattle || !me?.alive || defeated}
+                      onClick={() => attackVillain(roomCode, playerId, v.id)}
                     >
-                      🔓
+                      ⚔️
                     </button>
-                  )
-                ) : (
-                  <button
-                    className="villain-attack-btn"
-                    style={{ '--vc': v.color }}
-                    disabled={!!battle || !!villainBattle || !me?.alive || defeated}
-                    onClick={() => attackVillain(roomCode, playerId, v.id)}
-                  >
-                    ⚔️
-                  </button>
-                )}
+                  )}
+                  {isHost && !isLocked && !defeated && (
+                    <button
+                      className="villain-heal-btn"
+                      title="+2 HP"
+                      onClick={() => healVillain(roomCode, v.id, 2)}
+                    >
+                      🔥
+                    </button>
+                  )}
+                </div>
               </div>
             )
           })}

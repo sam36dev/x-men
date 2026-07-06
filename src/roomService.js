@@ -137,6 +137,14 @@ export async function unlockVillain(code, villainId) {
   await update(ref(db, `rooms/${code}/unlockedVillains`), { [villainId]: true })
 }
 
+export async function healVillain(code, villainId, amount = 2) {
+  const villain = villains.find(v => v.id === villainId)
+  const maxHp = villain?.hp ?? 999
+  await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`), (cur) =>
+    Math.min(maxHp, (cur ?? maxHp) + amount)
+  )
+}
+
 export async function giveForgeItem(code, playerId, item) {
   await update(ref(db, `rooms/${code}/players/${playerId}`), { forgeItem: item })
 }
