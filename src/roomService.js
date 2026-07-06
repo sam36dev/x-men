@@ -310,6 +310,19 @@ export async function submitRoll(code, playerId, roll, preB) {
   }
 }
 
+function _isCActive(player, char) {
+  if (!char?.abilityC || !player) return false
+  const cond = char.abilityC.condition
+  const hp = player.hp ?? 100
+  if (cond === 'always')    return true
+  if (cond === 'hp_lte_20') return hp <= 20
+  if (cond === 'hp_lte_30') return hp <= 30
+  if (cond === 'hp_lte_35') return hp <= 35
+  if (cond === 'hp_lte_40') return hp <= 40
+  if (cond === 'hp_lte_50') return hp <= 50
+  return false
+}
+
 function _abilityChance(player, allPlayers) {
   const base = 0
   const tokenBonus = (player.tokens || 0) * 10
@@ -387,8 +400,8 @@ async function _resolveBattle(code, battle) {
   if ((attPreB && attChar?.id === 7) || (defPreB && defChar?.id === 7)) {
     const fleeId = (attPreB && attChar?.id === 7) ? attackerId : defenderId
     await update(battleRef, { fled: fleeId })
-    await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false, ...(attPreB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
-    await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false, ...(defPreB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
+    await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, ...(attPreB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
+    await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, ...(defPreB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
     setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 3500)
     return
   }
@@ -400,9 +413,9 @@ async function _resolveBattle(code, battle) {
   let attEffect = attPlayer?.abilityDisabled ? null : (attChar?.ability?.effect ?? null)
   let defEffect = defPlayer?.abilityDisabled ? null : (defChar?.ability?.effect ?? null)
 
-  // [C] effects — host-activated conditional abilities
-  const attCEffect = attPlayer?.cActive ? (attChar?.abilityC?.effect ?? null) : null
-  const defCEffect = defPlayer?.cActive ? (defChar?.abilityC?.effect ?? null) : null
+  // [C] effects — automatic when condition is met
+  const attCEffect = _isCActive(attPlayer, attChar) ? (attChar?.abilityC?.effect ?? null) : null
+  const defCEffect = _isCActive(defPlayer, defChar) ? (defChar?.abilityC?.effect ?? null) : null
 
   // [C] C_ABSORB_SURE / C_PIERCE_SURE guarantee [A] activation
   let attActivated = attEffect ? _rollsChance(attChance) : false

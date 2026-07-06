@@ -514,15 +514,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 <span className={`player-c-cond ${isCConditionMet(me, myChar, players) ? 'player-c-cond--met' : ''}`}>
                   {cConditionLabel(myChar.abilityC.condition)}
                 </span>
-                {me.cActive && <span className="player-c-active">ATIVO</span>}
-                {isHost && myChar.abilityC.effect !== 'C_STEAL_ABILITY' && (
-                  <button
-                    className={`player-c-toggle ${me.cActive ? 'player-c-toggle--on' : ''}`}
-                    onClick={() => toggleCAbility(roomCode, me.id)}
-                  >
-                    {me.cActive ? '✓' : '○'}
-                  </button>
-                )}
+                {isCConditionMet(me, myChar, players) && <span className="player-c-active">ATIVO</span>}
               </div>
             )}
             {myChar.id === 7 && me.stolenAbility && (
@@ -857,15 +849,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                     <span className={`player-c-cond ${isCConditionMet(p, char, players) ? 'player-c-cond--met' : ''}`}>
                       {cConditionLabel(char.abilityC.condition)}
                     </span>
-                    {p.cActive && <span className="player-c-active">ATIVO</span>}
-                    {isHost && char.abilityC.effect !== 'C_STEAL_ABILITY' && (
-                      <button
-                        className={`player-c-toggle ${p.cActive ? 'player-c-toggle--on' : ''}`}
-                        onClick={() => toggleCAbility(roomCode, p.id)}
-                      >
-                        {p.cActive ? '✓' : '○'}
-                      </button>
-                    )}
+                    {isCConditionMet(p, char, players) && <span className="player-c-active">ATIVO</span>}
                   </div>
                 )}
                 {char?.id === 7 && p.stolenAbility && (
