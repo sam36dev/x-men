@@ -136,7 +136,34 @@ async function _resolveVillainBattle(code, vb) {
   const playerChar = characters.find(c => c.id === characterId)
   let damage = Math.abs(playerRoll - villainRoll)
 
+  const playerSnap = await get(ref(db, `rooms/${code}/players/${playerId}`))
+  const playerData = playerSnap.val()
+
   try {
+    const isSentinel = villainId >= 8 && villainId <= 10
+
+    // Jubileu: player always wins vs Sentinelas — damage goes to villain, player never takes damage
+    if (playerData?.luckCard?.effect === 'sentinel_wins' && isSentinel) {
+      if (damage > 0) {
+        const killTx = await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
+          cur => Math.max(0, (cur ?? 0) - damage))
+        if ((killTx.snapshot.val() ?? 0) === 0 && villainId === 9) {
+          await runTransaction(ref(db, `rooms/${code}/players/${playerId}/tokens`), cur => (cur || 0) + 1)
+        }
+      }
+      await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), p => {
+        if (!p) return null
+        return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
+      })
+      await runTransaction(ref(db, `rooms/${code}/players/${playerId}/luckCard`), card => {
+        if (!card) return null
+        const n = (card.charges || 0) - 1
+        return n <= 0 ? null : { ...card, charges: n }
+      })
+      setTimeout(() => remove(ref(db, `rooms/${code}/villainBattle`)), 4000)
+      return
+    }
+
     if (playerRoll > villainRoll) {
       // Juggernaut (id=4): absorbs first 10 damage
       if (villain?.id === 4) damage = Math.max(0, damage - 10)
@@ -193,6 +220,27 @@ async function _resolveVillainBattle(code, vb) {
         }
       }
     }
+
+    // Post-battle luck card updates
+    {
+      const luckOps = []
+      // Phoenix: decrement charges
+      if (playerData?.luckCard?.effect === 'dice_d20') {
+        luckOps.push(runTransaction(ref(db, `rooms/${code}/players/${playerId}/luckCard`), card => {
+          if (!card) return null
+          const n = (card.charges || 0) - 1
+          return n <= 0 ? null : { ...card, charges: n }
+        }))
+      }
+      // Ciclope: clear when raw roll hits 12
+      if (playerData?.luckCard?.effect === 'dice_d12_until_12' && playerRoll >= 12)
+        luckOps.push(update(ref(db, `rooms/${code}/players/${playerId}`), { luckCard: null }))
+      // Sanguessuga: clear when player wins
+      if (playerData?.luckCard?.effect === 'disable_abilities' && playerRoll > villainRoll)
+        luckOps.push(update(ref(db, `rooms/${code}/players/${playerId}`), { luckCard: null }))
+      if (luckOps.length) await Promise.all(luckOps)
+    }
+
     setTimeout(() => remove(ref(db, `rooms/${code}/villainBattle`)), 4000)
   } catch (err) {
     await remove(ref(db, `rooms/${code}/villainBattle`)).catch(() => {})
@@ -291,6 +339,20 @@ export async function applyLuckCard(code, playerId, card) {
         return { ...p, hp: newHp, alive: newHp > 0 }
       })
       break
+    case 'aoe_damage': {
+      const snap = await get(ref(db, `rooms/${code}/players`))
+      const all = Object.entries(snap.val() || {})
+      await Promise.all(
+        all
+          .filter(([id, p]) => id !== playerId && p.alive)
+          .map(([id]) => runTransaction(ref(db, `rooms/${code}/players/${id}`), p => {
+            if (!p || !p.alive) return p
+            const newHp = Math.max(0, (p.hp || 0) - card.value)
+            return { ...p, hp: newHp, alive: newHp > 0 }
+          }))
+      )
+      break
+    }
     case 'token':
       await runTransaction(ref(db, `rooms/${code}/players/${playerId}/tokens`), cur =>
         Math.max(0, (cur || 0) + card.value))
@@ -478,9 +540,15 @@ async function _resolveBattle(code, battle) {
   let attEffect = attPlayer?.abilityDisabled ? null : (attChar?.ability?.effect ?? null)
   let defEffect = defPlayer?.abilityDisabled ? null : (defChar?.ability?.effect ?? null)
 
+  // Sanguessuga: disable all abilities for affected player
+  if (attPlayer?.luckCard?.effect === 'disable_abilities') attEffect = null
+  if (defPlayer?.luckCard?.effect === 'disable_abilities') defEffect = null
+
   // [C] effects — automatic when condition is met
-  const attCEffect = _isCActive(attPlayer, attChar) ? (attChar?.abilityC?.effect ?? null) : null
-  const defCEffect = _isCActive(defPlayer, defChar) ? (defChar?.abilityC?.effect ?? null) : null
+  const attCEffect = attPlayer?.luckCard?.effect === 'disable_abilities' ? null
+    : _isCActive(attPlayer, attChar) ? (attChar?.abilityC?.effect ?? null) : null
+  const defCEffect = defPlayer?.luckCard?.effect === 'disable_abilities' ? null
+    : _isCActive(defPlayer, defChar) ? (defChar?.abilityC?.effect ?? null) : null
 
   // [C] C_ABSORB_SURE / C_PIERCE_SURE guarantee [A] activation
   let attActivated = attEffect ? _rollsChance(attChance) : false
@@ -504,6 +572,10 @@ async function _resolveBattle(code, battle) {
   // [B] — captured atomically with roll submission
   let attBEffect = attPreB ? (attChar?.abilityB?.effect ?? null) : null
   let defBEffect = defPreB ? (defChar?.abilityB?.effect ?? null) : null
+
+  // Sanguessuga: disable B abilities
+  if (attPlayer?.luckCard?.effect === 'disable_abilities') attBEffect = null
+  if (defPlayer?.luckCard?.effect === 'disable_abilities') defBEffect = null
 
   // B_NINJA cancels opponent's [B] (unless both have it — then both apply)
   if (attBEffect === 'B_NINJA' && defBEffect !== 'B_NINJA') defBEffect = null
@@ -770,6 +842,30 @@ async function _resolveBattle(code, battle) {
         }
       }
     }
+  }
+
+  // Post-battle luck card updates
+  {
+    const luckOps = []
+    // Phoenix: decrement charges for both players
+    for (const [pid, player] of [[attackerId, attPlayer], [defenderId, defPlayer]]) {
+      if (player?.luckCard?.effect === 'dice_d20') {
+        luckOps.push(runTransaction(ref(db, `rooms/${code}/players/${pid}/luckCard`), card => {
+          if (!card) return null
+          const n = (card.charges || 0) - 1
+          return n <= 0 ? null : { ...card, charges: n }
+        }))
+      }
+    }
+    // Ciclope: clear when player's raw roll hits 12
+    if (attPlayer?.luckCard?.effect === 'dice_d12_until_12' && battle.attackerRoll >= 12)
+      luckOps.push(update(ref(db, `rooms/${code}/players/${attackerId}`), { luckCard: null }))
+    if (defPlayer?.luckCard?.effect === 'dice_d12_until_12' && battle.defenderRoll >= 12)
+      luckOps.push(update(ref(db, `rooms/${code}/players/${defenderId}`), { luckCard: null }))
+    // Sanguessuga: clear for the winner
+    if (winnerId && allPlayers.find(p => p.id === winnerId)?.luckCard?.effect === 'disable_abilities')
+      luckOps.push(update(ref(db, `rooms/${code}/players/${winnerId}`), { luckCard: null }))
+    if (luckOps.length) await Promise.all(luckOps)
   }
 
   // Reset preB and cActive; record which turn [B] was used so it can't be reused same turn

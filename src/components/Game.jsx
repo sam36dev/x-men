@@ -30,7 +30,13 @@ const FORGE_ITEMS = [
 ]
 
 const LUCK_CARDS = [
-  { id: 1, name: 'Colossus', icon: '🪨', effect: 'dice_d8', persistent: true, description: 'D8 até ser removido' },
+  { id: 1, name: 'Ciclope',      icon: '🔴', effect: 'dice_d12_until_12', persistent: true, description: 'D12 até tirar 12' },
+  { id: 2, name: 'Colossus',     icon: '🪨', effect: 'dice_d8',           persistent: true, description: 'D8 até ser removido' },
+  { id: 3, name: 'Deadpool',     icon: '💀', type: 'damage', value: 10 },
+  { id: 4, name: 'Jubileu',      icon: '🎆', effect: 'sentinel_wins',     persistent: true, charges: 3, description: '3× vence Sentinela' },
+  { id: 5, name: 'Phoenix',      icon: '🔥', effect: 'dice_d20',          persistent: true, charges: 5, description: 'D20 por 5 batalhas' },
+  { id: 6, name: 'Sanguessuga',  icon: '🩸', effect: 'disable_abilities', persistent: true, description: 'A/B/C bloqueados' },
+  { id: 7, name: 'Tempestade',   icon: '⛈️', type: 'aoe_damage', value: 10 },
 ]
 
 const FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
@@ -349,7 +355,11 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const baseDiceType = myChar?.id === 1 && (me?.hp ?? 100) <= 30 ? 10
     : isTransformed ? (myChar.transformation.diceType ?? myChar.diceType ?? 6)
     : (myChar?.diceType ?? 6)
-  const effectiveDiceType = me?.luckCard?.effect === 'dice_d8' ? 8 : baseDiceType
+  const effectiveDiceType =
+    me?.luckCard?.effect === 'dice_d8'           ? 8
+    : me?.luckCard?.effect === 'dice_d12_until_12' ? 12
+    : me?.luckCard?.effect === 'dice_d20'          ? 20
+    : baseDiceType
 
   function rollDice() {
     if (rolling || myRoll !== null || !myChar) return
@@ -497,7 +507,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
               <button
                 className={`my-b-btn ${me.preB ? 'my-b-btn--on' : ''}`}
                 onClick={() => togglePreB(roomCode, playerId)}
-                disabled={!!isInBattle || (!me.preB && (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1))}
+                disabled={!!isInBattle || (!me.preB && (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1)) || me.luckCard?.effect === 'disable_abilities'}
               >
                 <span className="my-b-btn__tag">[B]</span>
                 <span className="my-b-btn__name">{myChar.abilityB.name}</span>
@@ -510,7 +520,9 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 <span className={`player-c-cond ${isCConditionMet(me, myChar, players) ? 'player-c-cond--met' : ''}`}>
                   {cConditionLabel(myChar.abilityC.condition)}
                 </span>
-                {isCConditionMet(me, myChar, players) && <span className="player-c-active">ATIVO</span>}
+                {me.luckCard?.effect === 'disable_abilities'
+                  ? <span className="player-c-active" style={{ background: '#660000' }}>BLOQUEADO</span>
+                  : isCConditionMet(me, myChar, players) && <span className="player-c-active">ATIVO</span>}
               </div>
             )}
             {myChar.id === 7 && me.stolenAbility && (
@@ -531,7 +543,8 @@ export default function Game({ roomCode, playerId, onLeave }) {
             )}
             {me.luckCard && (
               <div className="player-luck-card">
-                {me.luckCard.icon} {me.luckCard.name}{me.luckCard.description ? ` — ${me.luckCard.description}` : ''}
+                {me.luckCard.icon} {me.luckCard.name}
+                {me.luckCard.charges != null ? ` — ${me.luckCard.charges}×` : me.luckCard.description ? ` — ${me.luckCard.description}` : ''}
                 {isHost && <button className="forge-clear-btn" onClick={() => clearLuckCard(roomCode, me.id)}>✕</button>}
               </div>
             )}
@@ -848,7 +861,12 @@ export default function Game({ roomCode, playerId, onLeave }) {
               <div className="opponent-row__info">
                 <span className="opponent-row__name">{p.name}</span>
                 <span className="opponent-row__char" style={{ color: char?.color }}>
-                  {char?.typeIcon} {char?.name} · D{char?.diceType} <span className="player-wins-count">({p.wins || 0})</span>
+                  {char?.typeIcon} {char?.name} · D{
+                    p.luckCard?.effect === 'dice_d8' ? 8
+                    : p.luckCard?.effect === 'dice_d12_until_12' ? 12
+                    : p.luckCard?.effect === 'dice_d20' ? 20
+                    : (char?.diceType ?? 6)
+                  } <span className="player-wins-count">({p.wins || 0})</span>
                 </span>
                 <div className="opp-hp-bar">
                   <div style={{
@@ -906,7 +924,8 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 )}
                 {p.luckCard && (
                   <div className="player-luck-card">
-                    {p.luckCard.icon} {p.luckCard.name}{p.luckCard.description ? ` — ${p.luckCard.description}` : ''}
+                    {p.luckCard.icon} {p.luckCard.name}
+                    {p.luckCard.charges != null ? ` — ${p.luckCard.charges}×` : p.luckCard.description ? ` — ${p.luckCard.description}` : ''}
                     {isHost && <button className="forge-clear-btn" onClick={() => clearLuckCard(roomCode, p.id)}>✕</button>}
                   </div>
                 )}
