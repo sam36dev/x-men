@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import './Game.css'
@@ -27,6 +27,10 @@ const FORGE_ITEMS = [
   { id: 4, name: 'Escudo do Capitão',  icon: '🛡️', diceBonus: 0 },
   { id: 5, name: 'Bomba',              icon: '💣', diceBonus: 0 },
   { id: 6, name: 'Raio da Tempestade', icon: '⚡', diceBonus: 3 },
+]
+
+const LUCK_CARDS = [
+  { id: 1, name: 'Colossus', icon: '🪨', effect: 'dice_d8', persistent: true, description: 'D8 até ser removido' },
 ]
 
 const FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
@@ -201,6 +205,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const [villainDiceDisplay2, setVillainDiceDisplay2] = useState(null)
   const [villainResult, setVillainResult] = useState(null)
   const [forgeTarget, setForgeTarget] = useState(null)
+  const [luckTarget, setLuckTarget] = useState(null)
   const [showAbility, setShowAbility] = useState(false)
   const [bombDetonate, setBombDetonate] = useState(null) // { playerId, playerName }
   const prevBattleRef = useRef(null)
@@ -341,9 +346,11 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const isTransformed = myChar?.transformation != null && (me?.hp ?? 100) <= (myChar.transformation.triggersAt ?? 999)
   const transformedChar = isTransformed ? { ...myChar, ...myChar.transformation } : myChar
   // Wolverine upgrades to D10 when HP ≤ 30; Jean Grey transforms to Phoenix (D10)
-  const effectiveDiceType = myChar?.id === 1 && (me?.hp ?? 100) <= 30 ? 10
+  const baseDiceType = myChar?.id === 1 && (me?.hp ?? 100) <= 30 ? 10
     : isTransformed ? (myChar.transformation.diceType ?? myChar.diceType ?? 6)
     : (myChar?.diceType ?? 6)
+  const luckDiceMin = me?.luckCard?.effect === 'dice_d8' ? 8 : 0
+  const effectiveDiceType = Math.max(baseDiceType, luckDiceMin)
 
   function rollDice() {
     if (rolling || myRoll !== null || !myChar) return
@@ -523,6 +530,12 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 {isHost && <button className="forge-clear-btn" onClick={() => clearForgeItem(roomCode, me.id)}>✕</button>}
               </div>
             )}
+            {me.luckCard && (
+              <div className="player-luck-card">
+                {me.luckCard.icon} {me.luckCard.name}{me.luckCard.description ? ` — ${me.luckCard.description}` : ''}
+                {isHost && <button className="forge-clear-btn" onClick={() => clearLuckCard(roomCode, me.id)}>✕</button>}
+              </div>
+            )}
             {me?.bomb && (
               <div className="bomb-row">
                 <span className="bomb-row__icon">💣</span>
@@ -546,9 +559,14 @@ export default function Game({ roomCode, playerId, onLeave }) {
               </div>
             )}
             {isHost && (
-              <button className="forge-btn" onClick={() => setForgeTarget(t => t === me.id ? null : me.id)}>
-                🔨 Forge{forgeTarget === me.id ? ' ▲' : ' ▼'}
-              </button>
+              <div className="forge-luck-row">
+                <button className="forge-btn" onClick={() => { setForgeTarget(t => t === me.id ? null : me.id); setLuckTarget(null) }}>
+                  🔨 Forge{forgeTarget === me.id ? ' ▲' : ' ▼'}
+                </button>
+                <button className="luck-btn" onClick={() => { setLuckTarget(t => t === me.id ? null : me.id); setForgeTarget(null) }}>
+                  🃏 Sorte{luckTarget === me.id ? ' ▲' : ' ▼'}
+                </button>
+              </div>
             )}
             {forgeTarget === me.id && (
               <div className="forge-picker">
@@ -562,6 +580,20 @@ export default function Game({ roomCode, playerId, onLeave }) {
                     <span className="forge-item-btn__icon">{item.icon}</span>
                     <span className="forge-item-btn__name">{item.name}</span>
                     {item.diceBonus > 0 && <span className="forge-item-btn__bonus">+{item.diceBonus}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+            {luckTarget === me.id && (
+              <div className="luck-picker">
+                {LUCK_CARDS.map(card => (
+                  <button key={card.id} className="luck-card-btn" onClick={() => {
+                    applyLuckCard(roomCode, me.id, card)
+                    setLuckTarget(null)
+                  }}>
+                    <span className="luck-card-btn__num">{card.id}</span>
+                    <span className="luck-card-btn__icon">{card.icon}</span>
+                    <span className="luck-card-btn__name">{card.name}</span>
                   </button>
                 ))}
               </div>
@@ -873,10 +905,21 @@ export default function Game({ roomCode, playerId, onLeave }) {
                     {isHost && <button className="forge-clear-btn" onClick={() => clearForgeItem(roomCode, p.id)}>✕</button>}
                   </div>
                 )}
+                {p.luckCard && (
+                  <div className="player-luck-card">
+                    {p.luckCard.icon} {p.luckCard.name}{p.luckCard.description ? ` — ${p.luckCard.description}` : ''}
+                    {isHost && <button className="forge-clear-btn" onClick={() => clearLuckCard(roomCode, p.id)}>✕</button>}
+                  </div>
+                )}
                 {isHost && (
-                  <button className="forge-btn" onClick={() => setForgeTarget(t => t === p.id ? null : p.id)}>
-                    🔨 Forge{forgeTarget === p.id ? ' ▲' : ' ▼'}
-                  </button>
+                  <div className="forge-luck-row">
+                    <button className="forge-btn" onClick={() => { setForgeTarget(t => t === p.id ? null : p.id); setLuckTarget(null) }}>
+                      🔨 Forge{forgeTarget === p.id ? ' ▲' : ' ▼'}
+                    </button>
+                    <button className="luck-btn" onClick={() => { setLuckTarget(t => t === p.id ? null : p.id); setForgeTarget(null) }}>
+                      🃏 Sorte{luckTarget === p.id ? ' ▲' : ' ▼'}
+                    </button>
+                  </div>
                 )}
                 {forgeTarget === p.id && (
                   <div className="forge-picker">
@@ -890,6 +933,20 @@ export default function Game({ roomCode, playerId, onLeave }) {
                         <span className="forge-item-btn__icon">{item.icon}</span>
                         <span className="forge-item-btn__name">{item.name}</span>
                         {item.diceBonus > 0 && <span className="forge-item-btn__bonus">+{item.diceBonus}</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {luckTarget === p.id && (
+                  <div className="luck-picker">
+                    {LUCK_CARDS.map(card => (
+                      <button key={card.id} className="luck-card-btn" onClick={() => {
+                        applyLuckCard(roomCode, p.id, card)
+                        setLuckTarget(null)
+                      }}>
+                        <span className="luck-card-btn__num">{card.id}</span>
+                        <span className="luck-card-btn__icon">{card.icon}</span>
+                        <span className="luck-card-btn__name">{card.name}</span>
                       </button>
                     ))}
                   </div>

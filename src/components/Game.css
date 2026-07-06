@@ -934,6 +934,88 @@
 }
 .forge-clear-btn:hover { color: #ff6666; }
 
+/* Forge + Luck row */
+.forge-luck-row {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+.forge-luck-row .forge-btn {
+  margin-top: 0;
+  flex: 1;
+}
+
+/* Luck Cards */
+.luck-btn {
+  flex: 1;
+  background: rgba(180, 80, 255, 0.1);
+  border: 1px solid rgba(180, 80, 255, 0.4);
+  border-radius: 6px;
+  color: #cc88ff;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.luck-btn:active { background: rgba(180, 80, 255, 0.25); }
+
+.luck-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  background: rgba(20, 5, 40, 0.9);
+  border: 1px solid rgba(180, 80, 255, 0.3);
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.luck-card-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(180, 80, 255, 0.06);
+  border: 1px solid rgba(180, 80, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+  width: 100%;
+}
+.luck-card-btn:active { background: rgba(180, 80, 255, 0.2); }
+
+.luck-card-btn__num {
+  font-family: 'Bangers', cursive;
+  font-size: 1rem;
+  color: #cc88ff;
+  min-width: 1rem;
+  text-align: center;
+}
+.luck-card-btn__icon { font-size: 0.9rem; }
+.luck-card-btn__name {
+  flex: 1;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.72rem;
+  color: #fff;
+  letter-spacing: 0.03em;
+}
+
+.player-luck-card {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.72rem;
+  color: #cc88ff;
+  letter-spacing: 0.04em;
+}
+
 /* Bomb */
 .bomb-assign-btn {
   margin-top: 0.4rem;

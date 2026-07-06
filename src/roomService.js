@@ -67,6 +67,7 @@ export async function startGame(code) {
     playerResets[`players/${pid}/preBUsedOnTurn`]    = 0
     playerResets[`players/${pid}/abilityDisabled`]   = false
     playerResets[`players/${pid}/forgeItem`]         = null
+    playerResets[`players/${pid}/luckCard`]          = null
   })
   const villainHp = {}
   villains.forEach(v => { villainHp[v.id] = v.hp })
@@ -269,6 +270,44 @@ export async function giveForgeItem(code, playerId, item) {
 
 export async function clearForgeItem(code, playerId) {
   await update(ref(db, `rooms/${code}/players/${playerId}`), { forgeItem: null })
+}
+
+export async function applyLuckCard(code, playerId, card) {
+  if (card.persistent) {
+    await update(ref(db, `rooms/${code}/players/${playerId}`), { luckCard: card })
+    return
+  }
+  switch (card.type) {
+    case 'heal':
+      await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), p => {
+        if (!p) return null
+        return { ...p, hp: Math.min(100, (p.hp || 0) + card.value), alive: true }
+      })
+      break
+    case 'damage':
+      await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), p => {
+        if (!p) return null
+        const newHp = Math.max(0, (p.hp || 0) - card.value)
+        return { ...p, hp: newHp, alive: newHp > 0 }
+      })
+      break
+    case 'token':
+      await runTransaction(ref(db, `rooms/${code}/players/${playerId}/tokens`), cur =>
+        Math.max(0, (cur || 0) + card.value))
+      break
+    case 'revive':
+      await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), p => {
+        if (!p) return null
+        return { ...p, hp: card.value, alive: true }
+      })
+      break
+    default:
+      break
+  }
+}
+
+export async function clearLuckCard(code, playerId) {
+  await update(ref(db, `rooms/${code}/players/${playerId}`), { luckCard: null })
 }
 
 export async function healPlayer(code, targetPlayerId, amount = 2) {
