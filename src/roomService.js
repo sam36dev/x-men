@@ -81,12 +81,17 @@ export async function startGame(code) {
 }
 
 export async function attackVillain(code, playerId, villainId) {
-  const snap = await get(ref(db, `rooms/${code}/villainHp/${villainId}`))
-  const hp = snap.val()
+  const [hpSnap, playerSnap] = await Promise.all([
+    get(ref(db, `rooms/${code}/villainHp/${villainId}`)),
+    get(ref(db, `rooms/${code}/players/${playerId}`)),
+  ])
+  const hp = hpSnap.val()
   if (hp == null || hp <= 0) return
+  const characterId = playerSnap.val()?.characterId ?? null
   await set(ref(db, `rooms/${code}/villainBattle`), {
     playerId,
     villainId,
+    characterId,
     playerRoll: null,
     villainRoll: null,
     resolved: false,
@@ -100,8 +105,16 @@ export async function submitVillainRoll(code, playerId, roll) {
   if (!vb || vb.resolved || vb.playerId !== playerId) return
 
   const villain = villains.find(v => v.id === vb.villainId)
-  const die1 = Math.ceil(Math.random() * (villain?.diceType ?? 6))
-  const die2 = villain?.id === 6 ? Math.ceil(Math.random() * (villain?.diceType ?? 6)) : null
+  const playerChar = characters.find(c => c.id === vb.characterId)
+
+  // Mística (id=3): copies exactly the player's dice type
+  const villainDiceType = villain?.id === 3
+    ? (playerChar?.diceType ?? villain?.diceType ?? 6)
+    : (villain?.diceType ?? 6)
+
+  const die1 = Math.ceil(Math.random() * villainDiceType)
+  // Sr. Sinistro (id=6): rolls two dice and takes the highest
+  const die2 = villain?.id === 6 ? Math.ceil(Math.random() * villainDiceType) : null
   const villainRoll = die2 != null ? Math.max(die1, die2) : die1
 
   const txResult = await runTransaction(vBattleRef, (cur) => {
@@ -114,24 +127,44 @@ export async function submitVillainRoll(code, playerId, roll) {
 }
 
 async function _resolveVillainBattle(code, vb) {
-  const { playerId, villainId, playerRoll, villainRoll } = vb
-  const damage = Math.abs(playerRoll - villainRoll)
+  const { playerId, villainId, playerRoll, villainRoll, characterId } = vb
+  const villain = villains.find(v => v.id === villainId)
+  const playerChar = characters.find(c => c.id === characterId)
+  let damage = Math.abs(playerRoll - villainRoll)
 
   try {
-    if (playerRoll > villainRoll && damage > 0) {
-      // Player wins the roll — damage villain and count win
-      await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`), (cur) => Math.max(0, (cur ?? 0) - damage))
-      await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
-        if (!p) return null
-        return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
-      })
-    } else if (villainRoll > playerRoll && damage > 0) {
-      // Villain wins — damage player
-      await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
-        if (!p) return null
-        const newHp = Math.max(0, p.hp - damage)
-        return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1 }
-      })
+    if (playerRoll > villainRoll) {
+      // Juggernaut (id=4): absorbs first 10 damage
+      if (villain?.id === 4) damage = Math.max(0, damage - 10)
+
+      if (damage > 0) {
+        await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
+          (cur) => Math.max(0, (cur ?? 0) - damage))
+        await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+          if (!p) return null
+          return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
+        })
+      }
+    } else if (villainRoll > playerRoll) {
+      // Dente de Sabre (id=5): double damage against Wolverine (characterId=1)
+      if (villain?.id === 5 && playerChar?.id === 1) damage *= 2
+
+      if (damage > 0) {
+        await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+          if (!p) return null
+          const newHp = Math.max(0, p.hp - damage)
+          return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1 }
+        })
+
+        // Omega Red (id=7): heals half of damage dealt
+        if (villain?.id === 7) {
+          const heal = Math.floor(damage / 2)
+          if (heal > 0) {
+            await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
+              (cur) => Math.min(villain.hp, (cur ?? 0) + heal))
+          }
+        }
+      }
     }
     setTimeout(() => remove(ref(db, `rooms/${code}/villainBattle`)), 4000)
   } catch (err) {
