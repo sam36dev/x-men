@@ -33,11 +33,8 @@ const FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
 function face(n, d) { return d === 6 && n >= 1 && n <= 6 ? FACES[n - 1] : n }
 
 function DiceFace({ value, diceType, color, rolling, selected }) {
-  // During rolling always show unicode dice faces regardless of dice type
-  const sym = value != null
-    ? (rolling ? FACES[(value - 1) % 6] : face(value, diceType))
-    : null
-  const useUni = rolling || diceType === 6
+  const sym = value != null ? face(value, diceType) : null
+  const useUni = diceType === 6
 
   return (
     <div
@@ -305,14 +302,16 @@ export default function Game({ roomCode, playerId, onLeave }) {
     // Animate villain dice when villainRoll arrives
     if (cur?.resolved && cur.villainRoll != null && !prev?.resolved) {
       const hasDie2 = cur.villainRoll2 != null
+      const vAnimDt = villains.find(v => v.id === cur.villainId)?.diceType ?? 6
+      const rnd = () => Math.ceil(Math.random() * vAnimDt)
       setVillainRolling(true)
-      setVillainDiceDisplay(Math.ceil(Math.random() * 6))
-      if (hasDie2) setVillainDiceDisplay2(Math.ceil(Math.random() * 6))
+      setVillainDiceDisplay(rnd())
+      if (hasDie2) setVillainDiceDisplay2(rnd())
       let ticks = 0
       const interval = setInterval(() => {
         ticks++
-        setVillainDiceDisplay(Math.ceil(Math.random() * 6))
-        if (hasDie2) setVillainDiceDisplay2(Math.ceil(Math.random() * 6))
+        setVillainDiceDisplay(rnd())
+        if (hasDie2) setVillainDiceDisplay2(rnd())
         if (ticks >= 12) {
           clearInterval(interval)
           setVillainDiceDisplay(cur.villainRoll)
@@ -943,11 +942,6 @@ export default function Game({ roomCode, playerId, onLeave }) {
       {/* Vilões */}
       <div className="game-villains">
         <h3 className="game-section-title">Vilões do Mapa</h3>
-        {(!!battle || !!villainBattle || !me?.alive) && (
-          <div style={{ fontSize: '0.7rem', color: '#ff6666', padding: '0 0.5rem 0.5rem', fontFamily: 'monospace' }}>
-            bloqueio: battle={String(!!battle)} vBattle={String(!!villainBattle && !villainBattle?.resolved)} alive={String(me?.alive)}
-          </div>
-        )}
         <div className="game-villain-scroll">
           {villains.map(v => {
             const currentHp = villainHp[v.id] ?? v.hp
