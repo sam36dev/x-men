@@ -453,7 +453,7 @@
   100% { transform: scale(1); }
 }
 
-.gdie__sym { font-family: 'Bangers', cursive; font-size: 1.8rem; line-height: 1; }
+.gdie__sym { font-family: 'Oswald', sans-serif; font-size: 1.8rem; font-weight: 700; line-height: 1; }
 .gdie__sym--uni { font-size: 2.4rem; line-height: 1; }
 .gdie__q { font-family: 'Bangers', cursive; font-size: 1.5rem; color: rgba(255,255,255,0.18); }
 
