@@ -689,19 +689,19 @@ export default function Game({ roomCode, playerId, onLeave }) {
               </span>
               <div className="villain-dice-pair">
                 <DiceFace
-                  value={villainRolling ? villainDiceDisplay : (villainBattle.villainRoll ?? null)}
+                  value={villainDiceDisplay}
                   diceType={activeVillain?.diceType ?? 6}
                   color={activeVillain?.color ?? '#888'}
                   rolling={villainRolling}
-                  selected={!villainRolling && villainBattle.villainRoll2 != null && (villainBattle.villainRoll >= (villainBattle.villainRoll2 ?? 0))}
+                  selected={!villainRolling && villainDiceDisplay != null && villainDiceDisplay2 != null}
                 />
                 {villainBattle.villainRoll2 != null && (
                   <DiceFace
-                    value={villainRolling ? villainDiceDisplay2 : villainBattle.villainRoll2}
+                    value={villainDiceDisplay2}
                     diceType={activeVillain?.diceType ?? 6}
                     color={activeVillain?.color ?? '#888'}
                     rolling={villainRolling}
-                    selected={!villainRolling && villainBattle.villainRoll2 > villainBattle.villainRoll}
+                    selected={false}
                   />
                 )}
               </div>
