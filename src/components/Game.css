@@ -345,6 +345,14 @@
   color: rgba(255,255,255,0.3);
 }
 
+.game-result__dice-note {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  opacity: 0.85;
+  margin: 0.1rem 0;
+}
+
 /* Battle panel */
 .battle-panel {
   margin: 0.5rem 0.75rem;

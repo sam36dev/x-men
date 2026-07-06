@@ -291,7 +291,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
         const damage = Math.abs(playerRoll - villainRoll)
         const playerWon = playerRoll > villainRoll
         const tied = playerRoll === villainRoll
-        setVillainResult({ playerRoll, villainRoll, damage, playerWon, tied, villainId, vPlayerId })
+        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId })
         setMyVillainRoll(null)
         setShaking(true)
         setTimeout(() => setShaking(false), 550)
@@ -615,18 +615,33 @@ export default function Game({ roomCode, playerId, onLeave }) {
       {/* Villain result banner */}
       {villainResult && villainResult.vPlayerId === playerId && (
         <div className={`game-result ${villainResult.playerWon ? 'game-result--win' : villainResult.tied ? 'game-result--tie' : 'game-result--lose'}`}>
-          <div className="game-result__rolls">
-            <span style={{ color: myChar?.color }}>{face(villainResult.playerRoll, myChar?.diceType ?? 6)}</span>
-            <span className="game-result__vs">VS</span>
-            <span style={{ color: villains.find(v => v.id === villainResult.villainId)?.color }}>
-              {villainResult.villainRoll}
-            </span>
-          </div>
-          <p>
-            {villainResult.tied  && '⚖️ Empate — ninguém toma dano'}
-            {villainResult.playerWon  && `🏆 Você venceu! |${villainResult.playerRoll}−${villainResult.villainRoll}| = ${villainResult.damage} → Vilão −${villainResult.damage} HP`}
-            {!villainResult.playerWon && !villainResult.tied && `💥 Você perdeu! |${villainResult.villainRoll}−${villainResult.playerRoll}| = ${villainResult.damage} → −${villainResult.damage} HP`}
-          </p>
+          {(() => {
+            const vColor = villains.find(v => v.id === villainResult.villainId)?.color
+            const vDt = villains.find(v => v.id === villainResult.villainId)?.diceType ?? 6
+            return (
+              <>
+                <div className="game-result__rolls">
+                  <span style={{ color: myChar?.color }}>{face(villainResult.playerRoll, myChar?.diceType ?? 6)}</span>
+                  <span className="game-result__vs">VS</span>
+                  <span style={{ color: vColor }}>
+                    {villainResult.villainRoll2 != null
+                      ? <>{villainResult.villainRoll2} <strong style={{ fontSize: '1.3em' }}>{villainResult.villainRoll}</strong></>
+                      : villainResult.villainRoll}
+                  </span>
+                </div>
+                {villainResult.villainRoll2 != null && (
+                  <p className="game-result__dice-note" style={{ color: vColor }}>
+                    🎲 dados: {villainResult.villainRoll2} e {villainResult.villainRoll} → usa o maior ({villainResult.villainRoll})
+                  </p>
+                )}
+                <p>
+                  {villainResult.tied  && '⚖️ Empate — ninguém toma dano'}
+                  {villainResult.playerWon  && `🏆 Você venceu! ${villainResult.playerRoll} > ${villainResult.villainRoll} → Vilão −${villainResult.damage} HP`}
+                  {!villainResult.playerWon && !villainResult.tied && `💥 Você perdeu! ${villainResult.villainRoll} > ${villainResult.playerRoll} → −${villainResult.damage} HP`}
+                </p>
+              </>
+            )
+          })()}
         </div>
       )}
 
