@@ -52,9 +52,32 @@ export async function selectCharacter(code, playerId, characterId) {
 }
 
 export async function startGame(code) {
+  const snap = await get(ref(db, `rooms/${code}/players`))
+  const playersVal = snap.val() || {}
+  const playerResets = {}
+  Object.keys(playersVal).forEach(pid => {
+    playerResets[`players/${pid}/hp`]               = 100
+    playerResets[`players/${pid}/alive`]             = true
+    playerResets[`players/${pid}/tokens`]            = 0
+    playerResets[`players/${pid}/wins`]              = 0
+    playerResets[`players/${pid}/consecutiveLosses`] = 0
+    playerResets[`players/${pid}/turn`]              = 1
+    playerResets[`players/${pid}/cActive`]           = false
+    playerResets[`players/${pid}/preB`]              = false
+    playerResets[`players/${pid}/preBUsedOnTurn`]    = 0
+    playerResets[`players/${pid}/abilityDisabled`]   = false
+    playerResets[`players/${pid}/forgeItem`]         = null
+  })
   const villainHp = {}
   villains.forEach(v => { villainHp[v.id] = v.hp })
-  await update(ref(db, `rooms/${code}`), { status: 'playing', villainHp })
+  await update(ref(db, `rooms/${code}`), {
+    status: 'playing',
+    villainHp,
+    battle: null,
+    villainBattle: null,
+    unlockedVillains: null,
+    ...playerResets,
+  })
 }
 
 export async function attackVillain(code, playerId, villainId) {
