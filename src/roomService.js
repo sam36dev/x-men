@@ -106,6 +106,7 @@ export async function submitVillainRoll(code, playerId, roll) {
 
   const villain = villains.find(v => v.id === vb.villainId)
   const playerChar = characters.find(c => c.id === vb.characterId)
+  console.log('[villain roll]', { villainId: vb.villainId, villain: villain?.name, villainDt: villain?.diceType, playerRoll: roll })
 
   // Mística (id=3): copies exactly the player's dice type
   const villainDiceType = villain?.id === 3
@@ -122,6 +123,7 @@ export async function submitVillainRoll(code, playerId, roll) {
     return { ...cur, playerRoll: roll, villainRoll, villainRoll2: die2, resolved: true }
   })
   if (!txResult.committed) return
+  console.log('[villain result]', { playerRoll: roll, villainRoll, die1, die2, villainDiceType })
 
   await _resolveVillainBattle(code, { ...vb, playerRoll: roll, villainRoll })
 }

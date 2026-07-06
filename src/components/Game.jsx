@@ -628,8 +628,8 @@ export default function Game({ roomCode, playerId, onLeave }) {
           </div>
           <p>
             {villainResult.tied  && '⚖️ Empate — ninguém toma dano'}
-            {villainResult.playerWon  && `🏆 Você venceu! Vilão −${villainResult.damage} HP`}
-            {!villainResult.playerWon && !villainResult.tied && `💥 Você perdeu! −${villainResult.damage} HP`}
+            {villainResult.playerWon  && `🏆 Você venceu! |${villainResult.playerRoll}−${villainResult.villainRoll}| = ${villainResult.damage} → Vilão −${villainResult.damage} HP`}
+            {!villainResult.playerWon && !villainResult.tied && `💥 Você perdeu! |${villainResult.villainRoll}−${villainResult.playerRoll}| = ${villainResult.damage} → −${villainResult.damage} HP`}
           </p>
         </div>
       )}
