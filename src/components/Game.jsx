@@ -550,7 +550,8 @@ export default function Game({ roomCode, playerId, onLeave }) {
               <div className="forge-picker">
                 {FORGE_ITEMS.map(item => (
                   <button key={item.id} className="forge-item-btn" onClick={() => {
-                    giveForgeItem(roomCode, me.id, item)
+                    if (item.id === 5) assignBomb(roomCode, me.id)
+                    else giveForgeItem(roomCode, me.id, item)
                     setForgeTarget(null)
                   }}>
                     <span className="forge-item-btn__num">{item.id}</span>
@@ -870,7 +871,8 @@ export default function Game({ roomCode, playerId, onLeave }) {
                   <div className="forge-picker">
                     {FORGE_ITEMS.map(item => (
                       <button key={item.id} className="forge-item-btn" onClick={() => {
-                        giveForgeItem(roomCode, p.id, item)
+                        if (item.id === 5) assignBomb(roomCode, p.id)
+                        else giveForgeItem(roomCode, p.id, item)
                         setForgeTarget(null)
                       }}>
                         <span className="forge-item-btn__num">{item.id}</span>
@@ -880,12 +882,6 @@ export default function Game({ roomCode, playerId, onLeave }) {
                       </button>
                     ))}
                   </div>
-                )}
-                {/* Bomb controls (host only) */}
-                {isHost && !p.bomb && (
-                  <button className="bomb-assign-btn" onClick={() => assignBomb(roomCode, p.id)}>
-                    💣 Atribuir Bomba
-                  </button>
                 )}
                 {p.bomb && (
                   <div className="bomb-row">
