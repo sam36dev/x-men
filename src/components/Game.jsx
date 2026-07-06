@@ -992,7 +992,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
                       className="villain-attack-btn"
                       style={{ '--vc': v.color }}
                       disabled={!!battle || (!!villainBattle && !villainBattle?.resolved) || !me?.alive || defeated}
-                      onClick={() => { attackVillain(roomCode, playerId, v.id); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                      onClick={() => { attackVillain(roomCode, playerId, v.id); window.scrollTo({ top: 0, behavior: 'instant' }) }}
                     >
                       ⚔️
                     </button>
