@@ -686,7 +686,10 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               <div className="player-mission">
                 <span className="player-mission__label">🎯</span>
                 {missionHidden ? (
-                  <span className="player-mission__name" style={{ color: '#666' }}>oculta</span>
+                  <>
+                    <span className="player-mission__name" style={{ color: '#666' }}>oculta</span>
+                    <button className="mission-toggle-btn" onClick={() => setMissionHidden(h => !h)}>👁</button>
+                  </>
                 ) : (
                   <>
                     <span className={`player-mission__name ${me.missionCompleted ? 'player-mission__name--done' : ''}`}>
@@ -699,11 +702,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                     {isHost && !me.missionCompleted && MISSIONS.find(m => m.id === me.missionId)?.auto === null && (
                       <button className="mission-complete-btn" onClick={() => completeMission(roomCode, me.id)}>✓ Concluir</button>
                     )}
+                    <button className="mission-toggle-btn" onClick={() => setMissionHidden(h => !h)}>🙈</button>
                   </>
                 )}
-                <button className="mission-toggle-btn" onClick={() => setMissionHidden(h => !h)}>
-                  {missionHidden ? '👁' : '🙈'}
-                </button>
               </div>
             )}
             {me?.bomb && (

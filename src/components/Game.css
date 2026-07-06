@@ -1053,7 +1053,6 @@
   font-size: 0.75rem;
   padding: 0;
   line-height: 1;
-  margin-left: auto;
   opacity: 0.6;
 }
 .mission-toggle-btn:hover { opacity: 1; }
