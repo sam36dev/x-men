@@ -49,9 +49,11 @@ export async function joinRoom(code, playerId, playerName) {
 }
 
 export async function addLocalPlayer(code, playerId, playerName) {
+  const mission = MISSIONS[Math.floor(Math.random() * MISSIONS.length)]
   await update(ref(db, `rooms/${code}/players/${playerId}`), {
     name: playerName, characterId: null, hp: 100, alive: true, tokens: 0, wins: 0,
     consecutiveLosses: 0, cActive: false, preB: false, turn: 1, preBUsedOnTurn: 0, abilityDisabled: false,
+    missionId: mission.id, missionProgress: 0, missionCompleted: false,
   })
 }
 
