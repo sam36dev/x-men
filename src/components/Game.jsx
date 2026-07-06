@@ -299,23 +299,10 @@ export default function Game({ roomCode, playerId, onLeave }) {
       }
     }
 
-    // Animate villain dice when villainRoll arrives
+    // Show villain dice values immediately when roll arrives
     if (cur?.resolved && cur.villainRoll != null && !prev?.resolved) {
-      const hasDie2 = cur.villainRoll2 != null
-      setVillainRolling(true)
-      setVillainDiceDisplay(null)
-      if (hasDie2) setVillainDiceDisplay2(null)
-      let ticks = 0
-      const interval = setInterval(() => {
-        ticks++
-        if (ticks >= 12) {
-          clearInterval(interval)
-          setVillainDiceDisplay(cur.villainRoll)
-          if (hasDie2) setVillainDiceDisplay2(cur.villainRoll2)
-          setVillainRolling(false)
-        }
-      }, 80)
-      return () => clearInterval(interval)
+      setVillainDiceDisplay(cur.villainRoll)
+      if (cur.villainRoll2 != null) setVillainDiceDisplay2(cur.villainRoll2)
     }
 
     if (!cur) { setMyVillainRoll(null); setVillainDiceDisplay(null); setVillainDiceDisplay2(null); setVillainRolling(false) }
