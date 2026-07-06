@@ -857,6 +857,11 @@ export default function Game({ roomCode, playerId, onLeave }) {
       {/* Vilões */}
       <div className="game-villains">
         <h3 className="game-section-title">Vilões do Mapa</h3>
+        {(!!battle || !!villainBattle || !me?.alive) && (
+          <div style={{ fontSize: '0.7rem', color: '#ff6666', padding: '0 0.5rem 0.5rem', fontFamily: 'monospace' }}>
+            bloqueio: battle={String(!!battle)} vBattle={String(!!villainBattle && !villainBattle?.resolved)} alive={String(me?.alive)}
+          </div>
+        )}
         <div className="game-villain-scroll">
           {villains.map(v => {
             const currentHp = villainHp[v.id] ?? v.hp
