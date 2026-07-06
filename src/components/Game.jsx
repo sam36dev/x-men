@@ -349,8 +349,7 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const baseDiceType = myChar?.id === 1 && (me?.hp ?? 100) <= 30 ? 10
     : isTransformed ? (myChar.transformation.diceType ?? myChar.diceType ?? 6)
     : (myChar?.diceType ?? 6)
-  const luckDiceMin = me?.luckCard?.effect === 'dice_d8' ? 8 : 0
-  const effectiveDiceType = Math.max(baseDiceType, luckDiceMin)
+  const effectiveDiceType = me?.luckCard?.effect === 'dice_d8' ? 8 : baseDiceType
 
   function rollDice() {
     if (rolling || myRoll !== null || !myChar) return
