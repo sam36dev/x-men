@@ -7,6 +7,7 @@ const CATEGORY_LABELS = {
   wins:    '⚔️ Vitórias',
   villains:'☠️ Vilões',
   feats:   '⚡ Feitos',
+  mission: '🎯 Missões',
 }
 
 export default function Trophies({ user, onBack }) {
@@ -29,7 +30,7 @@ export default function Trophies({ user, onBack }) {
     return (b.stats?.totalWins || 0) - (a.stats?.totalWins || 0)
   })
 
-  const categories = ['wins', 'villains', 'feats']
+  const categories = ['wins', 'villains', 'feats', 'mission']
 
   return (
     <div className="trophies-page">
@@ -62,7 +63,7 @@ export default function Trophies({ user, onBack }) {
                       <div key={t.id} className={`trophy-card ${earned ? 'trophy-card--earned' : 'trophy-card--locked'}`}>
                         <span className="trophy-card__icon">{earned ? t.icon : '🔒'}</span>
                         <span className="trophy-card__name">{earned ? t.name : '???'}</span>
-                        <span className="trophy-card__desc">{t.desc}</span>
+                        {t.category !== 'mission' && <span className="trophy-card__desc">{t.desc}</span>}
                       </div>
                     )
                   })}

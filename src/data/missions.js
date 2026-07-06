@@ -1,0 +1,16 @@
+export const MISSIONS = [
+  { id: 1,  name: 'Vença Magneto',                                goal: 1,  auto: 'villain_kill',       villainId: 1 },
+  { id: 2,  name: 'Vença Mystique',                               goal: 1,  auto: 'villain_kill',       villainId: 3 },
+  { id: 3,  name: 'Vença Sabretooth',                             goal: 1,  auto: 'villain_kill',       villainId: 5 },
+  { id: 4,  name: 'Vença Apocalypse',                             goal: 1,  auto: 'villain_kill',       villainId: 2 },
+  { id: 5,  name: 'Vença Juggernaut',                             goal: 1,  auto: 'villain_kill',       villainId: 4 },
+  { id: 6,  name: 'Complete 10 voltas',                           goal: 10, auto: 'turns'                            },
+  { id: 7,  name: 'Salve 4 civis',                                goal: 4,  auto: 'civilians'                        },
+  { id: 8,  name: 'Mate um X-Men',                                goal: 1,  auto: 'kill_player'                      },
+  { id: 9,  name: 'Sobreviva a 4 lutas contra Apocalypse',        goal: 4,  auto: 'survive_apocalypse'               },
+  { id: 10, name: 'Recrute 4 X-Men',                              goal: 4,  auto: null                               },
+  { id: 11, name: 'Não permita nenhum X-Men cumprir suas missões', goal: 1, auto: null                               },
+  { id: 12, name: 'Não permita 3 Sentinelas no tabuleiro',        goal: 1,  auto: null                               },
+  { id: 13, name: 'Vença Omega Red',                              goal: 1,  auto: 'villain_kill',       villainId: 7 },
+  { id: 14, name: 'Vença 2 Sentinelas',                           goal: 2,  auto: 'sentinel_kill'                    },
+]

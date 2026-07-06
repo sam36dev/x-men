@@ -21,6 +21,22 @@ export const TROPHIES = [
   { id: 'c_ability',       icon: '⚡', name: 'Poder Desperto',          desc: 'Ativou uma habilidade [C]',            category: 'feats'   },
   { id: 'max_damage',      icon: '💥', name: 'Dano Crítico',            desc: 'Causou 15 ou mais de dano em batalha', category: 'feats'   },
   { id: 'comeback',        icon: '🔥', name: 'De Volta',               desc: 'Venceu com HP ≤ 20 após estar perdendo',category: 'feats'  },
+
+  // Missões
+  { id: 'mission_1',  icon: '🧲', name: 'Vença Magneto',                                desc: '', category: 'mission' },
+  { id: 'mission_2',  icon: '🎭', name: 'Vença Mystique',                               desc: '', category: 'mission' },
+  { id: 'mission_3',  icon: '🦷', name: 'Vença Sabretooth',                             desc: '', category: 'mission' },
+  { id: 'mission_4',  icon: '☠️', name: 'Vença Apocalypse',                             desc: '', category: 'mission' },
+  { id: 'mission_5',  icon: '🪨', name: 'Vença Juggernaut',                             desc: '', category: 'mission' },
+  { id: 'mission_6',  icon: '🔄', name: 'Complete 10 voltas',                           desc: '', category: 'mission' },
+  { id: 'mission_7',  icon: '🏘️', name: 'Salve 4 civis',                                desc: '', category: 'mission' },
+  { id: 'mission_8',  icon: '💀', name: 'Mate um X-Men',                                desc: '', category: 'mission' },
+  { id: 'mission_9',  icon: '🛡️', name: 'Sobreviva a 4 lutas contra Apocalypse',        desc: '', category: 'mission' },
+  { id: 'mission_10', icon: '👥', name: 'Recrute 4 X-Men',                              desc: '', category: 'mission' },
+  { id: 'mission_11', icon: '🚫', name: 'Não permita nenhum X-Men cumprir suas missões', desc: '', category: 'mission' },
+  { id: 'mission_12', icon: '🤖', name: 'Não permita 3 Sentinelas no tabuleiro',        desc: '', category: 'mission' },
+  { id: 'mission_13', icon: '🪱', name: 'Vença Omega Red',                              desc: '', category: 'mission' },
+  { id: 'mission_14', icon: '⚙️', name: 'Vença 2 Sentinelas',                           desc: '', category: 'mission' },
 ]
 
 // Mapeamento villainId → trophyId

@@ -1016,6 +1016,37 @@
   letter-spacing: 0.04em;
 }
 
+/* Mission */
+.player-mission {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  flex-wrap: wrap;
+}
+.player-mission__label { color: #aaa; }
+.player-mission__name {
+  color: #ffdd88;
+  letter-spacing: 0.03em;
+}
+.player-mission__name--done { color: #88ff99; text-decoration: line-through; }
+.player-mission__progress { color: #ffaa55; font-size: 0.65rem; }
+.player-mission__done { color: #88ff99; font-weight: bold; }
+.mission-complete-btn {
+  background: rgba(100, 220, 100, 0.12);
+  border: 1px solid rgba(100, 220, 100, 0.4);
+  color: #88ff99;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  padding: 0.1rem 0.35rem;
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 0.04em;
+}
+.mission-complete-btn:hover { background: rgba(100, 220, 100, 0.22); }
+
 /* Bomb */
 .bomb-assign-btn {
   margin-top: 0.4rem;

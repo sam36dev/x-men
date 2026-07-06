@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
+import { MISSIONS } from '../data/missions'
+import { awardTrophy } from '../userService'
 import './Game.css'
 
 function ConfirmModal({ onConfirm, onCancel }) {
@@ -319,6 +321,14 @@ export default function Game({ roomCode, playerId, onLeave }) {
     if (!cur) { setMyVillainRoll(null); setVillainDiceDisplay(null); setVillainDiceDisplay2(null); setVillainRolling(false) }
   }, [room?.villainBattle])
 
+  // Award mission trophy when completed
+  useEffect(() => {
+    const player = room?.players?.[playerId]
+    if (player?.missionCompleted && player.missionId) {
+      awardTrophy(playerId, `mission_${player.missionId}`)
+    }
+  }, [room?.players?.[playerId]?.missionCompleted])
+
   if (!room) return <div className="game-loading">Carregando…</div>
 
   const players = Object.entries(room.players || {}).map(([id, p]) => ({ id, ...p }))
@@ -546,6 +556,21 @@ export default function Game({ roomCode, playerId, onLeave }) {
                 {me.luckCard.icon} {me.luckCard.name}
                 {me.luckCard.charges != null ? ` — ${me.luckCard.charges}×` : me.luckCard.description ? ` — ${me.luckCard.description}` : ''}
                 {isHost && <button className="forge-clear-btn" onClick={() => clearLuckCard(roomCode, me.id)}>✕</button>}
+              </div>
+            )}
+            {me.missionId && (
+              <div className="player-mission">
+                <span className="player-mission__label">🎯</span>
+                <span className={`player-mission__name ${me.missionCompleted ? 'player-mission__name--done' : ''}`}>
+                  {MISSIONS.find(m => m.id === me.missionId)?.name}
+                </span>
+                {(MISSIONS.find(m => m.id === me.missionId)?.goal ?? 1) > 1 && (
+                  <span className="player-mission__progress">{me.missionProgress ?? 0}/{MISSIONS.find(m => m.id === me.missionId)?.goal}</span>
+                )}
+                {me.missionCompleted && <span className="player-mission__done">✓</span>}
+                {isHost && !me.missionCompleted && MISSIONS.find(m => m.id === me.missionId)?.auto === null && (
+                  <button className="mission-complete-btn" onClick={() => completeMission(roomCode, me.id)}>✓ Concluir</button>
+                )}
               </div>
             )}
             {me?.bomb && (
@@ -927,6 +952,21 @@ export default function Game({ roomCode, playerId, onLeave }) {
                     {p.luckCard.icon} {p.luckCard.name}
                     {p.luckCard.charges != null ? ` — ${p.luckCard.charges}×` : p.luckCard.description ? ` — ${p.luckCard.description}` : ''}
                     {isHost && <button className="forge-clear-btn" onClick={() => clearLuckCard(roomCode, p.id)}>✕</button>}
+                  </div>
+                )}
+                {p.missionId && (
+                  <div className="player-mission">
+                    <span className="player-mission__label">🎯</span>
+                    <span className={`player-mission__name ${p.missionCompleted ? 'player-mission__name--done' : ''}`}>
+                      {p.missionCompleted || isHost ? MISSIONS.find(m => m.id === p.missionId)?.name : '???'}
+                    </span>
+                    {isHost && (MISSIONS.find(m => m.id === p.missionId)?.goal ?? 1) > 1 && (
+                      <span className="player-mission__progress">{p.missionProgress ?? 0}/{MISSIONS.find(m => m.id === p.missionId)?.goal}</span>
+                    )}
+                    {p.missionCompleted && <span className="player-mission__done">✓</span>}
+                    {isHost && !p.missionCompleted && MISSIONS.find(m => m.id === p.missionId)?.auto === null && (
+                      <button className="mission-complete-btn" onClick={() => completeMission(roomCode, p.id)}>✓ Concluir</button>
+                    )}
                   </div>
                 )}
                 {isHost && (

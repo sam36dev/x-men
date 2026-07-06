@@ -5,6 +5,7 @@ import {
 } from 'firebase/database'
 import { characters } from './data/characters'
 import { villains } from './data/villains'
+import { MISSIONS } from './data/missions'
 
 function _toArr(val) {
   if (!val) return []
@@ -68,6 +69,10 @@ export async function startGame(code) {
     playerResets[`players/${pid}/abilityDisabled`]   = false
     playerResets[`players/${pid}/forgeItem`]         = null
     playerResets[`players/${pid}/luckCard`]          = null
+    const mission = MISSIONS[Math.floor(Math.random() * MISSIONS.length)]
+    playerResets[`players/${pid}/missionId`]         = mission.id
+    playerResets[`players/${pid}/missionProgress`]   = 0
+    playerResets[`players/${pid}/missionCompleted`]  = false
   })
   const villainHp = {}
   villains.forEach(v => { villainHp[v.id] = v.hp })
@@ -147,8 +152,12 @@ async function _resolveVillainBattle(code, vb) {
       if (damage > 0) {
         const killTx = await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
           cur => Math.max(0, (cur ?? 0) - damage))
-        if ((killTx.snapshot.val() ?? 0) === 0 && villainId === 9) {
-          await runTransaction(ref(db, `rooms/${code}/players/${playerId}/tokens`), cur => (cur || 0) + 1)
+        const jNewHp = killTx.snapshot.val() ?? 0
+        if (jNewHp === 0) {
+          if (villainId === 9) await runTransaction(ref(db, `rooms/${code}/players/${playerId}/tokens`), cur => (cur || 0) + 1)
+          await _checkMissionProgress(code, playerId, 'villain_kill', { villainId })
+          await _checkMissionProgress(code, playerId, 'sentinel_kill', { villainId })
+          if (villainId === 9) await _checkMissionProgress(code, playerId, 'civilians', {})
         }
       }
       await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), p => {
@@ -197,6 +206,11 @@ async function _resolveVillainBattle(code, vb) {
               }
             }
           }
+
+          // Missions: villain kill
+          await _checkMissionProgress(code, playerId, 'villain_kill', { villainId })
+          if (isSentinel) await _checkMissionProgress(code, playerId, 'sentinel_kill', { villainId })
+          if (villainId === 9) await _checkMissionProgress(code, playerId, 'civilians', {})
         }
       }
     } else if (villainRoll > playerRoll) {
@@ -220,6 +234,9 @@ async function _resolveVillainBattle(code, vb) {
         }
       }
     }
+
+    // Mission: survive_apocalypse — every battle vs Apocalypse regardless of outcome
+    if (villainId === 2) await _checkMissionProgress(code, playerId, 'survive_apocalypse', {})
 
     // Post-battle luck card updates
     {
@@ -399,6 +416,7 @@ export async function changeTurn(code, playerId, delta) {
     const newTokens = delta > 0 ? (p.tokens || 0) + 1 : (p.tokens || 0)
     return { ...p, turn: newTurn, tokens: newTokens }
   })
+  if (delta > 0) await _checkMissionProgress(code, playerId, 'turns', {})
 }
 
 export async function togglePreB(code, playerId) {
@@ -435,6 +453,30 @@ export async function submitRoll(code, playerId, roll, preB) {
   if (after.attackerRoll != null && after.defenderRoll != null) {
     await _resolveBattle(code, after)
   }
+}
+
+async function _checkMissionProgress(code, playerId, eventType, eventData = {}) {
+  await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), player => {
+    if (!player || player.missionCompleted) return player
+    const mission = MISSIONS.find(m => m.id === player.missionId)
+    if (!mission || mission.auto !== eventType) return player
+    if (eventType === 'villain_kill' && mission.villainId !== eventData.villainId) return player
+    if (eventType === 'sentinel_kill' && (eventData.villainId < 8 || eventData.villainId > 10)) return player
+    const newProgress = (player.missionProgress || 0) + 1
+    const completed = newProgress >= mission.goal
+    return { ...player, missionProgress: newProgress, missionCompleted: completed }
+  })
+}
+
+export async function completeMission(code, playerId) {
+  const snap = await get(ref(db, `rooms/${code}/players/${playerId}`))
+  const player = snap.val()
+  const mission = MISSIONS.find(m => m.id === player?.missionId)
+  if (!mission) return
+  await update(ref(db, `rooms/${code}/players/${playerId}`), {
+    missionProgress: mission.goal,
+    missionCompleted: true,
+  })
 }
 
 function _isCActive(player, char) {
@@ -728,6 +770,13 @@ async function _resolveBattle(code, battle) {
       return { effect: next.effect, name: next.name, rounds: 3, ownerId: next.ownerId, queue: rest.length > 0 ? rest : null }
     }
     return null
+  }
+
+  // Mission: kill_player — check before applying damage
+  if (loserId && winnerId && damage > 0) {
+    const loserHpBefore = (loserId === attackerId ? attPlayer : defPlayer)?.hp ?? 100
+    const wouldDie = loserHpBefore <= damage && loserCEffect !== 'C_SURVIVE_1'
+    if (wouldDie) await _checkMissionProgress(code, winnerId, 'kill_player', {})
   }
 
   // Apply damage to loser HP + track loss streak + consume Vampira round if she lost
