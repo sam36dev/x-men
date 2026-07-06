@@ -141,12 +141,35 @@ async function _resolveVillainBattle(code, vb) {
       if (villain?.id === 4) damage = Math.max(0, damage - 10)
 
       if (damage > 0) {
-        await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
+        const killTx = await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
           (cur) => Math.max(0, (cur ?? 0) - damage))
+        const newVillainHp = killTx.snapshot.val() ?? 0
+
         await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
           if (!p) return null
           return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
         })
+
+        if (newVillainHp === 0) {
+          // Sentinela (Salve os Civis!, id=9): +1 token when defeated
+          if (villainId === 9) {
+            await runTransaction(ref(db, `rooms/${code}/players/${playerId}/tokens`),
+              (cur) => (cur || 0) + 1)
+          }
+
+          // Laboratório (id=10) spawn: when any boss (id 1-7) dies and lab is alive → respawn plain Sentinela (id=8) with 50 HP
+          if (villainId >= 1 && villainId <= 7) {
+            const labHpSnap = await get(ref(db, `rooms/${code}/villainHp/10`))
+            const labHp = labHpSnap.val() ?? 0
+            if (labHp > 0) {
+              const sentHpSnap = await get(ref(db, `rooms/${code}/villainHp/8`))
+              const sentHp = sentHpSnap.val() ?? 0
+              if (sentHp === 0) {
+                await set(ref(db, `rooms/${code}/villainHp/8`), 50)
+              }
+            }
+          }
+        }
       }
     } else if (villainRoll > playerRoll) {
       // Dente de Sabre (id=5): double damage against Wolverine (characterId=1)

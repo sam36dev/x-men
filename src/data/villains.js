@@ -110,5 +110,53 @@ export const villains = [
     mechanic: "Tentáculos: drena 5 HP do jogador por turno enquanto estiver na mesma região",
     specialRule: "Vitalidade Parasita: recupera metade do dano que causar em batalha",
     reward: "Vencer Omega Red imuniza o jogador contra dreno de HP pelo resto da partida"
+  },
+  {
+    id: 8,
+    name: "Sentinela",
+    alias: "Modelo Mark V",
+    image: "/images/sentinel.jpg",
+    hp: 70,
+    diceType: 8,
+    difficulty: "medio",
+    difficultyLabel: "Médio",
+    color: "#9955FF",
+    gradient: "linear-gradient(160deg, #1a0040 0%, #0d0020 50%, #070010 100%)",
+    typeIcon: "🤖",
+    mechanic: "Unidade de patrulha padrão — sem habilidade especial",
+    specialRule: null,
+    reward: "Derrote para avançar"
+  },
+  {
+    id: 9,
+    name: "Sentinela (Salve os Civis!)",
+    alias: "Modelo Caçador",
+    image: "/images/sentinel2.jpg",
+    hp: 60,
+    diceType: 6,
+    difficulty: "medio",
+    difficultyLabel: "Médio",
+    color: "#FF8833",
+    gradient: "linear-gradient(160deg, #2a1200 0%, #150900 50%, #0a0500 100%)",
+    typeIcon: "🤖",
+    mechanic: "Ao ser derrotado: vencedor resgata um civil e ganha +1 token",
+    specialRule: "save_civilian",
+    reward: "+1 token ao derrotar"
+  },
+  {
+    id: 10,
+    name: "Sentinela (Laboratório)",
+    alias: "Fábrica de Sentinelas",
+    image: "/images/sentinel.jpg",
+    hp: 100,
+    diceType: 10,
+    difficulty: "dificil",
+    difficultyLabel: "Difícil",
+    color: "#FF3333",
+    gradient: "linear-gradient(160deg, #2a0000 0%, #150000 50%, #0a0000 100%)",
+    typeIcon: "🏭",
+    mechanic: "Enquanto vivo: cada boss derrotado ressurge como Sentinela com 50 HP",
+    specialRule: "lab_spawn",
+    reward: "Destrua o laboratório para impedir os reforços"
   }
 ]
