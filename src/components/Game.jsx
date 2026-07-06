@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, selectCharacter, addLocalPlayer } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import { MISSIONS } from '../data/missions'
@@ -194,7 +194,132 @@ function AbilityModal({ char, onClose }) {
   )
 }
 
-export default function Game({ roomCode, playerId, onLeave }) {
+function LocalPlayerCard({ p, roomCode, battle, villainBattle, players, villains, villainHp, onRemove }) {
+  const [myRoll,        setMyRoll]        = useState(null)
+  const [rolling,       setRolling]       = useState(false)
+  const [myVillainRoll, setMyVillainRoll] = useState(null)
+  const [villainRolling,setVillainRolling]= useState(false)
+
+  const char         = characters.find(c => c.id === p.characterId)
+  const isInBattle   = battle && (battle.attackerId === p.id || battle.defenderId === p.id)
+  const isAttacker   = battle?.attackerId === p.id
+  const myBattleRoll = battle ? (isAttacker ? battle.attackerRoll : battle.defenderRoll) : null
+  const isInVillain  = villainBattle?.playerId === p.id
+  const activeVillain= villainBattle ? villains.find(v => v.id === villainBattle.villainId) : null
+  const diceType     = char?.diceType ?? 6
+  const takenIds     = players.map(pl => pl.characterId).filter(Boolean)
+
+  useEffect(() => { if (!battle)       setMyRoll(null)        }, [battle])
+  useEffect(() => { if (!villainBattle) setMyVillainRoll(null) }, [villainBattle])
+
+  function rollDice() {
+    if (rolling || myRoll !== null) return
+    setRolling(true)
+    let ticks = 0
+    const iv = setInterval(() => {
+      ticks++
+      setMyRoll(Math.ceil(Math.random() * diceType))
+      if (ticks >= 12) {
+        clearInterval(iv)
+        const v = Math.ceil(Math.random() * diceType)
+        setMyRoll(v); setRolling(false)
+        submitRoll(roomCode, p.id, v, false)
+      }
+    }, 80)
+  }
+
+  function rollVillain() {
+    if (villainRolling || myVillainRoll !== null) return
+    setVillainRolling(true)
+    let ticks = 0
+    const iv = setInterval(() => {
+      ticks++
+      if (ticks >= 12) {
+        clearInterval(iv)
+        const v = Math.ceil(Math.random() * diceType)
+        setMyVillainRoll(v); setVillainRolling(false)
+        submitVillainRoll(roomCode, p.id, v)
+      }
+    }, 80)
+  }
+
+  return (
+    <div className="local-player-card" style={{ '--accent': char?.color ?? '#FFD700' }}>
+      <div className="local-player-card__toprow">
+        <span className="local-player-card__label">🎮 {p.name}</span>
+        {char && <span className="local-player-card__hp">❤️ {p.hp}</span>}
+        <button className="local-player-card__remove" onClick={onRemove} title="Remover jogador">✕</button>
+      </div>
+
+      {!char ? (
+        <div className="local-char-grid">
+          {characters.map(c => (
+            <button
+              key={c.id}
+              className={`local-char-btn ${takenIds.includes(c.id) ? 'local-char-btn--taken' : ''}`}
+              disabled={takenIds.includes(c.id)}
+              onClick={() => selectCharacter(roomCode, p.id, c.id)}
+            >
+              {c.typeIcon} {c.name}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <>
+          <span className="local-player-card__char" style={{ color: char.color }}>{char.typeIcon} {char.name} · D{diceType}</span>
+
+          {isInVillain && (
+            <div className="local-battle-row">
+              <span>⚔️ vs {activeVillain?.name}</span>
+              {villainBattle.playerRoll == null && myVillainRoll === null ? (
+                <button className="local-roll-btn" onClick={rollVillain} disabled={villainRolling}>
+                  🎲 {villainRolling ? '…' : 'Rolar'}
+                </button>
+              ) : (
+                <span className="local-roll-val">{face(myVillainRoll ?? villainBattle.playerRoll, diceType)}</span>
+              )}
+            </div>
+          )}
+
+          {isInBattle && (
+            <div className="local-battle-row">
+              <span>⚔️ {isAttacker ? 'Atacando' : 'Defendendo'}</span>
+              {myBattleRoll == null && myRoll === null ? (
+                <button className="local-roll-btn" onClick={rollDice} disabled={rolling}>
+                  🎲 {rolling ? '…' : 'Rolar'}
+                </button>
+              ) : (
+                <span className="local-roll-val">{face(myRoll ?? myBattleRoll, diceType)}</span>
+              )}
+            </div>
+          )}
+
+          {!battle && !isInVillain && p.alive && (
+            <div className="local-attack-row">
+              {players.filter(pl => pl.id !== p.id && pl.alive).map(pl => {
+                const plChar = characters.find(c => c.id === pl.characterId)
+                return (
+                  <button key={pl.id} className="local-attack-btn" style={{ '--c': plChar?.color ?? '#FFD700' }}
+                    onClick={() => attackPlayer(roomCode, p.id, pl.id)}>
+                    ⚔️ {pl.name}
+                  </button>
+                )
+              })}
+              {villains.filter(v => (villainHp[v.id] ?? v.hp) > 0).map(v => (
+                <button key={v.id} className="local-attack-btn" style={{ '--c': v.color }}
+                  onClick={() => attackVillain(roomCode, p.id, v.id)}>
+                  ⚔️ {v.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+export default function Game({ roomCode, playerId, user, onLeave }) {
   const [room, setRoom] = useState(null)
   const [myRoll, setMyRoll] = useState(null)
   const [rolling, setRolling] = useState(false)
@@ -211,6 +336,8 @@ export default function Game({ roomCode, playerId, onLeave }) {
   const [forgeTarget, setForgeTarget] = useState(null)
   const [luckTarget, setLuckTarget] = useState(null)
   const [missionHidden, setMissionHidden] = useState(false)
+  const [localPlayerIds, setLocalPlayerIds] = useState([])
+  const isTester = user?.displayName === 'tester'
   const [showAbility, setShowAbility] = useState(false)
   const [bombDetonate, setBombDetonate] = useState(null) // { playerId, playerName }
   const prevBattleRef = useRef(null)
@@ -642,6 +769,43 @@ export default function Game({ roomCode, playerId, onLeave }) {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Local players (tester only) */}
+      {isTester && (
+        <div className="local-players-section">
+          <button
+            className="local-add-btn"
+            onClick={async () => {
+              const name = `Local ${localPlayerIds.length + 2}`
+              const id = crypto.randomUUID()
+              await addLocalPlayer(roomCode, id, name)
+              setLocalPlayerIds(ids => [...ids, id])
+            }}
+          >
+            ➕ Adicionar jogador local
+          </button>
+          {localPlayerIds.map(lid => {
+            const lp = players.find(p => p.id === lid)
+            if (!lp) return null
+            return (
+              <LocalPlayerCard
+                key={lid}
+                p={lp}
+                roomCode={roomCode}
+                battle={battle}
+                villainBattle={villainBattle}
+                players={players}
+                villains={villains}
+                villainHp={villainHp}
+                onRemove={async () => {
+                  await leaveRoom(roomCode, lid)
+                  setLocalPlayerIds(ids => ids.filter(i => i !== lid))
+                }}
+              />
+            )
+          })}
         </div>
       )}
 

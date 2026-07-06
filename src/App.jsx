@@ -109,6 +109,7 @@ export default function App() {
         <Game
           roomCode={roomCode}
           playerId={playerId}
+          user={user}
           onLeave={goHome}
         />
       )}

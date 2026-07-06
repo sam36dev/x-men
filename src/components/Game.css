@@ -1058,6 +1058,121 @@
 }
 .mission-toggle-btn:hover { opacity: 1; }
 
+/* Local players (tester) */
+.local-players-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+.local-add-btn {
+  align-self: flex-start;
+  background: rgba(0, 180, 255, 0.1);
+  border: 1.5px dashed rgba(0, 180, 255, 0.4);
+  color: #66ddff;
+  border-radius: 8px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+}
+.local-add-btn:hover { background: rgba(0, 180, 255, 0.18); }
+.local-player-card {
+  background: rgba(0, 180, 255, 0.06);
+  border: 1px solid rgba(var(--accent-rgb, 0,180,255), 0.25);
+  border-left: 3px solid var(--accent, #66ddff);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.local-player-card__toprow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.local-player-card__label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  color: #66ddff;
+  letter-spacing: 0.05em;
+  flex: 1;
+}
+.local-player-card__hp { font-size: 0.75rem; color: #ff8888; }
+.local-player-card__remove {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0 0.2rem;
+}
+.local-player-card__remove:hover { color: #ff4444; }
+.local-player-card__char {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+}
+.local-char-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+}
+.local-char-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #ccc;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+}
+.local-char-btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); color: #fff; }
+.local-char-btn--taken { opacity: 0.35; cursor: not-allowed; }
+.local-battle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  color: #ccc;
+}
+.local-roll-btn {
+  background: rgba(255,200,0,0.12);
+  border: 1.5px solid rgba(255,200,0,0.4);
+  color: #FFCC00;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+}
+.local-roll-btn:hover { background: rgba(255,200,0,0.22); }
+.local-roll-val {
+  font-size: 1.1rem;
+  color: #FFCC00;
+}
+.local-attack-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.1rem;
+}
+.local-attack-btn {
+  background: rgba(var(--c-rgb, 255,100,0), 0.1);
+  border: 1px solid color-mix(in srgb, var(--c, #ff6400) 40%, transparent);
+  color: var(--c, #ff6400);
+  border-radius: 6px;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.45rem;
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+}
+.local-attack-btn:hover { opacity: 0.85; }
+
 /* Bomb */
 .bomb-assign-btn {
   margin-top: 0.4rem;
