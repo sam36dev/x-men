@@ -186,7 +186,14 @@ async function _resolveVillainBattle(code, vb) {
       return
     }
 
+    // [A] passive abilities in villain battle
+    const playerEffect = !_hasLuck(playerData, 'disable_abilities') && !playerData?.abilityDisabled
+      ? playerChar?.ability?.effect : null
+
     if (playerRoll > villainRoll) {
+      // MIN_DAMAGE_3 (Ciclope): minimum 3 damage when winning
+      if (playerEffect === 'MIN_DAMAGE_3' && damage > 0) damage = Math.max(3, damage)
+
       // Juggernaut (id=4): absorbs first 10 damage
       if (villain?.id === 4) damage = Math.max(0, damage - 10)
 
@@ -233,7 +240,9 @@ async function _resolveVillainBattle(code, vb) {
       if (damage > 0) {
         await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
           if (!p) return null
-          const newHp = Math.max(0, p.hp - damage)
+          // HEAL_HALF (Wolverine): recover half damage taken
+          const healed = playerEffect === 'HEAL_HALF' ? Math.floor(damage / 2) : 0
+          const newHp = Math.max(0, p.hp - damage + healed)
           return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1 }
         })
 
@@ -606,8 +615,10 @@ async function _resolveBattle(code, battle) {
     : _isCActive(defPlayer, defChar) ? (defChar?.abilityC?.effect ?? null) : null
 
   // [C] C_ABSORB_SURE / C_PIERCE_SURE guarantee [A] activation
-  let attActivated = attEffect ? _rollsChance(attChance) : false
-  let defActivated = defEffect ? _rollsChance(defChance) : false
+  // Passive abilities always activate regardless of tokens
+  const PASSIVE_EFFECTS = new Set(['HEAL_HALF', 'MIN_DAMAGE_3'])
+  let attActivated = attEffect ? (PASSIVE_EFFECTS.has(attEffect) || _rollsChance(attChance)) : false
+  let defActivated = defEffect ? (PASSIVE_EFFECTS.has(defEffect) || _rollsChance(defChance)) : false
   if (attCEffect === 'C_ABSORB_SURE' && attEffect === 'ABSORB') attActivated = true
   if (attCEffect === 'C_PIERCE_SURE' && attEffect === 'PIERCE') attActivated = true
   if (defCEffect === 'C_ABSORB_SURE' && defEffect === 'ABSORB') defActivated = true
