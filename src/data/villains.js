@@ -59,7 +59,7 @@ export const villains = [
     color: "#CC4400",
     gradient: "linear-gradient(160deg, #2a0800 0%, #150400 50%, #0a0200 100%)",
     typeIcon: "🪨",
-    mechanic: "Imparável: absorve os primeiros 10 de dano de cada batalha",
+    mechanic: "Imparável: absorve qualquer ataque com dano de 2 ou menos",
     specialRule: "Não contra-ataca na primeira rodada — o jogador ataca duas vezes",
     reward: "Vencer Juggernaut concede +20 HP ao vencedor"
   },

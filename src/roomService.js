@@ -195,7 +195,9 @@ async function _resolveVillainBattle(code, vb) {
 
     if (playerRoll > villainRoll) {
       // MIN_DAMAGE_3 (Ciclope): minimum 3 damage when winning
-      if (playerEffect === 'MIN_DAMAGE_3' && damage > 0) damage = Math.max(3, damage)
+      const minDmgActivated = playerEffect === 'MIN_DAMAGE_3' && damage > 0
+      if (minDmgActivated) damage = Math.max(3, damage)
+      if (minDmgActivated) await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
 
       // Juggernaut (id=4): absorbs attacks of 2 or less damage
       if (villain?.id === 4 && damage <= 2) {
@@ -274,6 +276,8 @@ async function _resolveVillainBattle(code, vb) {
       if (villain?.id === 5 && playerChar?.id === 1) damage *= 2
 
       if (damage > 0) {
+        if (playerEffect === 'HEAL_HALF')
+          await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
         await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
           if (!p) return null
           // HEAL_HALF (Wolverine): recover half damage taken

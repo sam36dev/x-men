@@ -436,7 +436,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         const damage = Math.abs(playerRoll - villainRoll)
         const playerWon = playerRoll > villainRoll
         const tied = playerRoll === villainRoll
-        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false })
+        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null })
         setMyVillainRoll(null)
         setShaking(true)
         setTimeout(() => setShaking(false), 550)
@@ -897,6 +897,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                   {villainResult.playerWon && !villainResult.absorbed && `🏆 Você venceu! ${villainResult.playerRoll} > ${villainResult.villainRoll} → Vilão −${villainResult.damage} HP`}
                   {villainResult.playerWon && villainResult.absorbed  && `🛡️ Dano absorvido! ${villainResult.playerRoll} > ${villainResult.villainRoll} — Juggernaut bloqueou o ataque`}
                   {!villainResult.playerWon && !villainResult.tied && `💥 Você perdeu! ${villainResult.villainRoll} > ${villainResult.playerRoll} → −${villainResult.damage} HP`}
+                  {villainResult.abilityActivated && (
+                    <span className="ability-activated"> ⚡ {villainResult.abilityActivated} ativado!</span>
+                  )}
                 </p>
               </>
             )
