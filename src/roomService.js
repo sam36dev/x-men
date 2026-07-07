@@ -465,8 +465,12 @@ export async function submitRoll(code, playerId, roll, preB) {
   if (!battle || battle.resolved) return
 
   const isAttacker = battle.attackerId === playerId
+  const isDefender = battle.defenderId === playerId
+  if (!isAttacker && !isDefender) return // not in this battle
+
   const myKey = isAttacker ? 'attackerRoll' : 'defenderRoll'
   const myPrebKey = isAttacker ? 'attackerPreB' : 'defenderPreB'
+  if (battle[myKey] != null) return // already rolled
 
   await update(ref(db), {
     [`rooms/${code}/battle/${myKey}`]: roll,

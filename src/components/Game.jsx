@@ -389,6 +389,12 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     if (!cur) setMyRoll(null)
   }, [room?.battle])
 
+  // Reset roll state when active player changes so each player can roll independently
+  useEffect(() => {
+    setMyRoll(null)
+    setRolling(false)
+  }, [activeId])
+
   // Opponent dice animation when their roll arrives
   const currentOppRoll = room?.battle
     ? (room.battle.attackerId === activeId ? room.battle.defenderRoll : room.battle.attackerRoll)
