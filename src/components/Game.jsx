@@ -1302,7 +1302,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                     <span className="villain-card__name">{v.name}</span>
                     {(isLocked || defeated) && (
                       <span className="villain-card__diff">
-                        {isLocked ? '🔒 Bloqueado' : '💀 Derrotado'}
+                        {isLocked ? '🔒 Bloqueado' : (
+                          <>💀 {room.villainKillers?.[v.id] ? `${room.villainKillers[v.id]}` : 'Derrotado'}</>
+                        )}
                       </span>
                     )}
                   </div>

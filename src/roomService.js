@@ -163,10 +163,13 @@ async function _resolveVillainBattle(code, vb) {
     // Jubileu: player always wins vs Sentinelas — damage goes to villain, player never takes damage
     if (_hasLuck(playerData, 'sentinel_wins') && isSentinel) {
       if (damage > 0) {
+        await runTransaction(ref(db, `rooms/${code}/villainDamage/${villainId}/${playerId}`),
+          cur => (cur || 0) + damage)
         const killTx = await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
           cur => Math.max(0, (cur ?? 0) - damage))
         const jNewHp = killTx.snapshot.val() ?? 0
         if (jNewHp === 0) {
+          await set(ref(db, `rooms/${code}/villainKillers/${villainId}`), playerData?.name ?? 'X-Men')
           if (villainId === 9) await runTransaction(ref(db, `rooms/${code}/players/${playerId}/tokens`), cur => (cur || 0) + 1)
           await _checkMissionProgress(code, playerId, 'villain_kill', { villainId })
           await _checkMissionProgress(code, playerId, 'sentinel_kill', { villainId })
@@ -198,6 +201,10 @@ async function _resolveVillainBattle(code, vb) {
       if (villain?.id === 4) damage = Math.max(0, damage - 10)
 
       if (damage > 0) {
+        // Track cumulative damage per player for kill credit
+        await runTransaction(ref(db, `rooms/${code}/villainDamage/${villainId}/${playerId}`),
+          cur => (cur || 0) + damage)
+
         const killTx = await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
           (cur) => Math.max(0, (cur ?? 0) - damage))
         const newVillainHp = killTx.snapshot.val() ?? 0
@@ -208,6 +215,16 @@ async function _resolveVillainBattle(code, vb) {
         })
 
         if (newVillainHp === 0) {
+          // Credit kill to highest-damage player
+          const dmgSnap = await get(ref(db, `rooms/${code}/villainDamage/${villainId}`))
+          const dmgMap = dmgSnap.val() || {}
+          const killerId = Object.entries(dmgMap).sort((a, b) => b[1] - a[1])[0]?.[0]
+          if (killerId) {
+            const killerSnap = await get(ref(db, `rooms/${code}/players/${killerId}`))
+            const killerName = killerSnap.val()?.name ?? 'X-Men'
+            await set(ref(db, `rooms/${code}/villainKillers/${villainId}`), killerName)
+          }
+
           // Sentinela (Salve os Civis!, id=9): +1 token when defeated
           if (villainId === 9) {
             await runTransaction(ref(db, `rooms/${code}/players/${playerId}/tokens`),
