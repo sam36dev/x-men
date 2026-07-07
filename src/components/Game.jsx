@@ -553,8 +553,8 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     }, 80)
   }
 
-  const alivePlayers = players.filter(p => p.id !== activeId && p.alive)
-  const deadPlayers  = players.filter(p => p.id !== activeId && !p.alive)
+  const alivePlayers = players.filter(p => p.id !== playerId && p.alive)
+  const deadPlayers  = players.filter(p => p.id !== playerId && !p.alive)
 
   async function handleLeave() {
     await leaveRoom(roomCode, playerId)
@@ -631,7 +631,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               <div className="game-hp-bar">
                 <div
                   className="game-hp-bar__fill"
-                  style={{ width: `${me.hp}%`, background: me.hp < 30 ? '#ff2222' : me.hp < 60 ? '#ffaa00' : '#ff5555' }}
+                  style={{ width: `${me.hp}%`, background: me.hp < 30 ? '#ff2222' : me.hp < 60 ? '#ffaa00' : '#44cc66' }}
                 />
               </div>
               <span className="game-hp-label" style={{ color: me.hp < 30 ? '#ff4444' : me.hp < 60 ? '#ffaa00' : '#ff8888' }}>
@@ -1113,7 +1113,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 <div className="opp-hp-bar">
                   <div style={{
                     width: `${p.hp}%`, height: '100%', borderRadius: '3px',
-                    background: p.hp < 30 ? '#ff2222' : p.hp < 60 ? '#ffaa00' : '#ff5555',
+                    background: p.hp < 30 ? '#ff2222' : p.hp < 60 ? '#ffaa00' : '#44cc66',
                     transition: 'width 0.5s ease',
                   }} />
                 </div>
