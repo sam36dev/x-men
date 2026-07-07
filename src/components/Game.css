@@ -1372,8 +1372,48 @@
   border-left: 3px solid #66ff88;
   background: rgba(100, 255, 136, 0.05);
 }
+.controlar-btn {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.55);
+  border: none;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.1rem 0;
+  line-height: 1.2;
+  border-radius: 0 0 6px 6px;
+}
+.controlar-btn--on {
+  background: rgba(100,255,136,0.3);
+}
+.topbar-controlling {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(100,255,136,0.15);
+  border: 1px solid rgba(100,255,136,0.4);
+  border-radius: 6px;
+  padding: 0.15rem 0.4rem;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  color: #66ff88;
+  letter-spacing: 0.04em;
+}
+.topbar-controlling__clear {
+  background: none;
+  border: none;
+  color: #66ff88;
+  cursor: pointer;
+  font-size: 0.65rem;
+  padding: 0;
+  opacity: 0.7;
+}
+.topbar-controlling__clear:hover { opacity: 1; }
 
 .opponent-row__img-wrap {
+  position: relative;
   width: 48px;
   height: 48px;
   border-radius: 7px;

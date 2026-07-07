@@ -594,6 +594,12 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
       {/* Top bar */}
       <div className="game-topbar">
         <span className="game-room">SALA: <strong>{roomCode}</strong></span>
+        {isTester && activeControllerId && (
+          <span className="topbar-controlling">
+            🎮 {activeP?.name}
+            <button className="topbar-controlling__clear" onClick={() => setActiveControllerId(null)}>✕</button>
+          </span>
+        )}
         {(battle || villainBattle) && (
           <button className="game-clearbattle" onClick={() => clearBattle(roomCode)} title="Limpar batalha travada">🗑️ Limpar</button>
         )}
@@ -603,7 +609,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
       {/* My card */}
       {me && myChar && (
         <div className="game-mycard" style={{ '--accent': transformedChar.color }}>
-          <div className="game-mycard__img-wrap" onClick={() => { setShowAbility(true); if (isTester) setActiveControllerId(null) }} style={{ cursor: 'pointer' }} title="Ver habilidades">
+          <div className="game-mycard__img-wrap" onClick={() => setShowAbility(true)} style={{ cursor: 'pointer' }} title="Ver habilidades">
             <img src={myChar.image} alt={myChar.name} onError={e => { e.target.style.display = 'none' }} />
             <span className="game-mycard__fallback">{myChar.name.charAt(0)}</span>
             <span className="game-mycard__ability-hint">📖</span>
@@ -1061,17 +1067,20 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
           const inBattle = battle && (battle.attackerId === p.id || battle.defenderId === p.id)
           return (
             <div key={p.id} className={`opponent-row ${isTester && activeId === p.id ? 'opponent-row--active' : ''}`}>
-              <div className="opponent-row__img-wrap"
-                onClick={isTester ? () => setActiveControllerId(p.id) : undefined}
-                style={isTester ? { cursor: 'pointer' } : undefined}
-              >
+              <div className="opponent-row__img-wrap">
                 <img src={char?.image} alt={char?.name} onError={e => { e.target.style.display = 'none' }} />
                 <span className="opponent-row__fallback" style={{ color: char?.color }}>{char?.name?.charAt(0)}</span>
+                {isTester && (
+                  <button
+                    className={`controlar-btn ${activeId === p.id ? 'controlar-btn--on' : ''}`}
+                    onClick={() => setActiveControllerId(activeId === p.id ? null : p.id)}
+                    title={activeId === p.id ? 'Soltar controle' : 'Controlar este jogador'}
+                  >
+                    🎮
+                  </button>
+                )}
               </div>
-              <div className="opponent-row__info"
-                onClick={isTester ? () => setActiveControllerId(p.id) : undefined}
-                style={isTester ? { cursor: 'pointer' } : undefined}
-              >
+              <div className="opponent-row__info">
                 <span className="opponent-row__name">{p.name}</span>
                 <span className="opponent-row__char" style={{ color: char?.color }}>
                   {char?.typeIcon} {char?.name} · D{
@@ -1224,7 +1233,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 className="attack-btn"
                 style={{ '--c': char?.color ?? '#FFD700' }}
                 onClick={() => { attackPlayer(roomCode, activeId, p.id); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                disabled={!!battle || inBattle || !activeP?.alive}
+                disabled={!!battle || inBattle || !activeP?.alive || p.id === activeId}
               >
                 ⚔️
               </button>
