@@ -492,18 +492,18 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     : isTransformed ? (myChar.transformation.diceType ?? myChar.diceType ?? 6)
     : (myChar?.diceType ?? 6)
   const effectiveDiceType =
-    me?.luckCard?.effect === 'dice_d8'           ? 8
-    : me?.luckCard?.effect === 'dice_d12_until_12' ? 12
-    : me?.luckCard?.effect === 'dice_d20'          ? 20
+    me?.luckCards?.dice_d20          ? 20
+    : me?.luckCards?.dice_d12_until_12 ? 12
+    : me?.luckCards?.dice_d8           ? 8
     : baseDiceType
 
   // Active controlled player (tester feature)
   const activeP    = players.find(p => p.id === activeId) ?? me
   const activeChar = characters.find(c => c.id === activeP?.characterId) ?? myChar
   const activeEffectiveDiceType =
-    activeP?.luckCard?.effect === 'dice_d8'            ? 8
-    : activeP?.luckCard?.effect === 'dice_d12_until_12' ? 12
-    : activeP?.luckCard?.effect === 'dice_d20'          ? 20
+    activeP?.luckCards?.dice_d20          ? 20
+    : activeP?.luckCards?.dice_d12_until_12 ? 12
+    : activeP?.luckCards?.dice_d8           ? 8
     : (activeChar?.id === 1 && (activeP?.hp ?? 100) <= 30 ? 10 : (activeChar?.diceType ?? 6))
 
   function rollDice() {
@@ -658,7 +658,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               <button
                 className={`my-b-btn ${me.preB ? 'my-b-btn--on' : ''}`}
                 onClick={() => togglePreB(roomCode, playerId)}
-                disabled={!!isInBattle || (!me.preB && (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1)) || me.luckCard?.effect === 'disable_abilities'}
+                disabled={!!isInBattle || (!me.preB && (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1)) || !!me.luckCards?.disable_abilities}
               >
                 <span className="my-b-btn__tag">[B]</span>
                 <span className="my-b-btn__name">{myChar.abilityB.name}</span>
@@ -671,7 +671,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 <span className={`player-c-cond ${isCConditionMet(me, myChar, players) ? 'player-c-cond--met' : ''}`}>
                   {cConditionLabel(myChar.abilityC.condition)}
                 </span>
-                {me.luckCard?.effect === 'disable_abilities'
+                {me.luckCards?.disable_abilities
                   ? <span className="player-c-active" style={{ background: '#660000' }}>BLOQUEADO</span>
                   : isCConditionMet(me, myChar, players) && <span className="player-c-active">ATIVO</span>}
               </div>
@@ -692,13 +692,13 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 {isHost && <button className="forge-clear-btn" onClick={() => clearForgeItem(roomCode, me.id)}>✕</button>}
               </div>
             )}
-            {me.luckCard && (
-              <div className="player-luck-card">
-                {me.luckCard.icon} {me.luckCard.name}
-                {me.luckCard.charges != null ? ` — ${me.luckCard.charges}×` : me.luckCard.description ? ` — ${me.luckCard.description}` : ''}
-                {isHost && <button className="forge-clear-btn" onClick={() => clearLuckCard(roomCode, me.id)}>✕</button>}
+            {me.luckCards && Object.values(me.luckCards).map(card => (
+              <div key={card.effect} className="player-luck-card">
+                {card.icon} {card.name}
+                {card.charges != null ? ` — ${card.charges}×` : card.description ? ` — ${card.description}` : ''}
+                {isHost && <button className="forge-clear-btn" onClick={() => clearLuckCard(roomCode, me.id, card.effect)}>✕</button>}
               </div>
-            )}
+            ))}
             {me.missionId && (
               <div className="player-mission">
                 <span className="player-mission__label">🎯</span>
@@ -1098,9 +1098,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 <span className="opponent-row__name">{p.name}</span>
                 <span className="opponent-row__char" style={{ color: char?.color }}>
                   {char?.typeIcon} {char?.name} · D{
-                    p.luckCard?.effect === 'dice_d8' ? 8
-                    : p.luckCard?.effect === 'dice_d12_until_12' ? 12
-                    : p.luckCard?.effect === 'dice_d20' ? 20
+                    p.luckCards?.dice_d20          ? 20
+                    : p.luckCards?.dice_d12_until_12 ? 12
+                    : p.luckCards?.dice_d8           ? 8
                     : (char?.diceType ?? 6)
                   } <span className="player-wins-count">({p.wins || 0})</span>
                 </span>
@@ -1158,13 +1158,13 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                     {isHost && <button className="forge-clear-btn" onClick={() => clearForgeItem(roomCode, p.id)}>✕</button>}
                   </div>
                 )}
-                {p.luckCard && (
-                  <div className="player-luck-card">
-                    {p.luckCard.icon} {p.luckCard.name}
-                    {p.luckCard.charges != null ? ` — ${p.luckCard.charges}×` : p.luckCard.description ? ` — ${p.luckCard.description}` : ''}
-                    {isHost && <button className="forge-clear-btn" onClick={() => clearLuckCard(roomCode, p.id)}>✕</button>}
+                {p.luckCards && Object.values(p.luckCards).map(card => (
+                  <div key={card.effect} className="player-luck-card">
+                    {card.icon} {card.name}
+                    {card.charges != null ? ` — ${card.charges}×` : card.description ? ` — ${card.description}` : ''}
+                    {isHost && <button className="forge-clear-btn" onClick={() => clearLuckCard(roomCode, p.id, card.effect)}>✕</button>}
                   </div>
-                )}
+                ))}
                 {p.missionId && (
                   <div className="player-mission">
                     <span className="player-mission__label">🎯</span>

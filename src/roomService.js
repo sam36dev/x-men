@@ -7,6 +7,10 @@ import { characters } from './data/characters'
 import { villains } from './data/villains'
 import { MISSIONS } from './data/missions'
 
+function _hasLuck(player, effect) {
+  return !!(player?.luckCards?.[effect])
+}
+
 function _toArr(val) {
   if (!val) return []
   if (Array.isArray(val)) return val
@@ -77,7 +81,7 @@ export async function startGame(code) {
     playerResets[`players/${pid}/preBUsedOnTurn`]    = 0
     playerResets[`players/${pid}/abilityDisabled`]   = false
     playerResets[`players/${pid}/forgeItem`]         = null
-    playerResets[`players/${pid}/luckCard`]          = null
+    playerResets[`players/${pid}/luckCards`]         = null
     const mission = MISSIONS[Math.floor(Math.random() * MISSIONS.length)]
     playerResets[`players/${pid}/missionId`]         = mission.id
     playerResets[`players/${pid}/missionProgress`]   = 0
@@ -157,7 +161,7 @@ async function _resolveVillainBattle(code, vb) {
     const isSentinel = villainId >= 8 && villainId <= 10
 
     // Jubileu: player always wins vs Sentinelas — damage goes to villain, player never takes damage
-    if (playerData?.luckCard?.effect === 'sentinel_wins' && isSentinel) {
+    if (_hasLuck(playerData, 'sentinel_wins') && isSentinel) {
       if (damage > 0) {
         const killTx = await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
           cur => Math.max(0, (cur ?? 0) - damage))
@@ -173,7 +177,7 @@ async function _resolveVillainBattle(code, vb) {
         if (!p) return null
         return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
       })
-      await runTransaction(ref(db, `rooms/${code}/players/${playerId}/luckCard`), card => {
+      await runTransaction(ref(db, `rooms/${code}/players/${playerId}/luckCards/sentinel_wins`), card => {
         if (!card) return null
         const n = (card.charges || 0) - 1
         return n <= 0 ? null : { ...card, charges: n }
@@ -251,19 +255,19 @@ async function _resolveVillainBattle(code, vb) {
     {
       const luckOps = []
       // Phoenix: decrement charges
-      if (playerData?.luckCard?.effect === 'dice_d20') {
-        luckOps.push(runTransaction(ref(db, `rooms/${code}/players/${playerId}/luckCard`), card => {
+      if (_hasLuck(playerData, 'dice_d20')) {
+        luckOps.push(runTransaction(ref(db, `rooms/${code}/players/${playerId}/luckCards/dice_d20`), card => {
           if (!card) return null
           const n = (card.charges || 0) - 1
           return n <= 0 ? null : { ...card, charges: n }
         }))
       }
       // Ciclope: clear when raw roll hits 12
-      if (playerData?.luckCard?.effect === 'dice_d12_until_12' && playerRoll >= 12)
-        luckOps.push(update(ref(db, `rooms/${code}/players/${playerId}`), { luckCard: null }))
+      if (_hasLuck(playerData, 'dice_d12_until_12') && playerRoll >= 12)
+        luckOps.push(update(ref(db, `rooms/${code}/players/${playerId}`), { 'luckCards/dice_d12_until_12': null }))
       // Sanguessuga: clear when player wins
-      if (playerData?.luckCard?.effect === 'disable_abilities' && playerRoll > villainRoll)
-        luckOps.push(update(ref(db, `rooms/${code}/players/${playerId}`), { luckCard: null }))
+      if (_hasLuck(playerData, 'disable_abilities') && playerRoll > villainRoll)
+        luckOps.push(update(ref(db, `rooms/${code}/players/${playerId}`), { 'luckCards/disable_abilities': null }))
       if (luckOps.length) await Promise.all(luckOps)
     }
 
@@ -348,7 +352,7 @@ export async function clearForgeItem(code, playerId) {
 
 export async function applyLuckCard(code, playerId, card) {
   if (card.persistent) {
-    await update(ref(db, `rooms/${code}/players/${playerId}`), { luckCard: card })
+    await update(ref(db, `rooms/${code}/players/${playerId}`), { [`luckCards/${card.effect}`]: card })
     return
   }
   switch (card.type) {
@@ -394,8 +398,12 @@ export async function applyLuckCard(code, playerId, card) {
   }
 }
 
-export async function clearLuckCard(code, playerId) {
-  await update(ref(db, `rooms/${code}/players/${playerId}`), { luckCard: null })
+export async function clearLuckCard(code, playerId, effect) {
+  if (effect) {
+    await update(ref(db, `rooms/${code}/players/${playerId}`), { [`luckCards/${effect}`]: null })
+  } else {
+    await update(ref(db, `rooms/${code}/players/${playerId}`), { luckCards: null })
+  }
 }
 
 export async function healPlayer(code, targetPlayerId, amount = 2) {
@@ -588,13 +596,13 @@ async function _resolveBattle(code, battle) {
   let defEffect = defPlayer?.abilityDisabled ? null : (defChar?.ability?.effect ?? null)
 
   // Sanguessuga: disable all abilities for affected player
-  if (attPlayer?.luckCard?.effect === 'disable_abilities') attEffect = null
-  if (defPlayer?.luckCard?.effect === 'disable_abilities') defEffect = null
+  if (_hasLuck(attPlayer, 'disable_abilities')) attEffect = null
+  if (_hasLuck(defPlayer, 'disable_abilities')) defEffect = null
 
   // [C] effects — automatic when condition is met
-  const attCEffect = attPlayer?.luckCard?.effect === 'disable_abilities' ? null
+  const attCEffect = _hasLuck(attPlayer, 'disable_abilities') ? null
     : _isCActive(attPlayer, attChar) ? (attChar?.abilityC?.effect ?? null) : null
-  const defCEffect = defPlayer?.luckCard?.effect === 'disable_abilities' ? null
+  const defCEffect = _hasLuck(defPlayer, 'disable_abilities') ? null
     : _isCActive(defPlayer, defChar) ? (defChar?.abilityC?.effect ?? null) : null
 
   // [C] C_ABSORB_SURE / C_PIERCE_SURE guarantee [A] activation
@@ -621,8 +629,8 @@ async function _resolveBattle(code, battle) {
   let defBEffect = defPreB ? (defChar?.abilityB?.effect ?? null) : null
 
   // Sanguessuga: disable B abilities
-  if (attPlayer?.luckCard?.effect === 'disable_abilities') attBEffect = null
-  if (defPlayer?.luckCard?.effect === 'disable_abilities') defBEffect = null
+  if (_hasLuck(attPlayer, 'disable_abilities')) attBEffect = null
+  if (_hasLuck(defPlayer, 'disable_abilities')) defBEffect = null
 
   // B_NINJA cancels opponent's [B] (unless both have it — then both apply)
   if (attBEffect === 'B_NINJA' && defBEffect !== 'B_NINJA') defBEffect = null
@@ -903,8 +911,8 @@ async function _resolveBattle(code, battle) {
     const luckOps = []
     // Phoenix: decrement charges for both players
     for (const [pid, player] of [[attackerId, attPlayer], [defenderId, defPlayer]]) {
-      if (player?.luckCard?.effect === 'dice_d20') {
-        luckOps.push(runTransaction(ref(db, `rooms/${code}/players/${pid}/luckCard`), card => {
+      if (_hasLuck(player, 'dice_d20')) {
+        luckOps.push(runTransaction(ref(db, `rooms/${code}/players/${pid}/luckCards/dice_d20`), card => {
           if (!card) return null
           const n = (card.charges || 0) - 1
           return n <= 0 ? null : { ...card, charges: n }
@@ -912,13 +920,13 @@ async function _resolveBattle(code, battle) {
       }
     }
     // Ciclope: clear when player's raw roll hits 12
-    if (attPlayer?.luckCard?.effect === 'dice_d12_until_12' && battle.attackerRoll >= 12)
-      luckOps.push(update(ref(db, `rooms/${code}/players/${attackerId}`), { luckCard: null }))
-    if (defPlayer?.luckCard?.effect === 'dice_d12_until_12' && battle.defenderRoll >= 12)
-      luckOps.push(update(ref(db, `rooms/${code}/players/${defenderId}`), { luckCard: null }))
+    if (_hasLuck(attPlayer, 'dice_d12_until_12') && battle.attackerRoll >= 12)
+      luckOps.push(update(ref(db, `rooms/${code}/players/${attackerId}`), { 'luckCards/dice_d12_until_12': null }))
+    if (_hasLuck(defPlayer, 'dice_d12_until_12') && battle.defenderRoll >= 12)
+      luckOps.push(update(ref(db, `rooms/${code}/players/${defenderId}`), { 'luckCards/dice_d12_until_12': null }))
     // Sanguessuga: clear for the winner
-    if (winnerId && allPlayers.find(p => p.id === winnerId)?.luckCard?.effect === 'disable_abilities')
-      luckOps.push(update(ref(db, `rooms/${code}/players/${winnerId}`), { luckCard: null }))
+    if (winnerId && _hasLuck(allPlayers.find(p => p.id === winnerId), 'disable_abilities'))
+      luckOps.push(update(ref(db, `rooms/${code}/players/${winnerId}`), { 'luckCards/disable_abilities': null }))
     if (luckOps.length) await Promise.all(luckOps)
   }
 
