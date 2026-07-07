@@ -1058,6 +1058,29 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         </div>
       )}
 
+      {/* Tester: seletor de vez de atacar */}
+      {isTester && players.filter(p => p.alive).length > 0 && (
+        <div className="turn-selector">
+          <span className="turn-selector__label">Vez de:</span>
+          <div className="turn-selector__btns">
+            {players.filter(p => p.alive).map(p => {
+              const c = characters.find(ch => ch.id === p.characterId)
+              const isActive = activeId === p.id
+              return (
+                <button
+                  key={p.id}
+                  className={`turn-sel-btn ${isActive ? 'turn-sel-btn--on' : ''}`}
+                  style={{ '--tc': c?.color ?? '#FFD700' }}
+                  onClick={() => setActiveControllerId(isActive ? null : p.id === playerId ? null : p.id)}
+                >
+                  {c?.typeIcon ?? '?'} {p.name}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Jogadores */}
       <div className="game-opponents">
         <h3 className="game-section-title">Jogadores</h3>
@@ -1070,15 +1093,6 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               <div className="opponent-row__img-wrap">
                 <img src={char?.image} alt={char?.name} onError={e => { e.target.style.display = 'none' }} />
                 <span className="opponent-row__fallback" style={{ color: char?.color }}>{char?.name?.charAt(0)}</span>
-                {isTester && (
-                  <button
-                    className={`controlar-btn ${activeId === p.id ? 'controlar-btn--on' : ''}`}
-                    onClick={() => setActiveControllerId(activeId === p.id ? null : p.id)}
-                    title={activeId === p.id ? 'Soltar controle' : 'Controlar este jogador'}
-                  >
-                    🎮
-                  </button>
-                )}
               </div>
               <div className="opponent-row__info">
                 <span className="opponent-row__name">{p.name}</span>

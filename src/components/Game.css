@@ -1057,6 +1057,55 @@
 }
 .mission-toggle-btn:hover { opacity: 1; }
 
+/* Turn selector (tester) */
+.turn-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  background: rgba(0,0,0,0.25);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-wrap: wrap;
+}
+.turn-selector__label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.45);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.turn-selector__btns {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.turn-sel-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  color: rgba(255,255,255,0.65);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.turn-sel-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+.turn-sel-btn--on {
+  background: color-mix(in srgb, var(--tc) 25%, transparent);
+  border-color: var(--tc);
+  color: var(--tc);
+  font-weight: 600;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--tc) 40%, transparent);
+}
+
 /* Local players (tester) */
 .local-players-section {
   display: flex;
@@ -1372,22 +1421,6 @@
   border-left: 3px solid #66ff88;
   background: rgba(100, 255, 136, 0.05);
 }
-.controlar-btn {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(0,0,0,0.55);
-  border: none;
-  font-size: 0.75rem;
-  cursor: pointer;
-  padding: 0.1rem 0;
-  line-height: 1.2;
-  border-radius: 0 0 6px 6px;
-}
-.controlar-btn--on {
-  background: rgba(100,255,136,0.3);
-}
 .topbar-controlling {
   display: flex;
   align-items: center;
@@ -1413,14 +1446,12 @@
 .topbar-controlling__clear:hover { opacity: 1; }
 
 .opponent-row__img-wrap {
-  position: relative;
   width: 48px;
   height: 48px;
   border-radius: 7px;
   overflow: hidden;
   flex-shrink: 0;
   background: rgba(0,0,0,0.4);
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
