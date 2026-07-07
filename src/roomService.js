@@ -215,15 +215,31 @@ async function _resolveVillainBattle(code, vb) {
         })
 
         if (newVillainHp === 0) {
-          // Credit kill to highest-damage player
+          // Credit kill to highest-damage player; tie-break: prefer player with matching mission
           const dmgSnap = await get(ref(db, `rooms/${code}/villainDamage/${villainId}`))
           const dmgMap = dmgSnap.val() || {}
-          const killerId = Object.entries(dmgMap).sort((a, b) => b[1] - a[1])[0]?.[0]
-          if (killerId) {
-            const killerSnap = await get(ref(db, `rooms/${code}/players/${killerId}`))
-            const killerName = killerSnap.val()?.name ?? 'X-Men'
-            await set(ref(db, `rooms/${code}/villainKillers/${villainId}`), killerName)
+          const entries = Object.entries(dmgMap)
+          const maxDmg = entries.length ? Math.max(...entries.map(([, d]) => d)) : 0
+          const topIds = entries.filter(([, d]) => d === maxDmg).map(([id]) => id)
+
+          const allPSnap = await get(ref(db, `rooms/${code}/players`))
+          const allPData = allPSnap.val() || {}
+
+          let killerId = topIds[0] ?? playerId
+          if (topIds.length > 1) {
+            const withMission = topIds.find(pid => {
+              const pd = allPData[pid]
+              if (!pd || pd.missionCompleted) return false
+              const m = MISSIONS.find(m => m.id === pd.missionId)
+              if (!m) return false
+              return (m.auto === 'villain_kill' && m.villainId === villainId) ||
+                     (m.auto === 'sentinel_kill' && isSentinel)
+            })
+            if (withMission) killerId = withMission
           }
+
+          const killerName = allPData[killerId]?.name ?? 'X-Men'
+          await set(ref(db, `rooms/${code}/villainKillers/${villainId}`), killerName)
 
           // Sentinela (Salve os Civis!, id=9): +1 token when defeated
           if (villainId === 9) {
@@ -244,10 +260,10 @@ async function _resolveVillainBattle(code, vb) {
             }
           }
 
-          // Missions: villain kill
-          await _checkMissionProgress(code, playerId, 'villain_kill', { villainId })
-          if (isSentinel) await _checkMissionProgress(code, playerId, 'sentinel_kill', { villainId })
-          if (villainId === 9) await _checkMissionProgress(code, playerId, 'civilians', {})
+          // Missions: go to credited killer (not necessarily last-hit player)
+          await _checkMissionProgress(code, killerId, 'villain_kill', { villainId })
+          if (isSentinel) await _checkMissionProgress(code, killerId, 'sentinel_kill', { villainId })
+          if (villainId === 9) await _checkMissionProgress(code, killerId, 'civilians', {})
         }
       }
     } else if (villainRoll > playerRoll) {
