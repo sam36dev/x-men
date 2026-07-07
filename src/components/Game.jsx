@@ -547,8 +547,8 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     }, 80)
   }
 
-  const alivePlayers = players.filter(p => p.id !== playerId && p.alive)
-  const deadPlayers  = players.filter(p => p.id !== playerId && !p.alive)
+  const alivePlayers = players.filter(p => p.id !== activeId && p.alive)
+  const deadPlayers  = players.filter(p => p.id !== activeId && !p.alive)
 
   async function handleLeave() {
     await leaveRoom(roomCode, playerId)
