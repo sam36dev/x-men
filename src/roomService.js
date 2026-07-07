@@ -197,8 +197,11 @@ async function _resolveVillainBattle(code, vb) {
       // MIN_DAMAGE_3 (Ciclope): minimum 3 damage when winning
       if (playerEffect === 'MIN_DAMAGE_3' && damage > 0) damage = Math.max(3, damage)
 
-      // Juggernaut (id=4): absorbs first 10 damage
-      if (villain?.id === 4) damage = Math.max(0, damage - 10)
+      // Juggernaut (id=4): absorbs attacks of 2 or less damage
+      if (villain?.id === 4 && damage <= 2) {
+        await update(ref(db, `rooms/${code}/villainBattle`), { absorbed: true })
+        damage = 0
+      }
 
       if (damage > 0) {
         // Track cumulative damage per player for kill credit
