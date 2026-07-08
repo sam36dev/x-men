@@ -506,6 +506,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
 
   // Active controlled player (tester feature)
   const activeP    = players.find(p => p.id === activeId) ?? me
+  const isParalyzed = !!(activeP?.paralyzedUntil != null && (activeP?.turn ?? 1) <= activeP.paralyzedUntil)
   const activeChar = characters.find(c => c.id === activeP?.characterId) ?? myChar
   const activeEffectiveDiceType =
     activeP?.luckCards?.dice_d20          ? 20
@@ -752,6 +753,11 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 )}
               </div>
             )}
+            {isParalyzed && (
+              <div className="paralyzed-banner">
+                🔵 Paralizado por {(activeP?.paralyzedUntil ?? 0) - (activeP?.turn ?? 1) + 1} turno(s)
+              </div>
+            )}
             {me?.bomb && (
               <div className="bomb-row">
                 <span className="bomb-row__icon">💣</span>
@@ -840,6 +846,12 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             </p>
             {activatedAbilityLabel && (
               <p className="ability-activated">⚡ {activatedAbilityLabel}</p>
+            )}
+            {result?.psychicTarget && (
+              <p className="ability-activated">🧠 Dano Psíquico → {result.psychicTarget.name} −3 HP</p>
+            )}
+            {result?.paralysisInfo && (
+              <p className="ability-activated">🔵 {result.paralysisInfo.name} paralizado por {result.paralysisInfo.turns} turno(s)!</p>
             )}
           </div>
         )
@@ -1237,7 +1249,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 className="attack-btn"
                 style={{ '--c': char?.color ?? '#FFD700' }}
                 onClick={() => { attackPlayer(roomCode, activeId, p.id); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                disabled={!!battle || inBattle || !activeP?.alive || p.id === activeId}
+                disabled={!!battle || inBattle || !activeP?.alive || p.id === activeId || isParalyzed}
               >
                 ⚔️
               </button>
@@ -1319,7 +1331,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                     <button
                       className="villain-attack-btn"
                       style={{ '--vc': v.color }}
-                      disabled={!!battle || (!!villainBattle && !villainBattle?.resolved) || !activeP?.alive || defeated}
+                      disabled={!!battle || (!!villainBattle && !villainBattle?.resolved) || !activeP?.alive || defeated || isParalyzed}
                       onClick={() => { attackVillain(roomCode, activeId, v.id); window.scrollTo({ top: 0, behavior: 'instant' }) }}
                     >
                       ⚔️

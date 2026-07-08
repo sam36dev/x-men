@@ -2015,6 +2015,26 @@
   color: #00ee77;
 }
 
+/* Paralysis banner */
+.paralyzed-banner {
+  background: rgba(100, 150, 255, 0.12);
+  border: 1.5px solid rgba(100, 150, 255, 0.45);
+  border-radius: 8px;
+  color: #88aaff;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0.35rem 0.75rem;
+  text-align: center;
+  margin: 0.25rem 0;
+  animation: paralyze-pulse 1s ease-in-out infinite alternate;
+}
+@keyframes paralyze-pulse {
+  from { box-shadow: 0 0 4px rgba(100,150,255,0.2); }
+  to   { box-shadow: 0 0 10px rgba(100,150,255,0.6); }
+}
+
 /* Mission victory overlay */
 .mission-victory-overlay {
   position: fixed;

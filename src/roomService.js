@@ -677,7 +677,7 @@ async function _resolveBattle(code, battle) {
 
   // [C] C_ABSORB_SURE / C_PIERCE_SURE guarantee [A] activation
   // Passive abilities always activate regardless of tokens
-  const PASSIVE_EFFECTS = new Set(['HEAL_HALF', 'MIN_DAMAGE_3', 'DODGE_TOKEN'])
+  const PASSIVE_EFFECTS = new Set(['HEAL_HALF', 'MIN_DAMAGE_3', 'DODGE_TOKEN', 'PSYCHIC_DAMAGE'])
   let attActivated = attEffect ? (PASSIVE_EFFECTS.has(attEffect) || _rollsChance(attChance)) : false
   let defActivated = defEffect ? (PASSIVE_EFFECTS.has(defEffect) || _rollsChance(defChance)) : false
   if (attCEffect === 'C_ABSORB_SURE' && attEffect === 'ABSORB') attActivated = true
@@ -834,6 +834,46 @@ async function _resolveBattle(code, battle) {
 
     // [C] C_HIGH_CARD (Gambit HP ≤ 20) — damage fixed at 5, overrides everything
     if (attCEffect === 'C_HIGH_CARD' || defCEffect === 'C_HIGH_CARD') damage = 5
+  }
+
+  // [B] B_PARALYZE (Jean Grey) — winner paralyzes loser for N turns (N = winner's tokens)
+  if (loserId && winnerId && winnerBEffect === 'B_PARALYZE') {
+    const winnerPlayer = winnerId === attackerId ? attPlayer : defPlayer
+    const loserPlayerDataB = loserId === attackerId ? attPlayer : defPlayer
+    const N = Math.max(1, winnerPlayer?.tokens ?? 1)
+    const untilTurn = (loserPlayerDataB?.turn ?? 1) + N - 1
+    await update(ref(db, `rooms/${code}/players/${loserId}`), { paralyzedUntil: untilTurn })
+    await update(battleRef, { paralysisInfo: { name: loserPlayerDataB?.name ?? 'Oponente', turns: N } })
+  }
+
+  // [A] PSYCHIC_DAMAGE (Jean Grey) — when Jean loses, deal 3 to a random alive player or villain
+  if (loserId && loserEffect === 'PSYCHIC_DAMAGE') {
+    const vHpSnap = await get(ref(db, `rooms/${code}/villainHp`))
+    const vHpData = vHpSnap.val() || {}
+    const targetPlayers = allPlayers.filter(p => p.id !== loserId && p.alive && (p.hp ?? 0) > 0)
+    const targetVillains = Object.entries(vHpData)
+      .filter(([, hp]) => hp > 0)
+      .map(([vid]) => ({ type: 'villain', id: Number(vid), name: villains.find(v => v.id === Number(vid))?.name ?? 'Boss' }))
+    const pool = [
+      ...targetPlayers.map(p => ({ type: 'player', id: p.id, name: p.name })),
+      ...targetVillains,
+    ]
+    if (pool.length > 0) {
+      const target = pool[Math.floor(Math.random() * pool.length)]
+      if (target.type === 'player') {
+        await runTransaction(ref(db, `rooms/${code}/players/${target.id}`), (p) => {
+          if (!p) return null
+          const newHp = Math.max(0, p.hp - 3)
+          return { ...p, hp: newHp, alive: newHp > 0 }
+        })
+      } else {
+        await runTransaction(ref(db, `rooms/${code}/villainHp/${target.id}`), (hp) => {
+          if (hp == null) return null
+          return Math.max(0, hp - 3)
+        })
+      }
+      await update(battleRef, { psychicTarget: { name: target.name, type: target.type, damage: 3 } })
+    }
   }
 
   const attAbilityName = attActivated && attChar?.ability
