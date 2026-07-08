@@ -23,7 +23,7 @@ export const characters = [
     team: "X-Men", number: "002",
     ability:  { name: "Raio Certeiro",        description: "Vencedor causa no mínimo 3 de dano",                   effect: "MIN_DAMAGE_3" },
     abilityB: { name: "Raio Concentrado",     description: "Dobra o resultado do dado nessa batalha",              effect: "B_DOUBLE_ROLL" },
-    abilityC: { name: "Raio Supremo",         description: "HP ≤ 50: dano causado é no mínimo 5",                  effect: "C_MIN_DAMAGE_5", condition: "hp_lte_50" }
+    abilityC: { name: "Raio Supremo",         description: "HP ≤ 20: dano causado é no mínimo 5",                  effect: "C_MIN_DAMAGE_5", condition: "hp_lte_20" }
   },
   {
     id: 3,
