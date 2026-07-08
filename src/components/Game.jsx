@@ -388,7 +388,8 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                          : defenderId === playerId ? !!(prev.defenderPreB) : false
         if (attackerId === playerId || defenderId === playerId) {
           resetBattleState(roomCode, playerId, myPreBUsed, me?.turn ?? 1)
-          if (myPreBUsed && myChar?.id === 6) addTrapCard(roomCode, playerId)
+          const myCharId = attackerId === playerId ? prev.attackerCharId : prev.defenderCharId
+          if (myPreBUsed && myCharId === 6) addTrapCard(roomCode, playerId)
         }
 
         setResult({
@@ -467,7 +468,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         if (vPlayerId === playerId) {
           const myVillainPreBUsed = !!(prev.playerPreB)
           resetBattleState(roomCode, playerId, myVillainPreBUsed, me?.turn ?? 1)
-          if (myVillainPreBUsed && myChar?.id === 6) addTrapCard(roomCode, playerId)
+          if (myVillainPreBUsed && prev.characterId === 6) addTrapCard(roomCode, playerId)
         }
       }
     }
