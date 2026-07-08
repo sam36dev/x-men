@@ -526,7 +526,7 @@ export async function submitRoll(code, playerId, roll, preB) {
 }
 
 async function _checkMissionProgress(code, playerId, eventType, eventData = {}) {
-  await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), player => {
+  const txResult = await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), player => {
     if (!player || player.missionCompleted) return player
     const mission = MISSIONS.find(m => m.id === player.missionId)
     if (!mission || mission.auto !== eventType) return player
@@ -536,6 +536,11 @@ async function _checkMissionProgress(code, playerId, eventType, eventData = {}) 
     const completed = newProgress >= mission.goal
     return { ...player, missionProgress: newProgress, missionCompleted: completed }
   })
+  const updated = txResult.snapshot.val()
+  if (updated?.missionCompleted) {
+    const mission = MISSIONS.find(m => m.id === updated.missionId)
+    await _triggerMissionVictory(code, playerId, updated.name, mission)
+  }
 }
 
 export async function completeMission(code, playerId) {
@@ -546,6 +551,16 @@ export async function completeMission(code, playerId) {
   await update(ref(db, `rooms/${code}/players/${playerId}`), {
     missionProgress: mission.goal,
     missionCompleted: true,
+  })
+  await _triggerMissionVictory(code, playerId, player.name, mission)
+}
+
+async function _triggerMissionVictory(code, playerId, playerName, mission) {
+  const alreadySnap = await get(ref(db, `rooms/${code}/missionWinner`))
+  if (alreadySnap.exists()) return // another player already won
+  await update(ref(db, `rooms/${code}`), {
+    missionWinner: { playerId, playerName, missionId: mission.id, missionName: mission.name },
+    status: 'ended',
   })
 }
 

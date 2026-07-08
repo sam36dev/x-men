@@ -453,13 +453,14 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     if (!cur) { setMyVillainRoll(null); setVillainDiceDisplay(null); setVillainDiceDisplay2(null); setVillainRolling(false) }
   }, [room?.villainBattle])
 
-  // Award mission trophy when completed
+  // Mission victory: show announcement + award trophy + end game
+  const missionWinner = room?.missionWinner
   useEffect(() => {
-    const player = room?.players?.[playerId]
-    if (player?.missionCompleted && player.missionId) {
-      awardTrophy(playerId, `mission_${player.missionId}`)
+    if (!missionWinner) return
+    if (missionWinner.playerId === playerId) {
+      awardTrophy(playerId, `mission_${missionWinner.missionId}`)
     }
-  }, [room?.players?.[playerId]?.missionCompleted])
+  }, [missionWinner?.playerId])
 
   if (!room) return <div className="game-loading">Carregando…</div>
 
@@ -576,6 +577,27 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
   }
 
   const activatedAbilityLabel = resolveActivatedAbility()
+
+  // Mission victory overlay — shown to ALL players
+  if (missionWinner) {
+    const isMe = missionWinner.playerId === playerId
+    const winnerChar = players.find(p => p.id === missionWinner.playerId)
+    const winnerCharData = characters.find(c => c.id === winnerChar?.characterId)
+    return (
+      <div className="mission-victory-overlay">
+        <div className="mission-victory-box">
+          <div className="mission-victory-icon">{winnerCharData?.typeIcon ?? '🎯'}</div>
+          <h1 className="mission-victory-title" style={{ color: winnerCharData?.color ?? '#FFD700' }}>
+            {missionWinner.playerName}
+          </h1>
+          <p className="mission-victory-sub">cumpriu a missão</p>
+          <p className="mission-victory-mission">"{missionWinner.missionName}"</p>
+          {isMe && <p className="mission-victory-trophy">🏆 Troféu desbloqueado!</p>}
+          <button className="mission-victory-btn" onClick={onLeave}>Voltar ao início</button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={`game-page ${shaking ? 'game-page--shake' : ''}`}>
