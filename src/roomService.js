@@ -677,7 +677,7 @@ async function _resolveBattle(code, battle) {
 
   // [C] C_ABSORB_SURE / C_PIERCE_SURE guarantee [A] activation
   // Passive abilities always activate regardless of tokens
-  const PASSIVE_EFFECTS = new Set(['HEAL_HALF', 'MIN_DAMAGE_3'])
+  const PASSIVE_EFFECTS = new Set(['HEAL_HALF', 'MIN_DAMAGE_3', 'DODGE_TOKEN'])
   let attActivated = attEffect ? (PASSIVE_EFFECTS.has(attEffect) || _rollsChance(attChance)) : false
   let defActivated = defEffect ? (PASSIVE_EFFECTS.has(defEffect) || _rollsChance(defChance)) : false
   if (attCEffect === 'C_ABSORB_SURE' && attEffect === 'ABSORB') attActivated = true
@@ -711,6 +711,15 @@ async function _resolveBattle(code, battle) {
   // [B] reroll: replaces roll before any modifier
   if (attBEffect === 'B_REROLL') attackerRoll = Math.ceil(Math.random() * (attChar?.diceType || 6))
   if (defBEffect === 'B_REROLL') defenderRoll = Math.ceil(Math.random() * (defChar?.diceType || 6))
+
+  // [B] B_TRAP_CARD (Gambit): if Gambit is the defender and declared trap, deal 6 to attacker now
+  if (defBEffect === 'B_TRAP_CARD') {
+    await runTransaction(ref(db, `rooms/${code}/players/${attackerId}`), (p) => {
+      if (!p) return null
+      const newHp = Math.max(0, (p.hp ?? 100) - 6)
+      return { ...p, hp: newHp, alive: newHp > 0 }
+    })
+  }
 
   // [C] C_MAX_ROLL — treat roll as max dice value
   if (attCEffect === 'C_MAX_ROLL') attackerRoll = attChar?.diceType ?? 6
@@ -815,6 +824,16 @@ async function _resolveBattle(code, battle) {
 
     // [C] C_DODGE_50 — 50% chance loser takes no damage
     if (loserCEffect === 'C_DODGE_50' && Math.random() < 0.5) damage = 0
+
+    // [A] DODGE_TOKEN (Gambit) — loser spends 1 token to take 0 damage
+    const loserPlayerData = loserId === attackerId ? attPlayer : defPlayer
+    if (loserEffect === 'DODGE_TOKEN' && (loserPlayerData?.tokens ?? 0) >= 1) {
+      damage = 0
+      await update(ref(db, `rooms/${code}/players/${loserId}`), { tokens: (loserPlayerData.tokens || 1) - 1 })
+    }
+
+    // [C] C_HIGH_CARD (Gambit HP ≤ 20) — damage fixed at 5, overrides everything
+    if (attCEffect === 'C_HIGH_CARD' || defCEffect === 'C_HIGH_CARD') damage = 5
   }
 
   const attAbilityName = attActivated && attChar?.ability

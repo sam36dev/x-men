@@ -79,9 +79,9 @@ export const characters = [
     type: "Energia", typeIcon: "🃏", hp: 100, diceType: 6, multiplier: 11,
     color: "#FF4499", gradient: "linear-gradient(160deg, #1a0020 0%, #0d0010 50%, #07000a 100%)",
     team: "X-Men", number: "006",
-    ability:  { name: "Carta Explosiva",      description: "Se tirou o valor máximo do dado, dano fixo é 15",      effect: "EXPLOSIVE"    },
-    abilityB: { name: "Baralho Explosivo",    description: "Rerola o dado automaticamente na resolução",           effect: "B_REROLL"     },
-    abilityC: { name: "Aposta Final",         description: "HP ≤ 40: +4 ao resultado do dado nessa batalha",       effect: "C_ROLL_BOOST_4", condition: "hp_lte_40" }
+    ability:  { name: "Esquiva",              description: "Ao perder, gasta 1 token para não sofrer dano",        effect: "DODGE_TOKEN"  },
+    abilityB: { name: "Carta Armadilha",      description: "Declare antes: se o oponente te atacar, sofre 6 de dano de armadilha antes de rolar", effect: "B_TRAP_CARD" },
+    abilityC: { name: "High Card",            description: "HP ≤ 20: toda batalha inflige ou recebe exatamente 5 de dano, independente do resultado", effect: "C_HIGH_CARD", condition: "hp_lte_20" }
   },
   {
     id: 7,
