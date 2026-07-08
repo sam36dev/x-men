@@ -151,7 +151,7 @@ export async function submitVillainRoll(code, playerId, roll, forgeItem, preB) {
   if (!txResult.committed) return
   console.log('[villain result]', { playerRoll: roll, villainRoll, die1, die2, villainDiceType })
 
-  await _resolveVillainBattle(code, { ...vb, playerRoll: roll, villainRoll, playerForgeId: forgeId, playerForgeBonus: forgeBonus })
+  await _resolveVillainBattle(code, { ...vb, playerRoll: roll, villainRoll, playerForgeId: forgeId, playerForgeBonus: forgeBonus, playerPreB: preB ?? false })
 }
 
 async function _resolveVillainBattle(code, vb) {
@@ -203,10 +203,17 @@ async function _resolveVillainBattle(code, vb) {
     const playerCEffect = !_hasLuck(playerData, 'disable_abilities') && !playerData?.abilityDisabled
       ? (_isCActive(playerData, playerChar) ? (playerChar?.abilityC?.effect ?? null) : null) : null
 
-    // Apply C roll modifiers before damage calc
+    // [B] effect for villain battle
+    const playerPreB = vb.playerPreB ?? false
+    const playerBEffect = !_hasLuck(playerData, 'disable_abilities') && playerPreB
+      ? (playerChar?.abilityB?.effect ?? null) : null
+    const playerBBonus = playerBEffect === 'B_PLUS_2' ? 2 : 0
+
+    // Apply C and B roll modifiers before damage calc
     let effectivePlayerRoll = playerRoll
     if (playerCEffect === 'C_MAX_ROLL') effectivePlayerRoll = playerChar?.diceType ?? 6
     if (playerCEffect === 'C_ROLL_BOOST_4') effectivePlayerRoll = playerRoll + 4
+    effectivePlayerRoll += playerBBonus
 
     damage = Math.abs(effectivePlayerRoll - villainRoll)
 
@@ -315,12 +322,14 @@ async function _resolveVillainBattle(code, vb) {
       }
 
       if (damage > 0) {
-        if (playerEffect === 'HEAL_HALF')
+        const healHalfActivated = playerEffect === 'HEAL_HALF'
+          && _rollsChance(_abilityChance(playerData, playerChar, []))
+        if (healHalfActivated)
           await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
         await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
           if (!p) return null
-          // HEAL_HALF (Wolverine): recover half damage taken
-          const healed = playerEffect === 'HEAL_HALF' ? Math.floor(damage / 2) : 0
+          // HEAL_HALF (Wolverine): recover half damage taken (token-probability)
+          const healed = healHalfActivated ? Math.floor(damage / 2) : 0
           let newHp = Math.max(0, p.hp - damage + healed)
           // [C] C_SURVIVE_1 (Colosso HP ≤ 20): survive with 1 HP instead of dying
           if (playerCEffect === 'C_SURVIVE_1' && newHp === 0) newHp = 1
@@ -347,8 +356,8 @@ async function _resolveVillainBattle(code, vb) {
       }
     }
 
-    // Store resolved damage so the client shows the correct value (not raw roll diff)
-    await update(ref(db, `rooms/${code}/villainBattle`), { resolvedDamage: damage })
+    // Store resolved damage + effective roll so the client shows correct values
+    await update(ref(db, `rooms/${code}/villainBattle`), { resolvedDamage: damage, playerBBonus, effectivePlayerRoll })
 
     // Mission: survive_apocalypse — every battle vs Apocalypse regardless of outcome
     if (villainId === 2) await _checkMissionProgress(code, playerId, 'survive_apocalypse', {})
@@ -815,7 +824,7 @@ async function _resolveBattle(code, battle) {
 
   // [C] C_ABSORB_SURE / C_PIERCE_SURE guarantee [A] activation
   // Passive abilities always activate regardless of tokens
-  const PASSIVE_EFFECTS = new Set(['HEAL_HALF', 'MIN_DAMAGE_3', 'DODGE_TOKEN', 'PSYCHIC_DAMAGE'])
+  const PASSIVE_EFFECTS = new Set(['MIN_DAMAGE_3', 'DODGE_TOKEN', 'PSYCHIC_DAMAGE'])
   let attActivated = attEffect ? (PASSIVE_EFFECTS.has(attEffect) || _rollsChance(attChance)) : false
   let defActivated = defEffect ? (PASSIVE_EFFECTS.has(defEffect) || _rollsChance(defChance)) : false
   if (attCEffect === 'C_ABSORB_SURE' && attEffect === 'ABSORB') attActivated = true

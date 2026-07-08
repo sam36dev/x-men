@@ -457,7 +457,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         const damage = prev.resolvedDamage ?? Math.abs(playerRoll - villainRoll)
         const playerWon = playerRoll > villainRoll
         const tied = playerRoll === villainRoll
-        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null, playerForgeBonus: prev.playerForgeBonus ?? 0, playerForgeId: prev.playerForgeId ?? null })
+        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null, playerForgeBonus: prev.playerForgeBonus ?? 0, playerForgeId: prev.playerForgeId ?? null, playerBBonus: prev.playerBBonus ?? 0, effectivePlayerRoll: prev.effectivePlayerRoll ?? playerRoll })
         setMyVillainRoll(null)
         setShaking(true)
         setTimeout(() => setShaking(false), 550)
@@ -984,10 +984,17 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               <>
                 <div className="game-result__rolls">
                   <span style={{ color: myChar?.color }}>
-                    {(villainResult.playerForgeBonus ?? 0) > 0
-                      ? <>{face(villainResult.playerRoll - villainResult.playerForgeBonus, myChar?.diceType ?? 6)}<span className="forge-bonus-label">+{villainResult.playerForgeBonus}⚔️</span></>
-                      : face(villainResult.playerRoll, myChar?.diceType ?? 6)
-                    }
+                    {(() => {
+                      const fBonus = villainResult.playerForgeBonus ?? 0
+                      const bBonus = villainResult.playerBBonus ?? 0
+                      const base = villainResult.playerRoll - fBonus
+                      return (fBonus > 0 || bBonus > 0)
+                        ? <>{face(base, myChar?.diceType ?? 6)}
+                            {fBonus > 0 && <span className="forge-bonus-label">+{fBonus}⚔️</span>}
+                            {bBonus > 0 && <span className="forge-bonus-label">+{bBonus}[B]</span>}
+                          </>
+                        : face(villainResult.playerRoll, myChar?.diceType ?? 6)
+                    })()}
                   </span>
                   <span className="game-result__vs">VS</span>
                   <span style={{ color: vColor }}>
@@ -1003,9 +1010,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 )}
                 <p>
                   {villainResult.tied  && '⚖️ Empate — ninguém toma dano'}
-                  {villainResult.playerWon && !villainResult.absorbed && `🏆 Você venceu! ${villainResult.playerRoll} > ${villainResult.villainRoll} → Vilão −${villainResult.damage} HP`}
-                  {villainResult.playerWon && villainResult.absorbed  && `🛡️ Dano absorvido! ${villainResult.playerRoll} > ${villainResult.villainRoll} — Juggernaut bloqueou o ataque`}
-                  {!villainResult.playerWon && !villainResult.tied && `💥 Você perdeu! ${villainResult.villainRoll} > ${villainResult.playerRoll} → −${villainResult.damage} HP`}
+                  {villainResult.playerWon && !villainResult.absorbed && `🏆 Você venceu! ${villainResult.effectivePlayerRoll} > ${villainResult.villainRoll} → Vilão −${villainResult.damage} HP`}
+                  {villainResult.playerWon && villainResult.absorbed  && `🛡️ Dano absorvido! ${villainResult.effectivePlayerRoll} > ${villainResult.villainRoll} — Juggernaut bloqueou o ataque`}
+                  {!villainResult.playerWon && !villainResult.tied && `💥 Você perdeu! ${villainResult.villainRoll} > ${villainResult.effectivePlayerRoll} → −${villainResult.damage} HP`}
                   {villainResult.playerForgeId === 4 && !villainResult.playerWon && !villainResult.tied && (
                     <span className="ability-activated"> 🛡️ Escudo do Capitão — dano reduzido à metade!</span>
                   )}

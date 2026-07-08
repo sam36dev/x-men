@@ -10,7 +10,7 @@ export const characters = [
     team: "X-Men", number: "001",
     ability:  { name: "Fator de Cura",       description: "Ao perder, recupera metade do dano recebido",          effect: "HEAL_HALF"    },
     abilityB: { name: "Investida",            description: "Soma +2 ao dado nessa batalha",                        effect: "B_PLUS_2"     },
-    abilityC: { name: "Fúria Berserker",      description: "HP ≤ 40: +4 ao resultado do dado nessa batalha",       effect: "C_ROLL_BOOST_4", condition: "hp_lte_40" }
+    abilityC: { name: "Fúria Berserker",      description: "HP ≤ 20: +4 ao resultado do dado nessa batalha",       effect: "C_ROLL_BOOST_4", condition: "hp_lte_20" }
   },
   {
     id: 2,
@@ -80,7 +80,7 @@ export const characters = [
     color: "#FF4499", gradient: "linear-gradient(160deg, #1a0020 0%, #0d0010 50%, #07000a 100%)",
     team: "X-Men", number: "006",
     ability:  { name: "Esquiva",              description: "Ao perder, gasta 1 token para não sofrer dano",        effect: "DODGE_TOKEN"  },
-    abilityB: { name: "Carta Explosiva",      description: "Coloca 1 carta explosiva no campo. Clique na carta para escolher um alvo e infligir 3 de dano.", effect: "B_TRAP_CARD" },
+    abilityB: { name: "Carta Explosiva",      description: "Coloca 1 carta explosiva no campo (1× por turno, sem precisar de batalha). Clique em 🃏 para detonar e causar 3 de dano a um alvo.", effect: "B_TRAP_CARD" },
     abilityC: { name: "High Card",            description: "HP ≤ 20: toda batalha inflige ou recebe exatamente 5 de dano, independente do resultado", effect: "C_HIGH_CARD", condition: "hp_lte_20" }
   },
   {

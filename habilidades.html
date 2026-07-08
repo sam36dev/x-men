@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>X-Men — Habilidades dos Personagens</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Oswald:wght@400;600;700&family=Roboto:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Roboto', sans-serif;
+    background: #fff;
+    color: #111;
+    padding: 32px 40px;
+    font-size: 13px;
+  }
+
+  h1 {
+    font-family: 'Bangers', cursive;
+    font-size: 2.6rem;
+    letter-spacing: 0.1em;
+    color: #FFCC00;
+    -webkit-text-stroke: 1.5px #111;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: #666;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .card {
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+  }
+
+  .card-icon { font-size: 1.3rem; }
+
+  .card-name {
+    font-family: 'Bangers', cursive;
+    font-size: 1.35rem;
+    letter-spacing: 0.05em;
+  }
+
+  .card-alias {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.72rem;
+    color: #888;
+    letter-spacing: 0.08em;
+  }
+
+  .card-dice {
+    margin-left: auto;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: #f0f0f0;
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: #444;
+  }
+
+  .abilities { display: flex; flex-direction: column; gap: 7px; }
+
+  .ability-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .ability-tag {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .tag-a  { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+  .tag-b  { background: #cff4fc; color: #055160; border: 1px solid #0dcaf0; }
+  .tag-c  { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+
+  .ability-info { flex: 1; }
+
+  .ability-name {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    display: inline;
+  }
+
+  .ability-desc {
+    color: #444;
+    font-size: 0.78rem;
+    display: inline;
+    margin-left: 4px;
+  }
+
+  .ability-condition {
+    font-size: 0.68rem;
+    color: #888;
+    font-style: italic;
+    margin-left: 4px;
+  }
+
+  .ability-effect {
+    font-size: 0.63rem;
+    color: #aaa;
+    font-family: monospace;
+    margin-left: 4px;
+  }
+
+  .note-passive {
+    font-size: 0.65rem;
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-left: 6px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    vertical-align: middle;
+  }
+
+  @media print {
+    body { padding: 20px 24px; }
+    h1 { -webkit-text-stroke: 0; color: #333; }
+  }
+</style>
+</head>
+<body>
+
+<h1>X-MEN CARD GAME</h1>
+<p class="subtitle">Habilidades dos Personagens — Ordem Alfabética</p>
+
+<!-- CICLOPE -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-icon">⚡</span>
+    <span class="card-name">Ciclope</span>
+    <span class="card-alias">Scott Summers</span>
+    <span class="card-dice">D6</span>
+  </div>
+  <div class="abilities">
+    <div class="ability-row">
+      <span class="ability-tag tag-a">[A] Passiva</span>
+      <div class="ability-info">
+        <span class="ability-name">Raio Certeiro</span>
+        <span class="note-passive">PASSIVA</span>
+        <span class="ability-desc">— Vencedor causa no mínimo 3 de dano.</span>
+        <span class="ability-effect">[MIN_DAMAGE_3]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-b">[B] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Raio Concentrado</span>
+        <span class="ability-desc">— Dobra o resultado do dado nessa batalha.</span>
+        <span class="ability-effect">[B_DOUBLE_ROLL]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-c">[C] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Raio Supremo</span>
+        <span class="ability-desc">— Dano causado é no mínimo 5.</span>
+        <span class="ability-condition">HP ≤ 20</span>
+        <span class="ability-effect">[C_MIN_DAMAGE_5]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COLOSSO -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-icon">🛡️</span>
+    <span class="card-name">Colosso</span>
+    <span class="card-alias">Piotr Rasputin</span>
+    <span class="card-dice">D6</span>
+  </div>
+  <div class="abilities">
+    <div class="ability-row">
+      <span class="ability-tag tag-a">[A] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Armadura de Aço</span>
+        <span class="ability-desc">— Ao perder, recebe no máximo 8 de dano.</span>
+        <span class="ability-effect">[ARMOR]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-b">[B] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Força Titânica</span>
+        <span class="ability-desc">— Multiplica o dano causado por 1.5 (se vencer).</span>
+        <span class="ability-effect">[B_DAMAGE_BOOST]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-c">[C] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Última Resistência</span>
+        <span class="ability-desc">— Sobrevive com 1 HP ao invés de ser eliminado.</span>
+        <span class="ability-condition">HP ≤ 20</span>
+        <span class="ability-effect">[C_SURVIVE_1]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GAMBIT -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-icon">🃏</span>
+    <span class="card-name">Gambit</span>
+    <span class="card-alias">Remy LeBeau</span>
+    <span class="card-dice">D6</span>
+  </div>
+  <div class="abilities">
+    <div class="ability-row">
+      <span class="ability-tag tag-a">[A] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Esquiva</span>
+        <span class="ability-desc">— Ao perder, gasta 1 token para não sofrer dano.</span>
+        <span class="ability-effect">[DODGE_TOKEN]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-b">[B] Direto</span>
+      <div class="ability-info">
+        <span class="ability-name">Carta Explosiva</span>
+        <span class="ability-desc">— Coloca 1 carta explosiva no campo (1× por turno, sem precisar de batalha). Clique em 🃏 para detonar e causar 3 de dano a um alvo.</span>
+        <span class="ability-effect">[B_TRAP_CARD]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-c">[C] Auto</span>
+      <div class="ability-info">
+        <span class="ability-name">High Card</span>
+        <span class="ability-desc">— Toda batalha inflige ou recebe exatamente 5 de dano, independente do resultado.</span>
+        <span class="ability-condition">HP ≤ 20</span>
+        <span class="ability-effect">[C_HIGH_CARD]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JEAN GREY -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-icon">🔥</span>
+    <span class="card-name">Jean Grey</span>
+    <span class="card-alias">Jean Grey — transforma em Fênix em HP ≤ 20 (D12)</span>
+    <span class="card-dice">D6 → D12</span>
+  </div>
+  <div class="abilities">
+    <div class="ability-row">
+      <span class="ability-tag tag-a">[A] Passiva</span>
+      <div class="ability-info">
+        <span class="ability-name">Dano Psíquico</span>
+        <span class="note-passive">PASSIVA</span>
+        <span class="ability-desc">— Ao perder, causa 3 de dano psíquico a um oponente ou boss aleatório.</span>
+        <span class="ability-effect">[PSYCHIC_DAMAGE]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-b">[B] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Paralisia</span>
+        <span class="ability-desc">— Ao vencer: paralisa o oponente por N rodadas (N = seus tokens).</span>
+        <span class="ability-effect">[B_PARALYZE]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-c">[C] Auto</span>
+      <div class="ability-info">
+        <span class="ability-name">Chama Fênix</span>
+        <span class="ability-desc">— Metade do dano recebido é refletido ao oponente.</span>
+        <span class="ability-condition">HP ≤ 20</span>
+        <span class="ability-effect">[C_REDIRECT_HALF]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTURNO -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-icon">🌑</span>
+    <span class="card-name">Noturno</span>
+    <span class="card-alias">Kurt Wagner</span>
+    <span class="card-dice">D6</span>
+  </div>
+  <div class="abilities">
+    <div class="ability-row">
+      <span class="ability-tag tag-a">[A] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Ataque Furtivo</span>
+        <span class="ability-desc">— Se for o atacante, +3 no resultado do dado.</span>
+        <span class="ability-effect">[SNEAK]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-b">[B] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Bamf!</span>
+        <span class="ability-desc">— Teleporta para qualquer casa (efeito físico/de tabuleiro).</span>
+        <span class="ability-effect">[B_MOVEMENT]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-c">[C] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Esquiva Total</span>
+        <span class="ability-desc">— 50% de chance de esquivar e não receber dano.</span>
+        <span class="ability-condition">HP ≤ 30</span>
+        <span class="ability-effect">[C_DODGE_50]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFESSOR X -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-icon">🧠</span>
+    <span class="card-name">Professor X</span>
+    <span class="card-alias">Charles Xavier</span>
+    <span class="card-dice">D6</span>
+  </div>
+  <div class="abilities">
+    <div class="ability-row">
+      <span class="ability-tag tag-a">[A] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Enfraquecimento Mental</span>
+        <span class="ability-desc">— Reduz o dado do oponente em −2 (mín. 1).</span>
+        <span class="ability-effect">[WEAKEN]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-b">[B] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Controle Mental</span>
+        <span class="ability-desc">— Força o dado do oponente a ser 1.</span>
+        <span class="ability-effect">[B_FORCE_ONE]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-c">[C] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Escudo Mental</span>
+        <span class="ability-desc">— Anula os efeitos de habilidade [A] do oponente.</span>
+        <span class="ability-condition">HP ≤ 35</span>
+        <span class="ability-effect">[C_MIND_SHIELD]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PSYLOCKE -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-icon">🗡️</span>
+    <span class="card-name">Psylocke</span>
+    <span class="card-alias">Betsy Braddock</span>
+    <span class="card-dice">D6</span>
+  </div>
+  <div class="abilities">
+    <div class="ability-row">
+      <span class="ability-tag tag-a">[A] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Lâmina Perfurante</span>
+        <span class="ability-desc">— Dano ignora ARMOR e SHIELD do oponente.</span>
+        <span class="ability-effect">[PIERCE]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-b">[B] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Golpe Ninja</span>
+        <span class="ability-desc">— +3 ao dado e cancela o [B] do oponente nessa batalha.</span>
+        <span class="ability-effect">[B_NINJA]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-c">[C] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Lâmina Ativada</span>
+        <span class="ability-desc">— PIERCE ativa com 100% de chance.</span>
+        <span class="ability-condition">HP ≤ 50</span>
+        <span class="ability-effect">[C_PIERCE_SURE]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPESTADE -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-icon">🌩️</span>
+    <span class="card-name">Tempestade</span>
+    <span class="card-alias">Ororo Munroe</span>
+    <span class="card-dice">D6</span>
+  </div>
+  <div class="abilities">
+    <div class="ability-row">
+      <span class="ability-tag tag-a">[A] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Tempestade Perfeita</span>
+        <span class="ability-desc">— Se tirou o valor máximo do dado, dano é dobrado.</span>
+        <span class="ability-effect">[DOUBLE_MAX]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-b">[B] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Controle do Clima</span>
+        <span class="ability-desc">— Trata o dado como D8 (+2 ao resultado).</span>
+        <span class="ability-effect">[B_UPGRADE]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-c">[C] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Olho da Tempestade</span>
+        <span class="ability-desc">— Dado conta como valor máximo do tipo.</span>
+        <span class="ability-condition">HP ≤ 50</span>
+        <span class="ability-effect">[C_MAX_ROLL]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VAMPIRA -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-icon">💫</span>
+    <span class="card-name">Vampira</span>
+    <span class="card-alias">Anna Marie</span>
+    <span class="card-dice">D6</span>
+  </div>
+  <div class="abilities">
+    <div class="ability-row">
+      <span class="ability-tag tag-a">[A] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Absorção de Poder</span>
+        <span class="ability-desc">— Copia e aplica o efeito [A] do oponente como se fosse seu.</span>
+        <span class="ability-effect">[ABSORB]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-b">[B] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Voo</span>
+        <span class="ability-desc">— Foge da batalha sem sofrer dano (declare antes de rolar).</span>
+        <span class="ability-effect">[B_MOVEMENT]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-c">[C] Token</span>
+      <div class="ability-info">
+        <span class="ability-name">Toque Vampírico</span>
+        <span class="ability-desc">— Vencer com 4+ dano: rouba [A] do oponente por 3 rodadas. Dono perde a habilidade enquanto roubada. Pode encadear roubos.</span>
+        <span class="ability-condition">Sempre disponível</span>
+        <span class="ability-effect">[C_STEAL_ABILITY]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WOLVERINE -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-icon">⚔️</span>
+    <span class="card-name">Wolverine</span>
+    <span class="card-alias">Logan</span>
+    <span class="card-dice">D6 → D10 (HP ≤ 30)</span>
+  </div>
+  <div class="abilities">
+    <div class="ability-row">
+      <span class="ability-tag tag-a">[A]</span>
+      <div class="ability-info">
+        <span class="ability-name">Fator de Cura</span>
+        <span class="ability-desc">— Ao perder, recupera metade do dano recebido.</span>
+        <span class="ability-effect">[HEAL_HALF]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-b">[B]</span>
+      <div class="ability-info">
+        <span class="ability-name">Investida</span>
+        <span class="ability-desc">— Soma +2 ao dado nessa batalha (funciona contra jogadores e vilões).</span>
+        <span class="ability-effect">[B_PLUS_2]</span>
+      </div>
+    </div>
+    <div class="ability-row">
+      <span class="ability-tag tag-c">[C] Auto</span>
+      <div class="ability-info">
+        <span class="ability-name">Fúria Berserker</span>
+        <span class="ability-desc">— HP ≤ 20: +4 ao resultado do dado nessa batalha.</span>
+        <span class="ability-condition">HP ≤ 20</span>
+        <span class="ability-effect">[C_ROLL_BOOST_4]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="text-align:center; color:#bbb; font-size:0.65rem; margin-top:20px; font-family:'Oswald',sans-serif; letter-spacing:0.1em;">
+  [A] = Habilidade Passiva/Principal &nbsp;|&nbsp; [B] = Habilidade de Token &nbsp;|&nbsp; [C] = Habilidade de Token com Condição de HP<br>
+  PASSIVA = ativa automaticamente, sem custo de token
+</p>
+
+</body>
+</html>

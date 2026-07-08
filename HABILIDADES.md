@@ -1,172 +1,149 @@
-# X-MEN CARD GAME — Sistema de Habilidades
+# X-Men Card Game — Habilidades dos Personagens
 
-## Estrutura de cada personagem
+> Descrições idênticas às que aparecem nas cartas do jogo.
 
-| Slot | Tipo | Regra |
-|------|------|-------|
-| **[A]** | Passiva aleatória | ~33% de chance, ativa automaticamente em batalha |
-| **[B]** | Ativa por turno | Jogador declara **antes** de rolar — 1× por turno |
-| **[C]** | Condicional | Ativa automaticamente ao atingir um estado |
+## Legenda
 
----
-
-## Personagens Jogáveis
-
-### 1. Wolverine — D6
-
-| Slot | Nome | Efeito |
-|------|------|--------|
-| [A] | Fator de Cura | Ao perder, recupera metade do dano sofrido |
-| [B] | Investida | +2 ao dado (declarar antes de rolar) |
-| [C] | Fúria Berserker | HP ≤ 40 → troca D6 por D10 até recuperar |
+| Tag | Regra |
+|-----|-------|
+| **[A]** | Habilidade passiva — ativa por token (chance +10%/token, máx. 90%) |
+| **[A] Passiva** | Sempre ativa, sem custo de token |
+| **[B]** | Declare antes de rolar — 1× por turno |
+| **[B] Direto** | Ação direta, sem precisar de batalha — 1× por turno |
+| **[C]** | Ativa automaticamente quando a condição de HP é atendida |
+| **[C] Sempre** | Sem condição de HP — sempre ativa |
 
 ---
 
-### 2. Ciclope — D6
+## 1. Wolverine · Logan · D6 → D10 (HP ≤ 30)
 
-| Slot | Nome | Efeito |
-|------|------|--------|
-| [A] | Precisão Óptica | Dano mínimo garantido de 3 |
-| [B] | Raio Óptico Concentrado | Dobra o resultado do dado |
-| [C] | Liderança | Jogador com mais HP (≥ 60) → +2 em todos os dados |
+| Slot | Nome | Descrição |
+|------|------|-----------|
+| [A] | Fator de Cura | Ao perder, recupera metade do dano recebido |
+| [B] | Investida | Soma +2 ao dado nessa batalha (funciona contra jogadores e vilões) |
+| [C] HP ≤ 20 | Fúria Berserker | HP ≤ 20: +4 ao resultado do dado nessa batalha |
 
----
-
-### 3. Tempestade — D6
-
-| Slot | Nome | Efeito |
-|------|------|--------|
-| [A] | Relâmpago | Dado = 6 → dano dobrado |
-| [B] | Controle do Clima | Troca D6 por D8 nessa batalha |
-| [C] | Olho da Tempestade | HP ≤ 50 → +2 ao dado em todas as batalhas |
+**Effect codes:** `HEAL_HALF` / `B_PLUS_2` / `C_ROLL_BOOST_4`
 
 ---
 
-### 4. Jean Grey → Phoenix — D8 (→ D10)
+## 2. Ciclope · Scott Summers · D6
 
-**Fase 1: Jean Grey (HP > 30)**
+| Slot | Nome | Descrição |
+|------|------|-----------|
+| [A] | Raio Certeiro | Vencedor causa no mínimo 3 de dano |
+| [B] | Raio Concentrado | Dobra o resultado do dado nessa batalha |
+| [C] HP ≤ 20 | Raio Supremo | HP ≤ 20: dano causado é no mínimo 5 |
 
-| Slot | Nome | Efeito |
-|------|------|--------|
-| [A] | Barreira Psíquica | Bloqueia completamente o dano de uma batalha |
-| [B] | Ligação Mental | Vê o dado do oponente antes de revelar |
-| [C] | Telecinese | 2 derrotas seguidas → redireciona 50% do próximo dano de volta |
-
-> **Transformação:** HP ≤ 30 → vira **Phoenix** (D10 permanente)
-
-**Fase 2: Phoenix (permanente)**
-
-| Slot | Nome | Efeito |
-|------|------|--------|
-| [A] | Chama Cósmica | Dano triplicado nessa batalha |
-| [B] | Ressurreição | 1× por partida: chega a 0 HP → volta com 40 HP |
-| [C] | Fênix Negro | Permanente — todo dano causado é dobrado |
+**Effect codes:** `MIN_DAMAGE_3` / `B_DOUBLE_ROLL` / `C_MIN_DAMAGE_5`
 
 ---
 
-### 5. Professor X — D6
+## 3. Tempestade · Ororo Munroe · D6
 
-| Slot | Nome | Efeito |
-|------|------|--------|
-| [A] | Empatia | Vê o dado do oponente antes de revelar |
+| Slot | Nome | Descrição |
+|------|------|-----------|
+| [A] | Tempestade Perfeita | Se tirou o valor máximo do dado, dano é dobrado |
+| [B] | Controle do Clima | Trata o dado como D8 (+2 ao resultado) |
+| [C] HP ≤ 50 | Olho da Tempestade | HP ≤ 50: dado conta como valor máximo do tipo |
+
+**Effect codes:** `DOUBLE_MAX` / `B_UPGRADE` / `C_MAX_ROLL`
+
+---
+
+## 4. Jean Grey · Jean Grey · D6 → D12 (transforma em Fênix com HP ≤ 20)
+
+| Slot | Nome | Descrição |
+|------|------|-----------|
+| [A] Passiva | Dano Psíquico | Ao perder, causa 3 de dano psíquico a um oponente ou boss aleatório |
+| [B] | Paralisia | Ao vencer: paralisa o oponente por N rodadas (N = seus tokens) |
+| [C] HP ≤ 20 | Chama Fênix | HP ≤ 20: metade do dano recebido é refletido ao oponente |
+
+**Effect codes:** `PSYCHIC_DAMAGE` / `B_PARALYZE` / `C_REDIRECT_HALF`
+
+---
+
+## 5. Professor X · Charles Xavier · D6
+
+| Slot | Nome | Descrição |
+|------|------|-----------|
+| [A] | Enfraquecimento Mental | Reduz o dado do oponente em -2 (mín 1) |
 | [B] | Controle Mental | Força o dado do oponente a ser 1 |
-| [C] | Paz Mental | HP ≤ 40 → pode recusar batalha sem dano (1× por estado) |
+| [C] HP ≤ 35 | Escudo Mental | HP ≤ 35: anula os efeitos de habilidade [A] do oponente |
+
+**Effect codes:** `WEAKEN` / `B_FORCE_ONE` / `C_MIND_SHIELD`
 
 ---
 
-### 6. Gambit — D6
+## 6. Gambit · Remy LeBeau · D6
 
-| Slot | Nome | Efeito |
-|------|------|--------|
-| [A] | Carta Explosiva | Dado = 6 → causa 15 de dano fixo |
-| [B] | Baralho Explosivo | Rerola o dado uma vez após ver o resultado |
-| [C] | Sorte Cajun | 2 derrotas consecutivas → próxima batalha usa D10 |
+| Slot | Nome | Descrição |
+|------|------|-----------|
+| [A] | Esquiva | Ao perder, gasta 1 token para não sofrer dano |
+| [B] Direto | Carta Explosiva | Coloca 1 carta explosiva no campo (1× por turno, sem precisar de batalha). Clique em 🃏 para detonar e causar 3 de dano a um alvo. |
+| [C] HP ≤ 20 | High Card | HP ≤ 20: toda batalha inflige ou recebe exatamente 5 de dano, independente do resultado |
 
----
-
-### 7. Vampira — D8
-
-| Slot | Nome | Efeito |
-|------|------|--------|
-| [A] | Absorção | Copia a habilidade [A] do oponente e usa também |
-| [B] | Vôo | Move +2 casas extras / foge da batalha |
-| [C] | Toque Letal | HP ≥ 70 + vencer por ≥ 5 → oponente perde próximo turno |
+**Effect codes:** `DODGE_TOKEN` / `B_TRAP_CARD` / `C_HIGH_CARD`
 
 ---
 
-### 8. Noturno — D6
+## 7. Vampira · Anna Marie · D6
 
-| Slot | Nome | Efeito |
-|------|------|--------|
-| [A] | Ataque Furtivo | Se for o atacante → +3 ao dado |
-| [B] | Bamf! | Teleporta para qualquer casa sem rolar movimento |
-| [C] | Sombras | HP ≤ 35 → 50% de chance de esquivar de qualquer ataque |
+| Slot | Nome | Descrição |
+|------|------|-----------|
+| [A] | Absorção de Poder | Copia e aplica o efeito do oponente como se fosse seu |
+| [B] | Voo | Foge da batalha sem sofrer dano (declare antes de rolar). |
+| [C] Sempre | Toque Vampírico | Vencer com 4+ dano: rouba [A] do oponente por 3 rodadas. Dono perde a habilidade enquanto roubada. Pode encadear roubos. |
 
----
-
-### 9. Colosso — D6
-
-| Slot | Nome | Efeito |
-|------|------|--------|
-| [A] | Forma de Aço | Recebe no máximo 8 de dano por batalha |
-| [B] | Força Titânica | Dano causado × 1.5 |
-| [C] | Muralha | HP ≤ 20 → sobrevive com mínimo 1 HP nesse turno |
+**Effect codes:** `ABSORB` / `B_MOVEMENT` / `C_STEAL_ABILITY`
 
 ---
 
-### 10. Psylocke — D8
+## 8. Noturno · Kurt Wagner · D6
 
-| Slot | Nome | Efeito |
-|------|------|--------|
-| [A] | Lâmina Psíquica | Ignora toda redução de dano do oponente |
-| [B] | Golpe Ninja | +3 ao dado + anula [B] do oponente nessa batalha |
-| [C] | Vínculo Telepático | 2× mesmo oponente seguidas → vê e anula uma habilidade dele |
+| Slot | Nome | Descrição |
+|------|------|-----------|
+| [A] | Ataque Furtivo | Se for o atacante, +3 no resultado do dado |
+| [B] | Bamf! | Teleporta para qualquer casa (efeito físico) |
+| [C] HP ≤ 30 | Esquiva Total | HP ≤ 30: 50% de chance de esquivar e não receber dano |
 
----
-
-## Vilões do Mapa (NPCs)
-
-> Vilões não escolhem habilidades — agem por regra automática.
-> **Magneto e Apocalipse começam bloqueados** — o host desbloqueia quando quiser.
-
-| Vilão | HP | Dado | Dificuldade | Mecânica | Recompensa |
-|-------|----|------|-------------|----------|------------|
-| **Magneto** 🔒 | 120 | D10 | Médio | Campo Magnético: reduz dano recebido em 2 (mín. 1). Vs Wolverine/Colosso: +3 no dado | Libera rota para o Leste do mapa |
-| **Mística** | 100 | D6 | Médio | Metamorfo: copia exatamente o dado do atacante. Se o jogador perder, foge para casa aleatória | Revela posição de um vilão oculto |
-| **Dente de Sabre** | 110 | D6 | Médio | Predador: dano dobrado contra Wolverine. Regenera 10 HP se não derrotado na 1ª rodada | +1 permanente ao dado de Wolverine |
-| **Juggernaut** | 150 | D10 | Difícil | Imparável: absorve os primeiros 10 de dano. Não contra-ataca na 1ª rodada | +20 HP ao vencedor |
-| **Sr. Sinistro** | 130 | D8 | Difícil | Experimento: rola 2 dados e usa o maior. Copia [A] do jogador | Revela habilidades ocultas de todos |
-| **Omega Red** | 140 | D8 | Difícil | Tentáculos: drena 5 HP/turno. Recupera metade do dano causado | Imunidade a dreno de HP |
-| **Apocalipse** 🔒 | 200 | D12 | Chefão Final | Fase 2: HP ≤ 100 → dano dobra automaticamente | **VENCE O JOGO** |
+**Effect codes:** `SNEAK` / `B_MOVEMENT` / `C_DODGE_50`
 
 ---
 
-## Resumo — Condições de ativação [C]
+## 9. Colosso · Piotr Rasputin · D6
 
-| Condição | Personagem |
-|----------|------------|
-| HP ≤ 20 | Colosso (Muralha) |
-| HP ≤ 30 | Jean Grey → **transforma em Phoenix** |
-| HP ≤ 35 | Noturno (Sombras) |
-| HP ≤ 40 | Wolverine (Fúria Berserker), Professor X (Paz Mental) |
-| HP ≤ 50 | Tempestade (Olho da Tempestade) |
-| HP ≥ 60 + mais HP | Ciclope (Liderança) |
-| HP ≥ 70 + vencer por ≥ 5 | Vampira (Toque Letal) |
-| 2 derrotas seguidas | Gambit (Sorte Cajun), Jean Grey (Telecinese) |
-| 2× mesmo oponente | Psylocke (Vínculo Telepático) |
-| Fase Phoenix | Permanente após transformação |
+| Slot | Nome | Descrição |
+|------|------|-----------|
+| [A] | Armadura de Aço | Ao perder, recebe no máximo 8 de dano |
+| [B] | Força Titânica | Multiplica o dano causado por 1.5 (se vencer) |
+| [C] HP ≤ 20 | Última Resistência | HP ≤ 20: sobrevive com 1 HP ao invés de ser eliminado |
+
+**Effect codes:** `ARMOR` / `B_DAMAGE_BOOST` / `C_SURVIVE_1`
 
 ---
 
-## Mecânica das Batalhas
+## 10. Psylocke · Betsy Braddock · D6
+
+| Slot | Nome | Descrição |
+|------|------|-----------|
+| [A] | Lâmina Perfurante | Dano ignora ARMOR e SHIELD do oponente |
+| [B] | Golpe Ninja | +3 ao dado e cancela o [B] do oponente nessa batalha |
+| [C] HP ≤ 50 | Lâmina Ativada | HP ≤ 50: PIERCE ativa com 100% de chance |
+
+**Effect codes:** `PIERCE` / `B_NINJA` / `C_PIERCE_SURE`
+
+---
+
+## Mecânica de batalha
 
 ```
-Dano = |dado_atacante - dado_defensor|
+Dano = |dado_atacante − dado_defensor|
 Perdedor = quem tirou o menor valor
-Empate = ninguém toma dano
+Empate = nenhum dano
 ```
 
-- **[B]** é declarado antes de rolar — fica ativo até a resolução
-- **[A]** é sorteado automaticamente no servidor durante a resolução
-- **[C]** é ativado/desativado pelo host quando a condição é atingida
-- Modificadores se empilham na ordem: B_REROLL → C_MAX_ROLL → B/[B] → [A] → dano final
+- **[B]** bloqueado após uso até o host avançar o turno (`+`)
+- **[A]** sorteado automaticamente na resolução da batalha
+- Wolverine usa **D10** automaticamente quando HP ≤ 30
+- Jean Grey usa **D12** automaticamente quando HP ≤ 20 (transforma em Fênix)
