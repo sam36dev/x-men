@@ -48,14 +48,14 @@ export const characters = [
     color: "#FF9944", gradient: "linear-gradient(160deg, #2a0800 0%, #150400 50%, #0a0200 100%)",
     team: "X-Men", number: "004",
     transformation: {
-      triggersAt: 30, name: "Phoenix", diceType: 10, color: "#FF4400",
+      triggersAt: 20, name: "Phoenix", diceType: 12, color: "#FF4400",
       gradient: "linear-gradient(160deg, #3d1000 0%, #1a0800 50%, #0d0400 100%)",
       type: "Cósmico", typeIcon: "🔥",
       powers: ["Força Fênix Cósmica", "Telecinese Suprema", "Chama Estelar", "Ressurreição"]
     },
     ability:  { name: "Escudo Psíquico",      description: "Ao perder, bloqueia todo o dano recebido",             effect: "SHIELD"       },
     abilityB: { name: "Ligação Mental",        description: "Reduz o dado do oponente em -2 (mín. 1)",              effect: "B_WEAKEN"     },
-    abilityC: { name: "Chama Fênix",          description: "HP ≤ 30: metade do dano recebido é refletido ao oponente", effect: "C_REDIRECT_HALF", condition: "hp_lte_30" }
+    abilityC: { name: "Chama Fênix",          description: "HP ≤ 20: metade do dano recebido é refletido ao oponente", effect: "C_REDIRECT_HALF", condition: "hp_lte_20" }
   },
   {
     id: 5,
