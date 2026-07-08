@@ -80,7 +80,7 @@ export const characters = [
     color: "#FF4499", gradient: "linear-gradient(160deg, #1a0020 0%, #0d0010 50%, #07000a 100%)",
     team: "X-Men", number: "006",
     ability:  { name: "Esquiva",              description: "Ao perder, gasta 1 token para não sofrer dano",        effect: "DODGE_TOKEN"  },
-    abilityB: { name: "Carta Armadilha",      description: "Declare antes: se o oponente te atacar, sofre 6 de dano de armadilha antes de rolar", effect: "B_TRAP_CARD" },
+    abilityB: { name: "Carta Explosiva",      description: "Coloca 1 carta explosiva no campo. Clique na carta para escolher um alvo e infligir 3 de dano.", effect: "B_TRAP_CARD" },
     abilityC: { name: "High Card",            description: "HP ≤ 20: toda batalha inflige ou recebe exatamente 5 de dano, independente do resultado", effect: "C_HIGH_CARD", condition: "hp_lte_20" }
   },
   {

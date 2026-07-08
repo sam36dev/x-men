@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, incrementMissionProgress, selectCharacter, addLocalPlayer, removeParalysis, decrementForgeCharge, incrementPlayerWins, resetBattleState } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, incrementMissionProgress, selectCharacter, addLocalPlayer, removeParalysis, decrementForgeCharge, incrementPlayerWins, resetBattleState, addTrapCard, triggerTrapCard } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import { MISSIONS } from '../data/missions'
@@ -341,6 +341,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
   const isTester = user?.displayName === 'tester'
   const activeId = isTester && activeControllerId ? activeControllerId : playerId
   const [showAbility, setShowAbility] = useState(false)
+  const [trapTarget, setTrapTarget] = useState(false)
   const [bombDetonate, setBombDetonate] = useState(null) // { playerId, playerName }
   const prevBattleRef = useRef(null)
   const prevOppRollRef = useRef(null)
@@ -387,6 +388,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                          : defenderId === playerId ? !!(prev.defenderPreB) : false
         if (attackerId === playerId || defenderId === playerId) {
           resetBattleState(roomCode, playerId, myPreBUsed, me?.turn ?? 1)
+          if (myPreBUsed && myChar?.id === 6) addTrapCard(roomCode, playerId)
         }
 
         setResult({
@@ -631,6 +633,32 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
       )}
 
       {showAbility && <AbilityModal char={myChar} onClose={() => setShowAbility(false)} />}
+
+      {trapTarget && (
+        <div className="trap-overlay">
+          <div className="trap-modal">
+            <div className="trap-modal__header">🃏 Detonar Carta Explosiva</div>
+            <p className="trap-modal__sub">Escolha o alvo (+3 de dano):</p>
+            <div className="trap-modal__targets">
+              {players.filter(p => p.id !== playerId && p.alive).map(p => {
+                const pChar = characters.find(c => c.id === p.characterId)
+                return (
+                  <button
+                    key={p.id}
+                    className="trap-target-btn"
+                    style={{ '--pc': pChar?.color ?? '#888' }}
+                    onClick={() => { triggerTrapCard(roomCode, playerId, p.id); setTrapTarget(false) }}
+                  >
+                    {pChar?.typeIcon ?? '⚔️'} {p.name}
+                    <span className="trap-target-hp">{p.hp} HP</span>
+                  </button>
+                )
+              })}
+            </div>
+            <button className="trap-modal__cancel" onClick={() => setTrapTarget(false)}>Cancelar</button>
+          </div>
+        </div>
+      )}
       {bombDetonate && (
         <BombModal
           target={bombDetonate}
@@ -712,6 +740,17 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 <span className="my-b-btn__tag">[B]</span>
                 <span className="my-b-btn__name">{myChar.abilityB.name}</span>
                 {me.preB && <span className="my-b-btn__check">✓</span>}
+              </button>
+            )}
+            {myChar?.id === 6 && (me.trapCards || 0) > 0 && (
+              <button
+                className="trap-card-btn"
+                onClick={() => setTrapTarget(true)}
+                disabled={!!isInBattle}
+              >
+                <span className="trap-card-btn__icon">🃏</span>
+                <span className="trap-card-btn__label">Detonar Carta</span>
+                <span className="trap-card-btn__count">{me.trapCards}</span>
               </button>
             )}
             {myChar.abilityC && (

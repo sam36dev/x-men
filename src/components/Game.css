@@ -1833,6 +1833,128 @@
   font-weight: 700;
 }
 
+/* Gambit trap card button */
+.trap-card-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  background: linear-gradient(135deg, rgba(60, 0, 80, 0.6), rgba(20, 0, 30, 0.8));
+  border: 1.5px solid rgba(255, 68, 153, 0.55);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s;
+  -webkit-tap-highlight-color: transparent;
+  align-self: flex-start;
+  box-shadow: 0 0 8px rgba(255, 68, 153, 0.2);
+}
+.trap-card-btn:hover:not(:disabled) {
+  border-color: rgba(255, 68, 153, 0.85);
+  box-shadow: 0 0 14px rgba(255, 68, 153, 0.4);
+}
+.trap-card-btn:active:not(:disabled) { transform: scale(0.96); }
+.trap-card-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.trap-card-btn__icon { font-size: 1rem; }
+.trap-card-btn__label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 180, 220, 0.9);
+  letter-spacing: 0.04em;
+}
+.trap-card-btn__count {
+  background: rgba(255, 68, 153, 0.25);
+  border: 1px solid rgba(255, 68, 153, 0.5);
+  border-radius: 50%;
+  width: 1.15rem;
+  height: 1.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ff44aa;
+}
+
+/* Trap card detonation overlay */
+.trap-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  padding: 1rem;
+}
+.trap-modal {
+  background: linear-gradient(160deg, #1a0020, #0d0010);
+  border: 1.5px solid rgba(255, 68, 153, 0.45);
+  border-radius: 14px;
+  padding: 1.4rem 1.2rem;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: 0 0 30px rgba(255, 68, 153, 0.25);
+}
+.trap-modal__header {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ff44aa;
+  text-align: center;
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.04em;
+}
+.trap-modal__sub {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.55);
+  text-align: center;
+  margin-bottom: 0.8rem;
+}
+.trap-modal__targets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+.trap-target-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.9rem;
+  background: rgba(255, 68, 153, 0.06);
+  border: 1.5px solid color-mix(in srgb, var(--pc) 45%, transparent);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  transition: all 0.15s;
+}
+.trap-target-btn:hover {
+  background: rgba(255, 68, 153, 0.12);
+  border-color: color-mix(in srgb, var(--pc) 75%, transparent);
+}
+.trap-target-btn:active { transform: scale(0.97); }
+.trap-target-hp {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.45);
+  font-weight: 400;
+}
+.trap-modal__cancel {
+  width: 100%;
+  padding: 0.45rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 7px;
+  color: rgba(255,255,255,0.45);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.trap-modal__cancel:hover { background: rgba(255,255,255,0.1); }
+
 /* Battle character cards */
 .battle-cards {
   display: flex;

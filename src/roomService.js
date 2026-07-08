@@ -83,6 +83,7 @@ export async function startGame(code) {
     playerResets[`players/${pid}/preBUsedOnTurn`]    = 0
     playerResets[`players/${pid}/abilityDisabled`]   = false
     playerResets[`players/${pid}/forgeItem`]         = null
+    playerResets[`players/${pid}/trapCards`]         = 0
     playerResets[`players/${pid}/luckCards`]         = null
     const mission = MISSIONS[Math.floor(Math.random() * MISSIONS.length)]
     playerResets[`players/${pid}/missionId`]         = mission.id
@@ -690,6 +691,19 @@ function _rollsChance(chance) {
   return Math.random() * 100 < chance
 }
 
+export async function addTrapCard(code, playerId) {
+  await runTransaction(ref(db, `rooms/${code}/players/${playerId}/trapCards`), (cur) => (cur || 0) + 1)
+}
+
+export async function triggerTrapCard(code, playerId, targetId) {
+  await runTransaction(ref(db, `rooms/${code}/players/${targetId}`), (p) => {
+    if (!p || !p.alive) return p
+    const newHp = Math.max(0, (p.hp ?? 0) - 3)
+    return { ...p, hp: newHp, alive: newHp > 0 }
+  })
+  await runTransaction(ref(db, `rooms/${code}/players/${playerId}/trapCards`), (cur) => Math.max(0, (cur || 0) - 1))
+}
+
 export async function resetBattleState(code, playerId, usedPreB, turn) {
   const patch = { preB: false, cActive: false }
   if (usedPreB) patch.preBUsedOnTurn = turn
@@ -836,14 +850,7 @@ async function _resolveBattle(code, battle) {
   if (attBEffect === 'B_REROLL') attackerRoll = Math.ceil(Math.random() * (attChar?.diceType || 6))
   if (defBEffect === 'B_REROLL') defenderRoll = Math.ceil(Math.random() * (defChar?.diceType || 6))
 
-  // [B] B_TRAP_CARD (Gambit): if Gambit is the defender and declared trap, deal 6 to attacker now
-  if (defBEffect === 'B_TRAP_CARD') {
-    await runTransaction(ref(db, `rooms/${code}/players/${attackerId}`), (p) => {
-      if (!p) return null
-      const newHp = Math.max(0, (p.hp ?? 100) - 6)
-      return { ...p, hp: newHp, alive: newHp > 0 }
-    })
-  }
+  // B_TRAP_CARD (Gambit): trap card placement is handled client-side via addTrapCard after battle
 
   // [C] C_MAX_ROLL — treat roll as max dice value
   if (attCEffect === 'C_MAX_ROLL') attackerRoll = attChar?.diceType ?? 6
