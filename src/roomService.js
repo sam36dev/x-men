@@ -1165,10 +1165,14 @@ async function _resolveBattle(code, battle) {
   await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false, ...(attPreB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
   await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false, ...(defPreB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
 
-  // Decrement forge item charges for both players (not bomb) — transactional to avoid stale reads
-  for (const [pid, pData] of [[attackerId, attPlayer], [defenderId, defPlayer]]) {
-    const fi = pData?.forgeItem
-    if (!fi || fi.id === 5) continue
+  // Decrement forge item charges for both players (not bomb)
+  // Use forgeId stored in battle node at roll-time — avoids stale snapshot issues
+  const forgePairs = [
+    [attackerId, battle.attackerForgeId],
+    [defenderId, battle.defenderForgeId],
+  ]
+  for (const [pid, forgeId] of forgePairs) {
+    if (!forgeId || forgeId === 5) continue
     await runTransaction(ref(db, `rooms/${code}/players/${pid}/forgeItem`), (cur) => {
       if (!cur) return cur
       const remaining = (cur.charges ?? 5) - 1
