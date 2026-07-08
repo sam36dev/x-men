@@ -554,6 +554,20 @@ async function _checkMissionProgress(code, playerId, eventType, eventData = {}) 
   }
 }
 
+export async function incrementMissionProgress(code, playerId) {
+  const snap = await get(ref(db, `rooms/${code}/players/${playerId}`))
+  const player = snap.val()
+  const mission = MISSIONS.find(m => m.id === player?.missionId)
+  if (!mission || player.missionCompleted) return
+  const newProgress = (player.missionProgress ?? 0) + 1
+  const completed = newProgress >= mission.goal
+  await update(ref(db, `rooms/${code}/players/${playerId}`), {
+    missionProgress: newProgress,
+    missionCompleted: completed,
+  })
+  if (completed) await _triggerMissionVictory(code, playerId, player.name, mission)
+}
+
 export async function completeMission(code, playerId) {
   const snap = await get(ref(db, `rooms/${code}/players/${playerId}`))
   const player = snap.val()

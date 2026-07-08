@@ -1034,6 +1034,19 @@
 .player-mission__name--done { color: #88ff99; text-decoration: line-through; }
 .player-mission__progress { color: #ffaa55; font-size: 0.65rem; }
 .player-mission__done { color: #88ff99; font-weight: bold; }
+.mission-increment-btn {
+  background: rgba(100, 200, 255, 0.12);
+  border: 1px solid rgba(100, 200, 255, 0.45);
+  color: #88ddff;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 0.04em;
+}
+.mission-increment-btn:hover { background: rgba(100, 200, 255, 0.22); }
 .mission-complete-btn {
   background: rgba(100, 220, 100, 0.12);
   border: 1px solid rgba(100, 220, 100, 0.4);

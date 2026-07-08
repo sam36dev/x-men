@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, selectCharacter, addLocalPlayer, removeParalysis } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, incrementMissionProgress, selectCharacter, addLocalPlayer, removeParalysis } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import { MISSIONS } from '../data/missions'
@@ -746,13 +746,28 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                     <span className={`player-mission__name ${me.missionCompleted ? 'player-mission__name--done' : ''}`}>
                       {MISSIONS.find(m => m.id === me.missionId)?.name}
                     </span>
-                    {(MISSIONS.find(m => m.id === me.missionId)?.goal ?? 1) > 1 && (
-                      <span className="player-mission__progress">{me.missionProgress ?? 0}/{MISSIONS.find(m => m.id === me.missionId)?.goal}</span>
-                    )}
-                    {me.missionCompleted && <span className="player-mission__done">✓</span>}
-                    {isHost && !me.missionCompleted && MISSIONS.find(m => m.id === me.missionId)?.auto === null && (
-                      <button className="mission-complete-btn" onClick={() => completeMission(roomCode, me.id)}>✓ Concluir</button>
-                    )}
+                    {(() => {
+                      const myMission = MISSIONS.find(m => m.id === me.missionId)
+                      const goal = myMission?.goal ?? 1
+                      const progress = me.missionProgress ?? 0
+                      const isManualMulti = myMission?.auto === null && goal > 1
+                      return (
+                        <>
+                          {goal > 1 && (
+                            <span className="player-mission__progress">{progress}/{goal}</span>
+                          )}
+                          {me.missionCompleted && <span className="player-mission__done">✓</span>}
+                          {isManualMulti && !me.missionCompleted && (
+                            <button className="mission-increment-btn" onClick={() => incrementMissionProgress(roomCode, me.id)}>
+                              +1
+                            </button>
+                          )}
+                          {isHost && !me.missionCompleted && myMission?.auto === null && goal === 1 && (
+                            <button className="mission-complete-btn" onClick={() => completeMission(roomCode, me.id)}>✓ Concluir</button>
+                          )}
+                        </>
+                      )
+                    })()}
                     <button className="mission-toggle-btn" onClick={() => setMissionHidden(h => !h)}>🙈</button>
                   </>
                 )}
