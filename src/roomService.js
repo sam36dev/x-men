@@ -323,13 +323,14 @@ async function _resolveVillainBattle(code, vb) {
 
       if (damage > 0) {
         const healHalfActivated = playerEffect === 'HEAL_HALF'
+          && damage % 2 === 0
           && _rollsChance(_abilityChance(playerData, playerChar, []))
         if (healHalfActivated)
           await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
         await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
           if (!p) return null
           // HEAL_HALF (Wolverine): recover half damage only if damage is even
-          const healed = healHalfActivated && damage % 2 === 0 ? damage / 2 : 0
+          const healed = healHalfActivated ? damage / 2 : 0
           let newHp = Math.max(0, p.hp - damage + healed)
           // [C] C_SURVIVE_1 (Colosso HP ≤ 20): survive with 1 HP instead of dying
           if (playerCEffect === 'C_SURVIVE_1' && newHp === 0) newHp = 1
@@ -1021,9 +1022,9 @@ async function _resolveBattle(code, battle) {
   }
 
   const attAbilityName = attActivated && attChar?.ability
-    && !(attEffect === 'HEAL_HALF' && loserId !== attackerId) ? attChar.ability.name : null
+    && !(attEffect === 'HEAL_HALF' && (loserId !== attackerId || damage % 2 !== 0)) ? attChar.ability.name : null
   const defAbilityName = defActivated && defChar?.ability
-    && !(defEffect === 'HEAL_HALF' && loserId !== defenderId) ? defChar.ability.name : null
+    && !(defEffect === 'HEAL_HALF' && (loserId !== defenderId || damage % 2 !== 0)) ? defChar.ability.name : null
   const attBName = attPreB && attChar?.abilityB?.effect !== 'B_MOVEMENT' ? attChar?.abilityB?.name : null
   const defBName = defPreB && defChar?.abilityB?.effect !== 'B_MOVEMENT' ? defChar?.abilityB?.name : null
   const attCName = attCEffect && attChar?.abilityC ? attChar.abilityC.name : null
