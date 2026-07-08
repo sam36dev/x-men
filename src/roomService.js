@@ -306,6 +306,13 @@ async function _resolveVillainBattle(code, vb) {
       // [C] C_DODGE_50 (Noturno HP ≤ 30): 50% chance to take 0 damage
       if (playerCEffect === 'C_DODGE_50' && Math.random() < 0.5) damage = 0
 
+      // [A] DODGE_TOKEN (Gambit): spend 1 token to take 0 damage (skipped when C_HIGH_CARD forces fixed damage)
+      if (playerCEffect !== 'C_HIGH_CARD' && playerEffect === 'DODGE_TOKEN' && (playerData?.tokens ?? 0) >= 1) {
+        damage = 0
+        await update(ref(db, `rooms/${code}/players/${playerId}`), { tokens: (playerData.tokens || 1) - 1 })
+        await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
+      }
+
       if (damage > 0) {
         if (playerEffect === 'HEAL_HALF')
           await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
