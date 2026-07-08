@@ -454,10 +454,11 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     if (prev && prev.resolved && !cur) {
       const { playerRoll, villainRoll, playerId: vPlayerId, villainId } = prev
       if (playerRoll != null && villainRoll != null) {
-        const damage = prev.resolvedDamage ?? Math.abs(playerRoll - villainRoll)
-        const playerWon = playerRoll > villainRoll
-        const tied = playerRoll === villainRoll
-        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null, playerForgeBonus: prev.playerForgeBonus ?? 0, playerForgeId: prev.playerForgeId ?? null, playerBBonus: prev.playerBBonus ?? 0, effectivePlayerRoll: prev.effectivePlayerRoll ?? playerRoll })
+        const effectiveRoll = prev.effectivePlayerRoll ?? playerRoll
+        const damage = prev.resolvedDamage ?? Math.abs(effectiveRoll - villainRoll)
+        const playerWon = effectiveRoll > villainRoll
+        const tied = effectiveRoll === villainRoll
+        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null, playerForgeBonus: prev.playerForgeBonus ?? 0, playerForgeId: prev.playerForgeId ?? null, playerBBonus: prev.playerBBonus ?? 0, playerCBonus: prev.playerCBonus ?? 0, effectivePlayerRoll: effectiveRoll })
         setMyVillainRoll(null)
         setShaking(true)
         setTimeout(() => setShaking(false), 550)
@@ -999,11 +1000,13 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                     {(() => {
                       const fBonus = villainResult.playerForgeBonus ?? 0
                       const bBonus = villainResult.playerBBonus ?? 0
+                      const cBonus = villainResult.playerCBonus ?? 0
                       const base = villainResult.playerRoll - fBonus
-                      return (fBonus > 0 || bBonus > 0)
+                      return (fBonus > 0 || bBonus > 0 || cBonus > 0)
                         ? <>{face(base, myChar?.diceType ?? 6)}
                             {fBonus > 0 && <span className="forge-bonus-label">+{fBonus}⚔️</span>}
                             {bBonus > 0 && <span className="forge-bonus-label">+{bBonus}[B]</span>}
+                            {cBonus > 0 && <span className="forge-bonus-label">+{cBonus}[C]</span>}
                           </>
                         : face(villainResult.playerRoll, myChar?.diceType ?? 6)
                     })()}

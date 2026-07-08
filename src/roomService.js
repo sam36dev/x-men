@@ -357,8 +357,9 @@ async function _resolveVillainBattle(code, vb) {
       }
     }
 
-    // Store resolved damage + effective roll so the client shows correct values
-    await update(ref(db, `rooms/${code}/villainBattle`), { resolvedDamage: damage, playerBBonus, effectivePlayerRoll })
+    // Store resolved damage + effective roll + bonuses so the client shows correct values
+    const playerCBonus = playerCEffect === 'C_ROLL_BOOST_4' ? 4 : 0
+    await update(ref(db, `rooms/${code}/villainBattle`), { resolvedDamage: damage, playerBBonus, playerCBonus, effectivePlayerRoll })
 
     // Mission: survive_apocalypse — every battle vs Apocalypse regardless of outcome
     if (villainId === 2) await _checkMissionProgress(code, playerId, 'survive_apocalypse', {})
