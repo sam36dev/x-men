@@ -328,8 +328,8 @@ async function _resolveVillainBattle(code, vb) {
           await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
         await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
           if (!p) return null
-          // HEAL_HALF (Wolverine): recover half damage taken, rounds up
-          const healed = healHalfActivated ? Math.ceil(damage / 2) : 0
+          // HEAL_HALF (Wolverine): recover half damage only if damage is even
+          const healed = healHalfActivated && damage % 2 === 0 ? damage / 2 : 0
           let newHp = Math.max(0, p.hp - damage + healed)
           // [C] C_SURVIVE_1 (Colosso HP ≤ 20): survive with 1 HP instead of dying
           if (playerCEffect === 'C_SURVIVE_1' && newHp === 0) newHp = 1
@@ -1106,8 +1106,8 @@ async function _resolveBattle(code, battle) {
 
   // HEAL_HALF — loser recovers damage/2 after taking damage (own [A] or stolen)
   // Delay lets the damage render first so clients see HP go down, then back up
-  if (loserId && damage > 0 && (loserEffect === 'HEAL_HALF' || (loserId === attackerId ? attStolenEff : defStolenEff) === 'HEAL_HALF')) {
-    const heal = Math.ceil(damage / 2)
+  if (loserId && damage > 0 && damage % 2 === 0 && (loserEffect === 'HEAL_HALF' || (loserId === attackerId ? attStolenEff : defStolenEff) === 'HEAL_HALF')) {
+    const heal = damage / 2
     if (heal > 0) {
       await new Promise(r => setTimeout(r, 900))
       await runTransaction(ref(db, `rooms/${code}/players/${loserId}`), (p) => {

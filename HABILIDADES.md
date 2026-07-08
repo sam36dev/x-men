@@ -19,7 +19,7 @@
 
 | Slot | Nome | Descrição |
 |------|------|-----------|
-| [A] | Fator de Cura | Ao perder, recupera metade do dano recebido |
+| [A] | Fator de Cura | Ao perder, se o dano for par, recupera metade dele (dano ímpar = sem cura) |
 | [B] | Investida | Soma +2 ao dado nessa batalha (funciona contra jogadores e vilões) |
 | [C] HP ≤ 20 | Fúria Berserker | HP ≤ 20: +4 ao resultado do dado nessa batalha |
 

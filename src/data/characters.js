@@ -8,7 +8,7 @@ export const characters = [
     type: "Combate", typeIcon: "⚔️", hp: 100, diceType: 6, multiplier: 14,
     color: "#F5A623", gradient: "linear-gradient(160deg, #3d2000 0%, #1a0a00 50%, #0d0500 100%)",
     team: "X-Men", number: "001",
-    ability:  { name: "Fator de Cura",       description: "Ao perder, recupera metade do dano recebido",          effect: "HEAL_HALF"    },
+    ability:  { name: "Fator de Cura",       description: "Ao perder, se o dano for par, recupera metade dele",   effect: "HEAL_HALF"    },
     abilityB: { name: "Investida",            description: "Soma +2 ao dado nessa batalha",                        effect: "B_PLUS_2"     },
     abilityC: { name: "Fúria Berserker",      description: "HP ≤ 20: +4 ao resultado do dado nessa batalha",       effect: "C_ROLL_BOOST_4", condition: "hp_lte_20" }
   },
