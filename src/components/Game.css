@@ -1561,6 +1561,13 @@
   flex-wrap: wrap;
 }
 
+.player-action-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: 0.3rem;
+}
+
 .player-tokens__coins {
   font-family: 'Oswald', sans-serif;
   font-size: 0.65rem;
@@ -1703,6 +1710,29 @@
 .give-token-btn--heal:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.give-token-btn--trap {
+  background: rgba(255, 68, 153, 0.15);
+  border-color: rgba(255, 68, 153, 0.4);
+  color: rgba(255, 68, 153, 0.95);
+  font-size: 0.65rem;
+  width: auto;
+  min-width: 20px;
+  padding: 0 3px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.give-token-btn--trap:active {
+  background: rgba(255, 68, 153, 0.3);
+  border-color: rgba(255, 68, 153, 0.7);
+}
+.trap-mini-count {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(255, 68, 153, 0.95);
 }
 
 .ability-activated {

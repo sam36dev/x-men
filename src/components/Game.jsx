@@ -388,8 +388,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                          : defenderId === playerId ? !!(prev.defenderPreB) : false
         if (attackerId === playerId || defenderId === playerId) {
           resetBattleState(roomCode, playerId, myPreBUsed, me?.turn ?? 1)
-          const myCharId = attackerId === playerId ? prev.attackerCharId : prev.defenderCharId
-          if (myPreBUsed && myCharId === 6) addTrapCard(roomCode, playerId)
+          // Gambit [B] trap cards are placed directly via button (no battle needed)
         }
 
         setResult({
@@ -468,7 +467,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         if (vPlayerId === playerId) {
           const myVillainPreBUsed = !!(prev.playerPreB)
           resetBattleState(roomCode, playerId, myVillainPreBUsed, me?.turn ?? 1)
-          if (myVillainPreBUsed && prev.characterId === 6) addTrapCard(roomCode, playerId)
+          // Gambit [B] trap cards are placed directly via button (no battle needed)
         }
       }
     }
@@ -721,13 +720,24 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               <span className="player-tokens__coins"><span className="xtoken" aria-label="token">X</span> ×{me.tokens || 0}</span>
               <span className="player-tokens__chance">{myChar.ability ? getChance(me, myChar, players) : '—'}</span>
               {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
-              {isHost && (
-                <>
-                  <button className="give-token-btn" onClick={() => giveToken(roomCode, me.id)} title="Dar token">+</button>
-                  <button className="give-token-btn give-token-btn--remove" onClick={() => removeToken(roomCode, me.id)} title="Gastar token" disabled={(me.tokens || 0) === 0}>−</button>
-                  <button className="give-token-btn give-token-btn--heal" onClick={() => healPlayer(roomCode, me.id)} title="+2 HP" disabled={me.hp >= 100}>🔥</button>
-                </>
-              )}
+              <div className="player-action-btns">
+                {isHost && (
+                  <>
+                    <button className="give-token-btn" onClick={() => giveToken(roomCode, me.id)} title="Dar token">+</button>
+                    <button className="give-token-btn give-token-btn--remove" onClick={() => removeToken(roomCode, me.id)} title="Gastar token" disabled={(me.tokens || 0) === 0}>−</button>
+                    <button className="give-token-btn give-token-btn--heal" onClick={() => healPlayer(roomCode, me.id)} title="+2 HP" disabled={me.hp >= 100}>🔥</button>
+                  </>
+                )}
+                {myChar?.id === 6 && (me.trapCards || 0) > 0 && (
+                  <button
+                    className="give-token-btn give-token-btn--trap"
+                    onClick={() => setTrapTarget(true)}
+                    title={`Detonar Carta Explosiva (${me.trapCards})`}
+                  >
+                    🃏{me.trapCards > 1 && <span className="trap-mini-count">{me.trapCards}</span>}
+                  </button>
+                )}
+              </div>
             </div>
             <div className="player-turn-row">
               <span className="player-turn-label">TURNO</span>
@@ -741,24 +751,24 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             </div>
             {myChar?.abilityB && (myChar.abilityB.effect !== 'B_MOVEMENT' || myChar.id === 7) && (
               <button
-                className={`my-b-btn ${me.preB ? 'my-b-btn--on' : ''}`}
-                onClick={() => togglePreB(roomCode, playerId)}
-                disabled={!!isInBattle || (!me.preB && (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1)) || !!me.luckCards?.disable_abilities}
+                className={`my-b-btn ${myChar.id !== 6 && me.preB ? 'my-b-btn--on' : ''}`}
+                onClick={() => {
+                  if (myChar.id === 6) {
+                    addTrapCard(roomCode, playerId)
+                    resetBattleState(roomCode, playerId, true, me?.turn ?? 1)
+                  } else {
+                    togglePreB(roomCode, playerId)
+                  }
+                }}
+                disabled={
+                  myChar.id === 6
+                    ? (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1) || !!me.luckCards?.disable_abilities
+                    : !!isInBattle || (!me.preB && (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1)) || !!me.luckCards?.disable_abilities
+                }
               >
                 <span className="my-b-btn__tag">[B]</span>
                 <span className="my-b-btn__name">{myChar.abilityB.name}</span>
-                {me.preB && <span className="my-b-btn__check">✓</span>}
-              </button>
-            )}
-            {myChar?.id === 6 && (me.trapCards || 0) > 0 && (
-              <button
-                className="trap-card-btn"
-                onClick={() => setTrapTarget(true)}
-                disabled={!!isInBattle}
-              >
-                <span className="trap-card-btn__icon">🃏</span>
-                <span className="trap-card-btn__label">Detonar Carta</span>
-                <span className="trap-card-btn__count">{me.trapCards}</span>
+                {myChar.id !== 6 && me.preB && <span className="my-b-btn__check">✓</span>}
               </button>
             )}
             {myChar.abilityC && (
@@ -1145,7 +1155,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 <span className="host-b-panel__char" style={{ color: side.char?.color }}>
                   {side.char?.typeIcon} {side.char?.name}
                 </span>
-                {side.char?.abilityB && (side.char.abilityB.effect !== 'B_MOVEMENT' || side.char?.id === 7) ? (
+                {side.char?.abilityB && side.char.abilityB.effect !== 'B_TRAP_CARD' && (side.char.abilityB.effect !== 'B_MOVEMENT' || side.char?.id === 7) ? (
                   side.pid === activeId ? (
                     // Own side — interactive toggle
                     <button
