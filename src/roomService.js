@@ -157,6 +157,7 @@ async function _resolveVillainBattle(code, vb) {
   const { playerId, villainId, playerRoll, villainRoll, characterId, playerForgeId } = vb
   const villain = villains.find(v => v.id === villainId)
   const playerChar = characters.find(c => c.id === characterId)
+  let damage = Math.abs(playerRoll - villainRoll)
 
   const playerSnap = await get(ref(db, `rooms/${code}/players/${playerId}`))
   const playerData = playerSnap.val()
@@ -206,7 +207,7 @@ async function _resolveVillainBattle(code, vb) {
     if (playerCEffect === 'C_MAX_ROLL') effectivePlayerRoll = playerChar?.diceType ?? 6
     if (playerCEffect === 'C_ROLL_BOOST_4') effectivePlayerRoll = playerRoll + 4
 
-    let damage = Math.abs(effectivePlayerRoll - villainRoll)
+    damage = Math.abs(effectivePlayerRoll - villainRoll)
 
     if (effectivePlayerRoll > villainRoll) {
       // MIN_DAMAGE_3 (Ciclope): minimum 3 damage when winning
@@ -337,6 +338,9 @@ async function _resolveVillainBattle(code, vb) {
         }
       }
     }
+
+    // Store resolved damage so the client shows the correct value (not raw roll diff)
+    await update(ref(db, `rooms/${code}/villainBattle`), { resolvedDamage: damage })
 
     // Mission: survive_apocalypse — every battle vs Apocalypse regardless of outcome
     if (villainId === 2) await _checkMissionProgress(code, playerId, 'survive_apocalypse', {})

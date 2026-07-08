@@ -439,7 +439,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     if (prev && prev.resolved && !cur) {
       const { playerRoll, villainRoll, playerId: vPlayerId, villainId } = prev
       if (playerRoll != null && villainRoll != null) {
-        const damage = Math.abs(playerRoll - villainRoll)
+        const damage = prev.resolvedDamage ?? Math.abs(playerRoll - villainRoll)
         const playerWon = playerRoll > villainRoll
         const tied = playerRoll === villainRoll
         setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null, playerForgeBonus: prev.playerForgeBonus ?? 0, playerForgeId: prev.playerForgeId ?? null })
