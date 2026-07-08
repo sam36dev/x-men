@@ -929,17 +929,29 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         const defChar = characters.find(c => c.id === players.find(p => p.id === result.defenderId)?.characterId)
         const attBonus = result.attackerForgeBonus ?? 0
         const defBonus = result.defenderForgeBonus ?? 0
-        const attBase  = attBonus > 0 ? result.attackerRoll - attBonus : null
-        const defBase  = defBonus > 0 ? result.defenderRoll - defBonus : null
+        const attCBonus = result.attackerCBonus ?? 0
+        const defCBonus = result.defenderCBonus ?? 0
+        const attBase  = (attBonus > 0 || attCBonus > 0) ? result.attackerRoll - attBonus - attCBonus : null
+        const defBase  = (defBonus > 0 || defCBonus > 0) ? result.defenderRoll - defBonus - defCBonus : null
         return (
           <div className={`game-result ${iLost ? 'game-result--lose' : iWon ? 'game-result--win' : 'game-result--tie'}`}>
             <div className="game-result__rolls">
               <span style={{ color: attChar?.color }}>
-                {attBase != null ? <>{face(attBase, attChar?.diceType ?? 6)}<span className="forge-bonus-label">+{attBonus}⚔️</span></> : face(result.attackerRoll, attChar?.diceType ?? 6)}
+                {attBase != null
+                  ? <>{face(attBase, attChar?.diceType ?? 6)}
+                      {attBonus > 0 && <span className="forge-bonus-label">+{attBonus}⚔️</span>}
+                      {attCBonus > 0 && <span className="forge-bonus-label">+{attCBonus}[C]</span>}
+                    </>
+                  : face(result.attackerRoll, attChar?.diceType ?? 6)}
               </span>
               <span className="game-result__vs">VS</span>
               <span style={{ color: defChar?.color }}>
-                {defBase != null ? <>{face(defBase, defChar?.diceType ?? 6)}<span className="forge-bonus-label">+{defBonus}⚔️</span></> : face(result.defenderRoll, defChar?.diceType ?? 6)}
+                {defBase != null
+                  ? <>{face(defBase, defChar?.diceType ?? 6)}
+                      {defBonus > 0 && <span className="forge-bonus-label">+{defBonus}⚔️</span>}
+                      {defCBonus > 0 && <span className="forge-bonus-label">+{defCBonus}[C]</span>}
+                    </>
+                  : face(result.defenderRoll, defChar?.diceType ?? 6)}
               </span>
             </div>
             {(result.attackerForgeId === 4 || result.defenderForgeId === 4) && (

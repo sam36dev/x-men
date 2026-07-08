@@ -1040,6 +1040,8 @@ async function _resolveBattle(code, battle) {
     resolvedDamage: damage,
     effectiveAttackerRoll: attackerRoll,
     effectiveDefenderRoll: defenderRoll,
+    attackerCBonus: attCEffect === 'C_ROLL_BOOST_4' ? 4 : 0,
+    defenderCBonus: defCEffect === 'C_ROLL_BOOST_4' ? 4 : 0,
   })
 
   // Vampira Toque Vampírico flags
