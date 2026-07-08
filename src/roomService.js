@@ -504,7 +504,7 @@ export async function toggleCAbility(code, playerId) {
   await runTransaction(ref(db, `rooms/${code}/players/${playerId}/cActive`), (cur) => !cur)
 }
 
-export async function submitRoll(code, playerId, roll, preB) {
+export async function submitRoll(code, playerId, roll, preB, forgeItem) {
   const battleRef = ref(db, `rooms/${code}/battle`)
   const snap = await get(battleRef)
   const battle = snap.val()
@@ -514,13 +514,17 @@ export async function submitRoll(code, playerId, roll, preB) {
   const isDefender = battle.defenderId === playerId
   if (!isAttacker && !isDefender) return // not in this battle
 
-  const myKey = isAttacker ? 'attackerRoll' : 'defenderRoll'
-  const myPrebKey = isAttacker ? 'attackerPreB' : 'defenderPreB'
+  const myKey    = isAttacker ? 'attackerRoll'    : 'defenderRoll'
+  const myPrebKey = isAttacker ? 'attackerPreB'   : 'defenderPreB'
+  const myForgeKey = isAttacker ? 'attackerForgeId' : 'defenderForgeId'
+  const myForgeBonusKey = isAttacker ? 'attackerForgeBonus' : 'defenderForgeBonus'
   if (battle[myKey] != null) return // already rolled
 
   await update(ref(db), {
     [`rooms/${code}/battle/${myKey}`]: roll,
     [`rooms/${code}/battle/${myPrebKey}`]: preB ?? false,
+    [`rooms/${code}/battle/${myForgeKey}`]: forgeItem?.id ?? null,
+    [`rooms/${code}/battle/${myForgeBonusKey}`]: forgeItem?.diceBonus ?? 0,
   })
 
   const afterSnap = await get(battleRef)
@@ -824,6 +828,9 @@ async function _resolveBattle(code, battle) {
       if (loserEffect === 'SHIELD') damage = 0
       if (loserStolenEff === 'ARMOR') damage = Math.min(8, damage)
       if (loserStolenEff === 'SHIELD') damage = 0
+      // Escudo do Capitão (forge id=4): halves incoming damage
+      const loserForgeId = loserId === attackerId ? battle.attackerForgeId : battle.defenderForgeId
+      if (loserForgeId === 4) damage = Math.floor(damage / 2)
     }
 
     // [C] C_DODGE_50 — 50% chance loser takes no damage

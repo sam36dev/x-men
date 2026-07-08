@@ -2015,6 +2015,17 @@
   color: #00ee77;
 }
 
+/* Forge bonus label in battle result */
+.forge-bonus-label {
+  font-size: 0.65em;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  color: #FFD700;
+  margin-left: 3px;
+  vertical-align: super;
+  letter-spacing: 0.04em;
+}
+
 /* Paralysis banner */
 .paralyzed-banner {
   background: rgba(100, 150, 255, 0.12);

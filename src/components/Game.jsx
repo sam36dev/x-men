@@ -362,7 +362,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               attAbility, defAbility, attAbilityB, defAbilityB,
               attAbilityC, defAbilityC, fled,
               resolvedLoserId, resolvedDamage,
-              effectiveAttackerRoll, effectiveDefenderRoll } = prev
+              effectiveAttackerRoll, effectiveDefenderRoll,
+              attackerForgeBonus, defenderForgeBonus,
+              attackerForgeId, defenderForgeId } = prev
       if (fled) {
         setResult({ fled, attackerId, defenderId })
         setMyRoll(null)
@@ -379,6 +381,10 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
           attAbility: attAbility ?? null, defAbility: defAbility ?? null,
           attAbilityB: attAbilityB ?? null, defAbilityB: defAbilityB ?? null,
           attAbilityC: attAbilityC ?? null, defAbilityC: defAbilityC ?? null,
+          attackerForgeBonus: prev.attackerForgeBonus ?? 0,
+          defenderForgeBonus: prev.defenderForgeBonus ?? 0,
+          attackerForgeId: prev.attackerForgeId ?? null,
+          defenderForgeId: prev.defenderForgeId ?? null,
         })
         setMyRoll(null)
         setShaking(true)
@@ -528,7 +534,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         const final = base + forgeBonus
         setMyRoll(final)
         setRolling(false)
-        submitRoll(roomCode, activeId, final, activeP?.preB ?? false)
+        submitRoll(roomCode, activeId, final, activeP?.preB ?? false, activeP?.forgeItem ?? null)
         if (forgeBonus > 0 || activeP?.forgeItem) clearForgeItem(roomCode, activeId)
       }
     }, 80)
@@ -832,13 +838,24 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         const tied  = !result.loserId
         const attChar = characters.find(c => c.id === players.find(p => p.id === result.attackerId)?.characterId)
         const defChar = characters.find(c => c.id === players.find(p => p.id === result.defenderId)?.characterId)
+        const attBonus = result.attackerForgeBonus ?? 0
+        const defBonus = result.defenderForgeBonus ?? 0
+        const attBase  = attBonus > 0 ? result.attackerRoll - attBonus : null
+        const defBase  = defBonus > 0 ? result.defenderRoll - defBonus : null
         return (
           <div className={`game-result ${iLost ? 'game-result--lose' : iWon ? 'game-result--win' : 'game-result--tie'}`}>
             <div className="game-result__rolls">
-              <span style={{ color: attChar?.color }}>{face(result.attackerRoll, attChar?.diceType ?? 6)}</span>
+              <span style={{ color: attChar?.color }}>
+                {attBase != null ? <>{face(attBase, attChar?.diceType ?? 6)}<span className="forge-bonus-label">+{attBonus}⚔️</span></> : face(result.attackerRoll, attChar?.diceType ?? 6)}
+              </span>
               <span className="game-result__vs">VS</span>
-              <span style={{ color: defChar?.color }}>{face(result.defenderRoll, defChar?.diceType ?? 6)}</span>
+              <span style={{ color: defChar?.color }}>
+                {defBase != null ? <>{face(defBase, defChar?.diceType ?? 6)}<span className="forge-bonus-label">+{defBonus}⚔️</span></> : face(result.defenderRoll, defChar?.diceType ?? 6)}
+              </span>
             </div>
+            {(result.attackerForgeId === 4 || result.defenderForgeId === 4) && (
+              <p className="ability-activated">🛡️ Escudo do Capitão — dano reduzido pela metade!</p>
+            )}
             <p>
               {tied  && '⚖️ Empate — ninguém toma dano'}
               {iLost && `💥 Você perdeu! −${result.damage} HP`}
