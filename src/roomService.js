@@ -690,6 +690,12 @@ function _rollsChance(chance) {
   return Math.random() * 100 < chance
 }
 
+export async function resetBattleState(code, playerId, usedPreB, turn) {
+  const patch = { preB: false, cActive: false }
+  if (usedPreB) patch.preBUsedOnTurn = turn
+  await update(ref(db, `rooms/${code}/players/${playerId}`), patch)
+}
+
 export async function decrementForgeCharge(code, playerId) {
   await runTransaction(ref(db, `rooms/${code}/players/${playerId}/forgeItem`), (fi) => {
     if (!fi || fi.id === 5) return fi
@@ -1183,10 +1189,7 @@ async function _resolveBattle(code, battle) {
     if (luckOps.length) await Promise.all(luckOps)
   }
 
-  // Reset preB and cActive; record which turn [B] was used so it can't be reused same turn
-  await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false, ...(attPreB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
-  await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false, ...(defPreB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
-
+  // preB/preBUsedOnTurn/cActive reset is handled client-side in Game.jsx
   // Forge charge decrement for player battles is handled client-side in Game.jsx
 
   clearTimeout(ensureCleared)
