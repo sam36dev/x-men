@@ -2039,6 +2039,20 @@
   letter-spacing: 0.04em;
 }
 
+.forge-charge-counter {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  font-size: 0.72em;
+  font-weight: 700;
+  color: #ccc;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+}
+
 /* Paralysis banner */
 .paralyzed-banner {
   background: rgba(100, 150, 255, 0.12);

@@ -442,7 +442,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         const damage = Math.abs(playerRoll - villainRoll)
         const playerWon = playerRoll > villainRoll
         const tied = playerRoll === villainRoll
-        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null })
+        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null, playerForgeBonus: prev.playerForgeBonus ?? 0, playerForgeId: prev.playerForgeId ?? null })
         setMyVillainRoll(null)
         setShaking(true)
         setTimeout(() => setShaking(false), 550)
@@ -547,15 +547,17 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
   function rollDiceVillain() {
     if (villainRolling || myVillainRoll !== null || !activeChar) return
     setVillainRolling(true)
+    const forgeBonus = activeP?.forgeItem?.diceBonus ?? 0
     let ticks = 0
     const interval = setInterval(() => {
       ticks++
       if (ticks >= 12) {
         clearInterval(interval)
-        const v = Math.ceil(Math.random() * activeEffectiveDiceType)
+        const base = Math.ceil(Math.random() * activeEffectiveDiceType)
+        const v = base + forgeBonus
         setMyVillainRoll(v)
         setVillainRolling(false)
-        submitVillainRoll(roomCode, activeId, v)
+        submitVillainRoll(roomCode, activeId, v, activeP?.forgeItem ?? null)
       }
     }, 80)
   }
@@ -722,7 +724,10 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             )}
             {me.forgeItem && me.forgeItem.id !== 1 && (
               <div className="player-forge-item">
-                {me.forgeItem.icon} {me.forgeItem.name}{me.forgeItem.diceBonus > 0 ? ` (+${me.forgeItem.diceBonus} dado)` : ''}{me.forgeItem.charges != null ? ` — ${me.forgeItem.charges} lutas` : ''}
+                {me.forgeItem.icon} {me.forgeItem.name}{me.forgeItem.diceBonus > 0 ? ` (+${me.forgeItem.diceBonus} dado)` : ''}
+                {me.forgeItem.id !== 5 && (
+                  <span className="forge-charge-counter">{5 - (me.forgeItem.charges ?? 5)}/5</span>
+                )}
                 {isHost && <button className="forge-clear-btn" onClick={() => clearForgeItem(roomCode, me.id)}>✕</button>}
               </div>
             )}
@@ -908,7 +913,12 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             return (
               <>
                 <div className="game-result__rolls">
-                  <span style={{ color: myChar?.color }}>{face(villainResult.playerRoll, myChar?.diceType ?? 6)}</span>
+                  <span style={{ color: myChar?.color }}>
+                    {(villainResult.playerForgeBonus ?? 0) > 0
+                      ? <>{face(villainResult.playerRoll - villainResult.playerForgeBonus, myChar?.diceType ?? 6)}<span className="forge-bonus-label">+{villainResult.playerForgeBonus}⚔️</span></>
+                      : face(villainResult.playerRoll, myChar?.diceType ?? 6)
+                    }
+                  </span>
                   <span className="game-result__vs">VS</span>
                   <span style={{ color: vColor }}>
                     {villainResult.villainRoll2 != null
@@ -926,6 +936,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                   {villainResult.playerWon && !villainResult.absorbed && `🏆 Você venceu! ${villainResult.playerRoll} > ${villainResult.villainRoll} → Vilão −${villainResult.damage} HP`}
                   {villainResult.playerWon && villainResult.absorbed  && `🛡️ Dano absorvido! ${villainResult.playerRoll} > ${villainResult.villainRoll} — Juggernaut bloqueou o ataque`}
                   {!villainResult.playerWon && !villainResult.tied && `💥 Você perdeu! ${villainResult.villainRoll} > ${villainResult.playerRoll} → −${villainResult.damage} HP`}
+                  {villainResult.playerForgeId === 4 && !villainResult.playerWon && !villainResult.tied && (
+                    <span className="ability-activated"> 🛡️ Escudo do Capitão — dano reduzido à metade!</span>
+                  )}
                   {villainResult.abilityActivated && (
                     <span className="ability-activated"> ⚡ {villainResult.abilityActivated} ativado!</span>
                   )}
@@ -1202,6 +1215,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 {p.forgeItem && p.forgeItem.id !== 1 && (
                   <div className="player-forge-item">
                     {p.forgeItem.icon} {p.forgeItem.name}{p.forgeItem.diceBonus > 0 ? ` (+${p.forgeItem.diceBonus} dado)` : ''}
+                    {p.forgeItem.id !== 5 && (
+                      <span className="forge-charge-counter">{5 - (p.forgeItem.charges ?? 5)}/5</span>
+                    )}
                     {isHost && <button className="forge-clear-btn" onClick={() => clearForgeItem(roomCode, p.id)}>✕</button>}
                   </div>
                 )}

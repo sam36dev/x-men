@@ -119,7 +119,7 @@ export async function attackVillain(code, playerId, villainId) {
   })
 }
 
-export async function submitVillainRoll(code, playerId, roll) {
+export async function submitVillainRoll(code, playerId, roll, forgeItem) {
   const vBattleRef = ref(db, `rooms/${code}/villainBattle`)
   const snap = await get(vBattleRef)
   const vb = snap.val()
@@ -139,22 +139,24 @@ export async function submitVillainRoll(code, playerId, roll) {
   const die2 = villain?.id === 6 ? Math.ceil(Math.random() * villainDiceType) : null
   const villainRoll = die2 != null ? Math.max(die1, die2) : die1
 
+  const forgeId = forgeItem?.id ?? null
+  const forgeBonus = forgeItem?.diceBonus ?? 0
+
   const txResult = await runTransaction(vBattleRef, (cur) => {
     if (!cur || cur.resolved) return undefined
     const villainRoll2 = die2 != null ? Math.min(die1, die2) : null
-    return { ...cur, playerRoll: roll, villainRoll, villainRoll2, resolved: true }
+    return { ...cur, playerRoll: roll, villainRoll, villainRoll2, playerForgeId: forgeId, playerForgeBonus: forgeBonus, resolved: true }
   })
   if (!txResult.committed) return
   console.log('[villain result]', { playerRoll: roll, villainRoll, die1, die2, villainDiceType })
 
-  await _resolveVillainBattle(code, { ...vb, playerRoll: roll, villainRoll })
+  await _resolveVillainBattle(code, { ...vb, playerRoll: roll, villainRoll, playerForgeId: forgeId, playerForgeBonus: forgeBonus })
 }
 
 async function _resolveVillainBattle(code, vb) {
-  const { playerId, villainId, playerRoll, villainRoll, characterId } = vb
+  const { playerId, villainId, playerRoll, villainRoll, characterId, playerForgeId } = vb
   const villain = villains.find(v => v.id === villainId)
   const playerChar = characters.find(c => c.id === characterId)
-  let damage = Math.abs(playerRoll - villainRoll)
 
   const playerSnap = await get(ref(db, `rooms/${code}/players/${playerId}`))
   const playerData = playerSnap.val()
@@ -195,11 +197,28 @@ async function _resolveVillainBattle(code, vb) {
     const playerEffect = !_hasLuck(playerData, 'disable_abilities') && !playerData?.abilityDisabled
       ? playerChar?.ability?.effect : null
 
-    if (playerRoll > villainRoll) {
+    // [C] ability check
+    const playerCEffect = !_hasLuck(playerData, 'disable_abilities') && !playerData?.abilityDisabled
+      ? (_isCActive(playerData, playerChar) ? (playerChar?.abilityC?.effect ?? null) : null) : null
+
+    // Apply C roll modifiers before damage calc
+    let effectivePlayerRoll = playerRoll
+    if (playerCEffect === 'C_MAX_ROLL') effectivePlayerRoll = playerChar?.diceType ?? 6
+    if (playerCEffect === 'C_ROLL_BOOST_4') effectivePlayerRoll = playerRoll + 4
+
+    let damage = Math.abs(effectivePlayerRoll - villainRoll)
+
+    if (effectivePlayerRoll > villainRoll) {
       // MIN_DAMAGE_3 (Ciclope): minimum 3 damage when winning
       const minDmgActivated = playerEffect === 'MIN_DAMAGE_3' && damage > 0
       if (minDmgActivated) damage = Math.max(3, damage)
       if (minDmgActivated) await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
+
+      // [C] C_MIN_DAMAGE_5 (Ciclope HP ≤ 20): deal at least 5 when winning
+      if (playerCEffect === 'C_MIN_DAMAGE_5' && damage > 0) damage = Math.max(5, damage)
+
+      // [C] C_HIGH_CARD (Gambit HP ≤ 20): fixed 5 damage
+      if (playerCEffect === 'C_HIGH_CARD') damage = 5
 
       // Juggernaut (id=4): absorbs attacks of 2 or less damage
       if (villain?.id === 4 && damage <= 2) {
@@ -273,9 +292,18 @@ async function _resolveVillainBattle(code, vb) {
           if (villainId === 9) await _checkMissionProgress(code, killerId, 'civilians', {})
         }
       }
-    } else if (villainRoll > playerRoll) {
+    } else if (villainRoll > effectivePlayerRoll) {
       // Dente de Sabre (id=5): double damage against Wolverine (characterId=1)
       if (villain?.id === 5 && playerChar?.id === 1) damage *= 2
+
+      // [C] C_HIGH_CARD (Gambit HP ≤ 20): fixed 5 damage
+      if (playerCEffect === 'C_HIGH_CARD') damage = 5
+
+      // Escudo do Capitão (forge id=4): halves incoming damage
+      if (playerForgeId === 4) damage = Math.floor(damage / 2)
+
+      // [C] C_DODGE_50 (Noturno HP ≤ 30): 50% chance to take 0 damage
+      if (playerCEffect === 'C_DODGE_50' && Math.random() < 0.5) damage = 0
 
       if (damage > 0) {
         if (playerEffect === 'HEAL_HALF')
@@ -284,7 +312,9 @@ async function _resolveVillainBattle(code, vb) {
           if (!p) return null
           // HEAL_HALF (Wolverine): recover half damage taken
           const healed = playerEffect === 'HEAL_HALF' ? Math.floor(damage / 2) : 0
-          const newHp = Math.max(0, p.hp - damage + healed)
+          let newHp = Math.max(0, p.hp - damage + healed)
+          // [C] C_SURVIVE_1 (Colosso HP ≤ 20): survive with 1 HP instead of dying
+          if (playerCEffect === 'C_SURVIVE_1' && newHp === 0) newHp = 1
           return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1 }
         })
 
@@ -295,6 +325,15 @@ async function _resolveVillainBattle(code, vb) {
             await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
               (cur) => Math.min(villain.hp, (cur ?? 0) + heal))
           }
+        }
+      }
+
+      // [C] C_REDIRECT_HALF (Jean Grey HP ≤ 20): reflect half damage back to villain
+      if (damage > 0 && playerCEffect === 'C_REDIRECT_HALF') {
+        const reflected = Math.floor(damage / 2)
+        if (reflected > 0) {
+          await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
+            cur => Math.max(0, (cur ?? 0) - reflected))
         }
       }
     }
@@ -320,6 +359,19 @@ async function _resolveVillainBattle(code, vb) {
       if (_hasLuck(playerData, 'disable_abilities') && playerRoll > villainRoll)
         luckOps.push(update(ref(db, `rooms/${code}/players/${playerId}`), { 'luckCards/disable_abilities': null }))
       if (luckOps.length) await Promise.all(luckOps)
+    }
+
+    // Decrement forge item charges after villain battle (not bomb id=5)
+    if (playerForgeId && playerForgeId !== 5) {
+      const fi = playerData?.forgeItem
+      if (fi) {
+        const remaining = (fi.charges ?? 5) - 1
+        if (remaining <= 0) {
+          await update(ref(db, `rooms/${code}/players/${playerId}`), { forgeItem: null })
+        } else {
+          await update(ref(db, `rooms/${code}/players/${playerId}`), { 'forgeItem/charges': remaining })
+        }
+      }
     }
 
     setTimeout(() => remove(ref(db, `rooms/${code}/villainBattle`)), 4000)
@@ -426,17 +478,38 @@ export async function applyLuckCard(code, playerId, card) {
       })
       break
     case 'aoe_damage': {
-      const snap = await get(ref(db, `rooms/${code}/players`))
-      const all = Object.entries(snap.val() || {})
-      await Promise.all(
-        all
+      const [playerSnap, villainHpSnap, unlockedSnap] = await Promise.all([
+        get(ref(db, `rooms/${code}/players`)),
+        get(ref(db, `rooms/${code}/villainHp`)),
+        get(ref(db, `rooms/${code}/unlockedVillains`)),
+      ])
+      const all = Object.entries(playerSnap.val() || {})
+      const villainHpMap = villainHpSnap.val() || {}
+      const unlockedMap = unlockedSnap.val() || {}
+
+      const ops = [
+        // Damage all alive players except card owner
+        ...all
           .filter(([id, p]) => id !== playerId && p.alive)
           .map(([id]) => runTransaction(ref(db, `rooms/${code}/players/${id}`), p => {
             if (!p || !p.alive) return p
             const newHp = Math.max(0, (p.hp || 0) - card.value)
             return { ...p, hp: newHp, alive: newHp > 0 }
-          }))
-      )
+          })),
+        // Damage all alive villains except locked Magneto (id=1) and Apocalipse (id=2)
+        ...Object.entries(villainHpMap)
+          .filter(([vid, hp]) => {
+            const vId = Number(vid)
+            if (hp <= 0) return false
+            if ((vId === 1 || vId === 2) && !unlockedMap[vId]) return false
+            return true
+          })
+          .map(([vid]) =>
+            runTransaction(ref(db, `rooms/${code}/villainHp/${Number(vid)}`),
+              cur => Math.max(0, (cur ?? 0) - card.value))
+          ),
+      ]
+      await Promise.all(ops)
       break
     }
     case 'token':
@@ -851,15 +924,16 @@ async function _resolveBattle(code, battle) {
     // [C] C_DODGE_50 — 50% chance loser takes no damage
     if (loserCEffect === 'C_DODGE_50' && Math.random() < 0.5) damage = 0
 
-    // [A] DODGE_TOKEN (Gambit) — loser spends 1 token to take 0 damage
+    // [C] C_HIGH_CARD (Gambit HP ≤ 20) — damage fixed at 5, overrides everything
+    if (attCEffect === 'C_HIGH_CARD' || defCEffect === 'C_HIGH_CARD') damage = 5
+
+    // [A] DODGE_TOKEN (Gambit) — loser spends 1 token to take 0 damage (only when C_HIGH_CARD is not overriding)
     const loserPlayerData = loserId === attackerId ? attPlayer : defPlayer
-    if (loserEffect === 'DODGE_TOKEN' && (loserPlayerData?.tokens ?? 0) >= 1) {
+    const highCardActive = attCEffect === 'C_HIGH_CARD' || defCEffect === 'C_HIGH_CARD'
+    if (!highCardActive && loserEffect === 'DODGE_TOKEN' && (loserPlayerData?.tokens ?? 0) >= 1) {
       damage = 0
       await update(ref(db, `rooms/${code}/players/${loserId}`), { tokens: (loserPlayerData.tokens || 1) - 1 })
     }
-
-    // [C] C_HIGH_CARD (Gambit HP ≤ 20) — damage fixed at 5, overrides everything
-    if (attCEffect === 'C_HIGH_CARD' || defCEffect === 'C_HIGH_CARD') damage = 5
   }
 
   // [B] B_PARALYZE (Jean Grey) — winner paralyzes loser for N turns (N = winner's tokens)
