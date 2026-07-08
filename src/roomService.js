@@ -683,6 +683,21 @@ function _rollsChance(chance) {
   return Math.random() * 100 < chance
 }
 
+export async function decrementForgeCharge(code, playerId) {
+  await runTransaction(ref(db, `rooms/${code}/players/${playerId}/forgeItem`), (fi) => {
+    if (!fi || fi.id === 5) return fi
+    const remaining = (fi.charges ?? 5) - 1
+    return remaining <= 0 ? null : { ...fi, charges: remaining }
+  })
+}
+
+export async function incrementPlayerWins(code, playerId) {
+  await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+    if (!p) return p
+    return { ...p, wins: (p.wins || 0) + 1 }
+  })
+}
+
 async function _resolveBattle(code, battle) {
   const battleRef = ref(db, `rooms/${code}/battle`)
 
@@ -1101,9 +1116,9 @@ async function _resolveBattle(code, battle) {
             sa = { ...sa, queue: [..._toArr(sa.queue), entry] }
           }
         }
-        return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0, stolenAbility: sa }
+        return { ...p, consecutiveLosses: 0, stolenAbility: sa }
       }
-      return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
+      return { ...p, consecutiveLosses: 0 }
     })
 
     if (vampiraWon) {
@@ -1165,20 +1180,7 @@ async function _resolveBattle(code, battle) {
   await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false, ...(attPreB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
   await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false, ...(defPreB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
 
-  // Decrement forge item charges for both players (not bomb)
-  // Use forgeId stored in battle node at roll-time — avoids stale snapshot issues
-  const forgePairs = [
-    [attackerId, battle.attackerForgeId],
-    [defenderId, battle.defenderForgeId],
-  ]
-  for (const [pid, forgeId] of forgePairs) {
-    if (!forgeId || forgeId === 5) continue
-    await runTransaction(ref(db, `rooms/${code}/players/${pid}/forgeItem`), (cur) => {
-      if (!cur) return cur
-      const remaining = (cur.charges ?? 5) - 1
-      return remaining <= 0 ? null : { ...cur, charges: remaining }
-    })
-  }
+  // Forge charge decrement for player battles is handled client-side in Game.jsx
 
   clearTimeout(ensureCleared)
   setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 4000)

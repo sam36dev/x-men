@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, incrementMissionProgress, selectCharacter, addLocalPlayer, removeParalysis } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, incrementMissionProgress, selectCharacter, addLocalPlayer, removeParalysis, decrementForgeCharge, incrementPlayerWins } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import { MISSIONS } from '../data/missions'
@@ -376,6 +376,14 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         const loserId = resolvedLoserId !== undefined
           ? (resolvedLoserId || null)
           : (effAtt > effDef ? defenderId : effAtt < effDef ? attackerId : null)
+        const winnerId = loserId === null ? null : (loserId === attackerId ? defenderId : attackerId)
+
+        // Client-side: each player updates their own wins/forge charges
+        if (winnerId === playerId) incrementPlayerWins(roomCode, playerId)
+        const myForgeId = attackerId === playerId ? attackerForgeId
+                        : defenderId === playerId ? defenderForgeId : null
+        if (myForgeId && myForgeId !== 5) decrementForgeCharge(roomCode, playerId)
+
         setResult({
           attackerRoll: effAtt, defenderRoll: effDef, damage, loserId, attackerId, defenderId,
           attAbility: attAbility ?? null, defAbility: defAbility ?? null,
