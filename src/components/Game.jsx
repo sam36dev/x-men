@@ -462,6 +462,13 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         setShaking(true)
         setTimeout(() => setShaking(false), 550)
         setTimeout(() => setVillainResult(null), 5000)
+
+        // Client-side: reset preB state and add trap card if Gambit used [B]
+        if (vPlayerId === playerId) {
+          const myVillainPreBUsed = !!(prev.playerPreB)
+          resetBattleState(roomCode, playerId, myVillainPreBUsed, me?.turn ?? 1)
+          if (myVillainPreBUsed && myChar?.id === 6) addTrapCard(roomCode, playerId)
+        }
       }
     }
 
@@ -572,7 +579,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         const v = base + forgeBonus
         setMyVillainRoll(v)
         setVillainRolling(false)
-        submitVillainRoll(roomCode, activeId, v, activeP?.forgeItem ?? null)
+        submitVillainRoll(roomCode, activeId, v, activeP?.forgeItem ?? null, activeP?.preB ?? false)
       }
     }, 80)
   }

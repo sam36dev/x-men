@@ -120,7 +120,7 @@ export async function attackVillain(code, playerId, villainId) {
   })
 }
 
-export async function submitVillainRoll(code, playerId, roll, forgeItem) {
+export async function submitVillainRoll(code, playerId, roll, forgeItem, preB) {
   const vBattleRef = ref(db, `rooms/${code}/villainBattle`)
   const snap = await get(vBattleRef)
   const vb = snap.val()
@@ -146,7 +146,7 @@ export async function submitVillainRoll(code, playerId, roll, forgeItem) {
   const txResult = await runTransaction(vBattleRef, (cur) => {
     if (!cur || cur.resolved) return undefined
     const villainRoll2 = die2 != null ? Math.min(die1, die2) : null
-    return { ...cur, playerRoll: roll, villainRoll, villainRoll2, playerForgeId: forgeId, playerForgeBonus: forgeBonus, resolved: true }
+    return { ...cur, playerRoll: roll, villainRoll, villainRoll2, playerForgeId: forgeId, playerForgeBonus: forgeBonus, playerPreB: preB ?? false, resolved: true }
   })
   if (!txResult.committed) return
   console.log('[villain result]', { playerRoll: roll, villainRoll, die1, die2, villainDiceType })
