@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, selectCharacter, addLocalPlayer } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, selectCharacter, addLocalPlayer, removeParalysis } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import { MISSIONS } from '../data/missions'
@@ -174,7 +174,7 @@ function AbilityModal({ char, onClose }) {
               <div className="ability-row__content">
                 <span className="ability-row__name">{char.abilityB.name}</span>
                 <span className="ability-row__desc">{char.abilityB.description}</span>
-                <span className="ability-row__note">Declare antes de rolar · 1× por turno</span>
+                <span className="ability-row__note">Declare antes de rolar · 1× por rodada</span>
               </div>
             </div>
           )}
@@ -755,7 +755,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             )}
             {isParalyzed && (
               <div className="paralyzed-banner">
-                🔵 Paralizado por {(activeP?.paralyzedUntil ?? 0) - (activeP?.turn ?? 1) + 1} turno(s)
+                🔵 Paralizado por {(activeP?.paralyzedUntil ?? 0) - (activeP?.turn ?? 1) + 1} rodada(s)
               </div>
             )}
             {me?.bomb && (
@@ -851,7 +851,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               <p className="ability-activated">🧠 Dano Psíquico → {result.psychicTarget.name} −3 HP</p>
             )}
             {result?.paralysisInfo && (
-              <p className="ability-activated">🔵 {result.paralysisInfo.name} paralizado por {result.paralysisInfo.turns} turno(s)!</p>
+              <p className="ability-activated">🔵 {result.paralysisInfo.name} paralizado por {result.paralysisInfo.turns} rodada(s)!</p>
             )}
           </div>
         )
@@ -1159,6 +1159,14 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 )}
                 {p.abilityDisabled && (
                   <div className="player-ability-stolen">🩸 [A] roubada</div>
+                )}
+                {p.paralyzedUntil != null && (p.turn ?? 1) <= p.paralyzedUntil && (
+                  <div className="player-paralyzed-tag">
+                    🔵 Paralizado ({p.paralyzedUntil - (p.turn ?? 1) + 1} rodada(s))
+                    {isHost && (
+                      <button className="forge-clear-btn" onClick={() => removeParalysis(roomCode, p.id)}>✕</button>
+                    )}
+                  </div>
                 )}
                 {p.forgeItem && p.forgeItem.id !== 1 && (
                   <div className="player-forge-item">

@@ -54,7 +54,7 @@ export const characters = [
       powers: ["Força Fênix Cósmica", "Telecinese Suprema", "Chama Estelar", "Ressurreição"]
     },
     ability:  { name: "Dano Psíquico",        description: "Ao perder, causa 3 de dano psíquico a um oponente ou boss aleatório", effect: "PSYCHIC_DAMAGE" },
-    abilityB: { name: "Paralisia",            description: "Ao vencer: paralisa o oponente por N turnos (N = seus tokens)",       effect: "B_PARALYZE"  },
+    abilityB: { name: "Paralisia",            description: "Ao vencer: paralisa o oponente por N rodadas (N = seus tokens)",      effect: "B_PARALYZE"  },
     abilityC: { name: "Chama Fênix",          description: "HP ≤ 20: metade do dano recebido é refletido ao oponente", effect: "C_REDIRECT_HALF", condition: "hp_lte_20" }
   },
   {

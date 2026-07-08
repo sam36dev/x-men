@@ -365,6 +365,10 @@ export async function removeBomb(code, playerId) {
   await update(ref(db, `rooms/${code}/players/${playerId}`), { bomb: null })
 }
 
+export async function removeParalysis(code, playerId) {
+  await update(ref(db, `rooms/${code}/players/${playerId}`), { paralyzedUntil: null })
+}
+
 export async function tickBomb(code, playerId) {
   await runTransaction(ref(db, `rooms/${code}/players/${playerId}/bomb/counter`), (cur) =>
     Math.min(5, (cur ?? 0) + 1)
