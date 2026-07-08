@@ -367,15 +367,11 @@ async function _resolveVillainBattle(code, vb) {
 
     // Decrement forge item charges after villain battle (not bomb id=5)
     if (playerForgeId && playerForgeId !== 5) {
-      const fi = playerData?.forgeItem
-      if (fi) {
+      await runTransaction(ref(db, `rooms/${code}/players/${playerId}/forgeItem`), (fi) => {
+        if (!fi) return fi
         const remaining = (fi.charges ?? 5) - 1
-        if (remaining <= 0) {
-          await update(ref(db, `rooms/${code}/players/${playerId}`), { forgeItem: null })
-        } else {
-          await update(ref(db, `rooms/${code}/players/${playerId}`), { 'forgeItem/charges': remaining })
-        }
-      }
+        return remaining <= 0 ? null : { ...fi, charges: remaining }
+      })
     }
 
     setTimeout(() => remove(ref(db, `rooms/${code}/villainBattle`)), 4000)
@@ -1169,16 +1165,15 @@ async function _resolveBattle(code, battle) {
   await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false, ...(attPreB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
   await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false, ...(defPreB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
 
-  // Decrement forge item charges for both players (not bomb)
+  // Decrement forge item charges for both players (not bomb) — transactional to avoid stale reads
   for (const [pid, pData] of [[attackerId, attPlayer], [defenderId, defPlayer]]) {
     const fi = pData?.forgeItem
     if (!fi || fi.id === 5) continue
-    const remaining = (fi.charges ?? 5) - 1
-    if (remaining <= 0) {
-      await update(ref(db, `rooms/${code}/players/${pid}`), { forgeItem: null })
-    } else {
-      await update(ref(db, `rooms/${code}/players/${pid}`), { 'forgeItem/charges': remaining })
-    }
+    await runTransaction(ref(db, `rooms/${code}/players/${pid}/forgeItem`), (cur) => {
+      if (!cur) return cur
+      const remaining = (cur.charges ?? 5) - 1
+      return remaining <= 0 ? null : { ...cur, charges: remaining }
+    })
   }
 
   clearTimeout(ensureCleared)
