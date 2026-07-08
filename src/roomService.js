@@ -398,7 +398,8 @@ export async function detonateBomb(code, playerId, villainId, xmenPresent) {
 }
 
 export async function giveForgeItem(code, playerId, item) {
-  await update(ref(db, `rooms/${code}/players/${playerId}`), { forgeItem: item })
+  const stored = item.id === 5 ? item : { ...item, charges: 5 }
+  await update(ref(db, `rooms/${code}/players/${playerId}`), { forgeItem: stored })
 }
 
 export async function clearForgeItem(code, playerId) {
@@ -1075,6 +1076,18 @@ async function _resolveBattle(code, battle) {
   // Reset preB and cActive; record which turn [B] was used so it can't be reused same turn
   await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, cActive: false, ...(attPreB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
   await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, cActive: false, ...(defPreB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
+
+  // Decrement forge item charges for both players (not bomb)
+  for (const [pid, pData] of [[attackerId, attPlayer], [defenderId, defPlayer]]) {
+    const fi = pData?.forgeItem
+    if (!fi || fi.id === 5) continue
+    const remaining = (fi.charges ?? 5) - 1
+    if (remaining <= 0) {
+      await update(ref(db, `rooms/${code}/players/${pid}`), { forgeItem: null })
+    } else {
+      await update(ref(db, `rooms/${code}/players/${pid}`), { 'forgeItem/charges': remaining })
+    }
+  }
 
   clearTimeout(ensureCleared)
   setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 4000)

@@ -535,7 +535,6 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         setMyRoll(final)
         setRolling(false)
         submitRoll(roomCode, activeId, final, activeP?.preB ?? false, activeP?.forgeItem ?? null)
-        if (forgeBonus > 0 || activeP?.forgeItem) clearForgeItem(roomCode, activeId)
       }
     }, 80)
   }
@@ -723,7 +722,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             )}
             {me.forgeItem && me.forgeItem.id !== 1 && (
               <div className="player-forge-item">
-                {me.forgeItem.icon} {me.forgeItem.name}{me.forgeItem.diceBonus > 0 ? ` (+${me.forgeItem.diceBonus} dado)` : ''}
+                {me.forgeItem.icon} {me.forgeItem.name}{me.forgeItem.diceBonus > 0 ? ` (+${me.forgeItem.diceBonus} dado)` : ''}{me.forgeItem.charges != null ? ` — ${me.forgeItem.charges} lutas` : ''}
                 {isHost && <button className="forge-clear-btn" onClick={() => clearForgeItem(roomCode, me.id)}>✕</button>}
               </div>
             )}
