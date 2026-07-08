@@ -818,42 +818,6 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         </div>
       )}
 
-      {/* Local players (tester only) */}
-      {isTester && (
-        <div className="local-players-section">
-          <button
-            className="local-add-btn"
-            onClick={async () => {
-              const name = `Local ${localPlayerIds.length + 2}`
-              const id = crypto.randomUUID()
-              await addLocalPlayer(roomCode, id, name)
-              setLocalPlayerIds(ids => [...ids, id])
-            }}
-          >
-            ➕ Adicionar jogador local
-          </button>
-          {localPlayerIds.map(lid => {
-            const lp = players.find(p => p.id === lid)
-            if (!lp) return null
-            return (
-              <LocalPlayerCard
-                key={lid}
-                p={lp}
-                roomCode={roomCode}
-                battle={battle}
-                villainBattle={villainBattle}
-                players={players}
-                villains={villains}
-                villainHp={villainHp}
-                onRemove={async () => {
-                  await leaveRoom(roomCode, lid)
-                  setLocalPlayerIds(ids => ids.filter(i => i !== lid))
-                }}
-              />
-            )
-          })}
-        </div>
-      )}
 
       {/* Result banner */}
       {result && (() => {
@@ -1201,15 +1165,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                   <div className="player-mission">
                     <span className="player-mission__label">🎯</span>
                     <span className={`player-mission__name ${p.missionCompleted ? 'player-mission__name--done' : ''}`}>
-                      {p.missionCompleted || isHost ? MISSIONS.find(m => m.id === p.missionId)?.name : '???'}
+                      {p.missionCompleted ? MISSIONS.find(m => m.id === p.missionId)?.name : '???'}
                     </span>
-                    {isHost && (MISSIONS.find(m => m.id === p.missionId)?.goal ?? 1) > 1 && (
-                      <span className="player-mission__progress">{p.missionProgress ?? 0}/{MISSIONS.find(m => m.id === p.missionId)?.goal}</span>
-                    )}
                     {p.missionCompleted && <span className="player-mission__done">✓</span>}
-                    {isHost && !p.missionCompleted && MISSIONS.find(m => m.id === p.missionId)?.auto === null && (
-                      <button className="mission-complete-btn" onClick={() => completeMission(roomCode, p.id)}>✓ Concluir</button>
-                    )}
                   </div>
                 )}
                 {isHost && (
