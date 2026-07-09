@@ -712,6 +712,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             </div>
             <div className="player-tokens">
               <span className="player-tokens__coins"><span className="xtoken" aria-label="token">X</span> ×{me.tokens || 0}</span>
+              {myChar.ability && (me.tokens || 0) > 0 && <span className="player-tokens__chance">{Math.min(90, (me.tokens || 0) * 10)}%</span>}
               {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
               <div className="player-action-btns">
                 {isHost && (
@@ -1262,6 +1263,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 </div>
                 <div className="player-tokens">
                   <span className="player-tokens__coins"><span className="xtoken" aria-label="token">X</span> ×{p.tokens || 0}</span>
+                  {char?.ability && (p.tokens || 0) > 0 && <span className="player-tokens__chance">{Math.min(90, (p.tokens || 0) * 10)}%</span>}
                   {isHost && p.alive && (
                     <>
                       <button className="give-token-btn" onClick={() => giveToken(roomCode, p.id)} title="Dar token">+</button>
