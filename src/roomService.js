@@ -228,9 +228,13 @@ async function _resolveVillainBattle(code, vb) {
 
     // [A] and [B] effects that modify rolls vs villain
     const playerAChance = _abilityChance(playerData, playerChar, [])
-    if (playerEffect === 'SNEAK' && _rollsChance(playerAChance)) effectivePlayerRoll += 3
-    if (playerEffect === 'WEAKEN' && _rollsChance(playerAChance)) villainRoll = Math.max(1, villainRoll - 2)
+    const sneakActivated  = playerEffect === 'SNEAK'   && _rollsChance(playerAChance)
+    const weakenActivated = playerEffect === 'WEAKEN'  && _rollsChance(playerAChance)
+    if (sneakActivated)  effectivePlayerRoll += 3
+    if (weakenActivated) villainRoll = Math.max(1, villainRoll - 2)
     if (playerBEffect === 'B_FORCE_ONE') villainRoll = 1
+    if (sneakActivated || weakenActivated)
+      await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
 
     damage = Math.abs(effectivePlayerRoll - villainRoll)
 
@@ -333,8 +337,8 @@ async function _resolveVillainBattle(code, vb) {
       // [C] C_DODGE_50 (Noturno HP ≤ 30): 50% chance to take 0 damage
       if (playerCEffect === 'C_DODGE_50' && Math.random() < 0.5) damage = 0
 
-      // [A] DODGE_TOKEN (Gambit): spend 1 token to take 0 damage (skipped when C_HIGH_CARD forces fixed damage)
-      if (playerCEffect !== 'C_HIGH_CARD' && playerEffect === 'DODGE_TOKEN' && (playerData?.tokens ?? 0) >= 1) {
+      // [A] DODGE_TOKEN (Gambit): spend 1 token to take 0 damage (probability-based, skipped when C_HIGH_CARD forces fixed damage)
+      if (playerCEffect !== 'C_HIGH_CARD' && playerEffect === 'DODGE_TOKEN' && (playerData?.tokens ?? 0) >= 1 && _rollsChance(playerAChance)) {
         damage = 0
         await update(ref(db, `rooms/${code}/players/${playerId}`), { tokens: (playerData.tokens || 1) - 1 })
         await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
@@ -940,8 +944,8 @@ async function _resolveBattle(code, battle) {
     : _isCActive(defPlayer, defChar) ? (defChar?.abilityC?.effect ?? null) : null
 
   // [C] C_ABSORB_SURE / C_PIERCE_SURE guarantee [A] activation
-  // Passive abilities always activate regardless of tokens
-  const PASSIVE_EFFECTS = new Set(['MIN_DAMAGE_3', 'DODGE_TOKEN', 'PSYCHIC_DAMAGE'])
+  // Passive abilities always activate regardless of tokens (DODGE_TOKEN uses probability, not passive)
+  const PASSIVE_EFFECTS = new Set(['MIN_DAMAGE_3', 'PSYCHIC_DAMAGE'])
   let attActivated = attEffect ? (PASSIVE_EFFECTS.has(attEffect) || _rollsChance(attChance)) : false
   let defActivated = defEffect ? (PASSIVE_EFFECTS.has(defEffect) || _rollsChance(defChance)) : false
   if (attCEffect === 'C_ABSORB_SURE' && attEffect === 'ABSORB') attActivated = true
@@ -1167,14 +1171,20 @@ async function _resolveBattle(code, battle) {
     }
   } catch (_) {}
 
+  const _highCard = attCEffect === 'C_HIGH_CARD' || defCEffect === 'C_HIGH_CARD'
   const attAbilityName = attActivated && attChar?.ability
-    && !(attEffect === 'HEAL_HALF' && (loserId !== attackerId || damage % 2 !== 0))
-    && !(attEffect === 'TIED_DAMAGE' && loserId !== null)
-    && !(attEffect === 'PSYCHIC_DAMAGE' && loserId !== attackerId) ? attChar.ability.name : null
+    && !(attEffect === 'HEAL_HALF'       && (loserId !== attackerId || damage % 2 !== 0))
+    && !(attEffect === 'TIED_DAMAGE'     && loserId !== null)
+    && !(attEffect === 'PSYCHIC_DAMAGE'  && loserId !== attackerId)
+    && !(attEffect === 'DODGE_TOKEN'     && (loserId !== attackerId || (attPlayer?.tokens ?? 0) < 1 || _highCard))
+    ? attChar.ability.name : null
   const defAbilityName = defActivated && defChar?.ability
-    && !(defEffect === 'HEAL_HALF' && (loserId !== defenderId || damage % 2 !== 0))
-    && !(defEffect === 'TIED_DAMAGE' && loserId !== null)
-    && !(defEffect === 'PSYCHIC_DAMAGE' && loserId !== defenderId) ? defChar.ability.name : null
+    && !(defEffect === 'HEAL_HALF'       && (loserId !== defenderId || damage % 2 !== 0))
+    && !(defEffect === 'TIED_DAMAGE'     && loserId !== null)
+    && !(defEffect === 'PSYCHIC_DAMAGE'  && loserId !== defenderId)
+    && !(defEffect === 'DODGE_TOKEN'     && (loserId !== defenderId || (defPlayer?.tokens ?? 0) < 1 || _highCard))
+    && !(defEffect === 'SNEAK')
+    ? defChar.ability.name : null
   const attBName = attPreB && attChar?.abilityB?.effect !== 'B_MOVEMENT' ? attChar?.abilityB?.name : null
   const defBName = defPreB && defChar?.abilityB?.effect !== 'B_MOVEMENT' ? defChar?.abilityB?.name : null
   const attCName = attCEffect && attChar?.abilityC ? attChar.abilityC.name : null
