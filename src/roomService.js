@@ -644,7 +644,7 @@ export async function changeTurn(code, playerId, delta) {
     const allPlayersData = allSnap.val() || {}
     const stormEntry = Object.entries(allPlayersData).find(([, p]) => {
       const char = characters.find(c => c.id === p.characterId)
-      return char?.abilityC?.effect === 'C_TURN_DAMAGE_3' && p.alive && (p.hp ?? 100) <= 20 && p.cActive
+      return char?.abilityC?.effect === 'C_TURN_DAMAGE_3' && p.alive && (p.hp ?? 100) <= 20
     })
     if (stormEntry) {
       const [stormPlayerId] = stormEntry
