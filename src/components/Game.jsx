@@ -523,9 +523,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
 
   const isTransformed = myChar?.transformation != null && (me?.hp ?? 100) <= (myChar.transformation.triggersAt ?? 999)
   const transformedChar = isTransformed ? { ...myChar, ...myChar.transformation } : myChar
-  // Wolverine upgrades to D10 when HP ≤ 20; Jean Grey transforms to Phoenix (D12)
-  const baseDiceType = myChar?.id === 1 && (me?.hp ?? 100) <= 20 ? 10
-    : isTransformed ? (myChar.transformation.diceType ?? myChar.diceType ?? 6)
+  const baseDiceType = isTransformed ? (myChar.transformation.diceType ?? myChar.diceType ?? 6)
     : (myChar?.diceType ?? 6)
   const effectiveDiceType =
     me?.luckCards?.dice_d20          ? 20
@@ -541,7 +539,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     activeP?.luckCards?.dice_d20          ? 20
     : activeP?.luckCards?.dice_d12_until_12 ? 12
     : activeP?.luckCards?.dice_d8           ? 8
-    : (activeChar?.id === 1 && (activeP?.hp ?? 100) <= 20 ? 10 : (activeChar?.diceType ?? 6))
+    : (activeChar?.diceType ?? 6)
 
   function rollDice() {
     if (rolling || myRoll !== null || !activeChar) return

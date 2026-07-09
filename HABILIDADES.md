@@ -15,7 +15,7 @@
 
 ---
 
-## 1. Wolverine · Logan · D6 → D10 (HP ≤ 30)
+## 1. Wolverine · Logan · D6
 
 | Slot | Nome | Descrição |
 |------|------|-----------|
