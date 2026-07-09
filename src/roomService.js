@@ -388,7 +388,7 @@ async function _resolveVillainBattle(code, vb) {
           .filter(([pid, p]) => pid !== playerId && p.alive && (p.hp ?? 0) > 0)
           .map(([, p]) => ({ type: 'player', name: p.name }))
         const villainTargets = Object.entries(vHpData)
-          .filter(([vid, hp]) => hp > 0 && unlockedMap2[vid])
+          .filter(([vid, hp]) => hp > 0 && (Number(vid) !== 1 && Number(vid) !== 2 || unlockedMap2[vid]))
           .map(([vid]) => ({ type: 'villain', id: Number(vid), name: villains.find(v => v.id === Number(vid))?.name ?? 'Boss' }))
         const pool = [...playerTargets, ...villainTargets]
         if (pool.length > 0) {
@@ -1131,7 +1131,7 @@ async function _resolveBattle(code, battle) {
       const unlockedMap = unlockedSnap.val() || {}
       const targetPlayers = allPlayers.filter(p => p.id !== loserId && p.alive && (p.hp ?? 0) > 0)
       const targetVillains = Object.entries(vHpData)
-        .filter(([vid, hp]) => hp > 0 && unlockedMap[vid])
+        .filter(([vid, hp]) => hp > 0 && (Number(vid) !== 1 && Number(vid) !== 2 || unlockedMap[vid]))
         .map(([vid]) => ({ type: 'villain', id: Number(vid), name: villains.find(v => v.id === Number(vid))?.name ?? 'Boss' }))
       const pool = [
         ...targetPlayers.map(p => ({ type: 'player', id: p.id, name: p.name })),
