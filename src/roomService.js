@@ -1385,7 +1385,15 @@ async function _resolveBattle(code, battle) {
     if (luckOps.length) await Promise.all(luckOps)
   }
 
-  // preB/preBUsedOnTurn/cActive reset is handled client-side in Game.jsx
+  // Reset preB server-side to prevent [B] from carrying into next battle
+  const attPatch = { preB: false }
+  if (attPreB) attPatch.preBUsedOnTurn = attPlayer?.turn ?? 1
+  const defPatch = { preB: false }
+  if (defPreB) defPatch.preBUsedOnTurn = defPlayer?.turn ?? 1
+  await Promise.all([
+    update(ref(db, `rooms/${code}/players/${attackerId}`), attPatch),
+    update(ref(db, `rooms/${code}/players/${defenderId}`), defPatch),
+  ]).catch(() => {})
   // Forge charge decrement for player battles is handled client-side in Game.jsx
 
   clearTimeout(ensureCleared)
