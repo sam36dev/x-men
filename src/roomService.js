@@ -366,8 +366,8 @@ async function _resolveVillainBattle(code, vb) {
         }
       }
 
-      // [C] C_REDIRECT_HALF (Jean Grey HP ≤ 20): reflect half damage back to villain
-      if (damage > 0 && playerCEffect === 'C_REDIRECT_HALF') {
+      // [C] C_REDIRECT_HALF (Jean Grey HP ≤ 20): reflect half damage back to villain (only even damage)
+      if (damage > 0 && damage % 2 === 0 && playerCEffect === 'C_REDIRECT_HALF') {
         const reflected = Math.floor(damage / 2)
         if (reflected > 0) {
           await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
@@ -1271,8 +1271,8 @@ async function _resolveBattle(code, battle) {
     }
   }
 
-  // [C] C_REDIRECT_HALF — loser reflects half damage back to winner
-  if (loserId && winnerId && damage > 0 && loserCEffect === 'C_REDIRECT_HALF') {
+  // [C] C_REDIRECT_HALF — loser reflects half damage back to winner (only even damage)
+  if (loserId && winnerId && damage > 0 && damage % 2 === 0 && loserCEffect === 'C_REDIRECT_HALF') {
     const reflected = Math.floor(damage / 2)
     if (reflected > 0) {
       await runTransaction(ref(db, `rooms/${code}/players/${winnerId}`), (p) => {
