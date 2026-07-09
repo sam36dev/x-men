@@ -61,9 +61,6 @@ function DiceFace({ value, diceType, color, rolling, selected }) {
   )
 }
 
-function getChance(player, char, allPlayers) {
-  return Math.min(90, (player.tokens || 0) * 10) + '%'
-}
 
 function isCConditionMet(player, char, allPlayers) {
   if (!char?.abilityC) return false
@@ -164,7 +161,6 @@ function AbilityModal({ char, onClose }) {
               <div className="ability-row__content">
                 <span className="ability-row__name">{char.ability.name}</span>
                 <span className="ability-row__desc">{char.ability.description}</span>
-                <span className="ability-row__note">~{char.multiplier || 0}% de chance (tokens dão +10% cada)</span>
               </div>
             </div>
           )}
@@ -717,7 +713,6 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             </div>
             <div className="player-tokens">
               <span className="player-tokens__coins"><span className="xtoken" aria-label="token">X</span> ×{me.tokens || 0}</span>
-              <span className="player-tokens__chance">{myChar.ability ? getChance(me, myChar, players) : '—'}</span>
               {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
               <div className="player-action-btns">
                 {isHost && (
@@ -1268,7 +1263,6 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 </div>
                 <div className="player-tokens">
                   <span className="player-tokens__coins"><span className="xtoken" aria-label="token">X</span> ×{p.tokens || 0}</span>
-                  <span className="player-tokens__chance">{char?.ability ? getChance(p, char, players) : '—'}</span>
                   {isHost && p.alive && (
                     <>
                       <button className="give-token-btn" onClick={() => giveToken(roomCode, p.id)} title="Dar token">+</button>
