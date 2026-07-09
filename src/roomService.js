@@ -380,11 +380,13 @@ async function _resolveVillainBattle(code, vb) {
         const allPData = allPSnap.val() || {}
         const vHpSnap = await get(ref(db, `rooms/${code}/villainHp`))
         const vHpData = vHpSnap.val() || {}
+        const unlockedSnap2 = await get(ref(db, `rooms/${code}/unlockedVillains`))
+        const unlockedMap2 = unlockedSnap2.val() || {}
         const playerTargets = Object.entries(allPData)
           .filter(([pid, p]) => pid !== playerId && p.alive && (p.hp ?? 0) > 0)
           .map(([, p]) => ({ type: 'player', name: p.name }))
         const villainTargets = Object.entries(vHpData)
-          .filter(([, hp]) => hp > 0)
+          .filter(([vid, hp]) => hp > 0 && unlockedMap2[vid])
           .map(([vid]) => ({ type: 'villain', id: Number(vid), name: villains.find(v => v.id === Number(vid))?.name ?? 'Boss' }))
         const pool = [...playerTargets, ...villainTargets]
         if (pool.length > 0) {
@@ -1109,13 +1111,15 @@ async function _resolveBattle(code, battle) {
     await update(battleRef, { paralysisInfo: { name: loserPlayerDataB?.name ?? 'Oponente', turns: N } })
   }
 
-  // [A] PSYCHIC_DAMAGE (Jean Grey) — when Jean loses, deal 3 to a random alive player or villain
+  // [A] PSYCHIC_DAMAGE (Jean Grey) — when Jean loses, deal 3 to a random alive player or unlocked villain
   if (loserId && loserEffect === 'PSYCHIC_DAMAGE') {
     const vHpSnap = await get(ref(db, `rooms/${code}/villainHp`))
     const vHpData = vHpSnap.val() || {}
+    const unlockedSnap = await get(ref(db, `rooms/${code}/unlockedVillains`))
+    const unlockedMap = unlockedSnap.val() || {}
     const targetPlayers = allPlayers.filter(p => p.id !== loserId && p.alive && (p.hp ?? 0) > 0)
     const targetVillains = Object.entries(vHpData)
-      .filter(([, hp]) => hp > 0)
+      .filter(([vid, hp]) => hp > 0 && unlockedMap[vid])
       .map(([vid]) => ({ type: 'villain', id: Number(vid), name: villains.find(v => v.id === Number(vid))?.name ?? 'Boss' }))
     const pool = [
       ...targetPlayers.map(p => ({ type: 'player', id: p.id, name: p.name })),
