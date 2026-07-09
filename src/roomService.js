@@ -155,7 +155,8 @@ export async function submitVillainRoll(code, playerId, roll, forgeItem, preB) {
 }
 
 async function _resolveVillainBattle(code, vb) {
-  const { playerId, villainId, playerRoll, villainRoll, characterId, playerForgeId } = vb
+  const { playerId, villainId, playerRoll, characterId, playerForgeId } = vb
+  let villainRoll = vb.villainRoll
   const villain = villains.find(v => v.id === villainId)
   const playerChar = characters.find(c => c.id === characterId)
   let damage = Math.abs(playerRoll - villainRoll)
@@ -223,6 +224,12 @@ async function _resolveVillainBattle(code, vb) {
 
     const playerBBonus = effectivePlayerRoll - rollAfterC
 
+    // [A] and [B] effects that modify rolls vs villain
+    const playerAChance = _abilityChance(playerData, playerChar, [])
+    if (playerEffect === 'SNEAK' && _rollsChance(playerAChance)) effectivePlayerRoll += 3
+    if (playerEffect === 'WEAKEN' && _rollsChance(playerAChance)) villainRoll = Math.max(1, villainRoll - 2)
+    if (playerBEffect === 'B_FORCE_ONE') villainRoll = 1
+
     damage = Math.abs(effectivePlayerRoll - villainRoll)
 
     if (effectivePlayerRoll > villainRoll) {
@@ -236,6 +243,9 @@ async function _resolveVillainBattle(code, vb) {
 
       // [C] C_HIGH_CARD (Gambit HP ≤ 20): fixed 5 damage
       if (playerCEffect === 'C_HIGH_CARD') damage = 5
+
+      // [B] B_DAMAGE_BOOST (Colosso): multiply damage by 1.5 when winning
+      if (playerBEffect === 'B_DAMAGE_BOOST' && damage > 0) damage = Math.floor(damage * 1.5)
 
       // Juggernaut (id=4): absorbs attacks of 2 or less damage
       if (villain?.id === 4 && damage <= 2) {
@@ -360,6 +370,22 @@ async function _resolveVillainBattle(code, vb) {
         if (reflected > 0) {
           await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
             cur => Math.max(0, (cur ?? 0) - reflected))
+        }
+      }
+
+      // [A] PSYCHIC_DAMAGE (Jean Grey) — when losing vs villain, deal 3 to random other player
+      if (playerEffect === 'PSYCHIC_DAMAGE' && damage > 0) {
+        const allPSnap = await get(ref(db, `rooms/${code}/players`))
+        const allPData = allPSnap.val() || {}
+        const targets = Object.entries(allPData).filter(([pid, p]) => pid !== playerId && p.alive && (p.hp ?? 0) > 0)
+        if (targets.length > 0) {
+          const [targetId] = targets[Math.floor(Math.random() * targets.length)]
+          await runTransaction(ref(db, `rooms/${code}/players/${targetId}`), (p) => {
+            if (!p) return null
+            const newHp = Math.max(0, p.hp - 3)
+            return { ...p, hp: newHp, alive: newHp > 0 }
+          })
+          await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
         }
       }
     }
