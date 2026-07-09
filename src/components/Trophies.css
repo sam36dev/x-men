@@ -154,6 +154,38 @@
   line-height: 1.3;
 }
 
+/* ── Ranking sub-tabs ── */
+.rank-subtabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.rank-subtab {
+  flex: 1;
+  padding: 0.5rem 0.4rem;
+  background: rgba(10, 25, 60, 0.5);
+  border: 1px solid rgba(21, 101, 192, 0.2);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.45);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rank-subtab--active {
+  background: rgba(21, 101, 192, 0.25);
+  border-color: rgba(21, 101, 192, 0.55);
+  color: #fff;
+}
+
+.rank-subtab:hover:not(.rank-subtab--active) {
+  border-color: rgba(21, 101, 192, 0.35);
+  color: rgba(255,255,255,0.7);
+}
+
 /* ── Ranking ── */
 .ranking-list {
   display: flex;

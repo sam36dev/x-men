@@ -12,6 +12,7 @@ const CATEGORY_LABELS = {
 
 export default function Trophies({ user, onBack }) {
   const [tab,     setTab]     = useState('mine')
+  const [rankTab, setRankTab] = useState('wins')
   const [users,   setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -23,14 +24,23 @@ export default function Trophies({ user, onBack }) {
   const myTrophies = me?.trophies || {}
   const myCount = Object.keys(myTrophies).length
 
-  const ranked = [...users].sort((a, b) => {
-    const aw = a.stats?.totalWins || 0
-    const bw = b.stats?.totalWins || 0
-    if (bw !== aw) return bw - aw
-    const ac = a.trophies ? Object.keys(a.trophies).length : 0
-    const bc = b.trophies ? Object.keys(b.trophies).length : 0
-    return bc - ac
+  const trophyCount = u => u.trophies ? Object.keys(u.trophies).length : 0
+  const wins        = u => u.stats?.totalWins || 0
+
+  const byWins = [...users].sort((a, b) => {
+    const d = wins(b) - wins(a)
+    return d !== 0 ? d : trophyCount(b) - trophyCount(a)
   })
+
+  const byTrophies = [...users].sort((a, b) => {
+    const d = trophyCount(b) - trophyCount(a)
+    return d !== 0 ? d : wins(b) - wins(a)
+  })
+
+  const champScore = u => wins(u) * 2 + trophyCount(u)
+  const byChampion = [...users].sort((a, b) => champScore(b) - champScore(a))
+
+  const ranked = rankTab === 'wins' ? byWins : rankTab === 'trophies' ? byTrophies : byChampion
 
   const categories = ['wins', 'villains', 'feats', 'mission']
 
@@ -79,13 +89,36 @@ export default function Trophies({ user, onBack }) {
       {/* ── RANKING ── */}
       {tab === 'ranking' && (
         <div className="trophies-content">
+          <div className="rank-subtabs">
+            <button className={`rank-subtab ${rankTab === 'wins'     ? 'rank-subtab--active' : ''}`} onClick={() => setRankTab('wins')}>
+              ⚔️ Vitórias
+            </button>
+            <button className={`rank-subtab ${rankTab === 'trophies' ? 'rank-subtab--active' : ''}`} onClick={() => setRankTab('trophies')}>
+              🏆 Troféus
+            </button>
+            <button className={`rank-subtab ${rankTab === 'champion' ? 'rank-subtab--active' : ''}`} onClick={() => setRankTab('champion')}>
+              👑 Campeões
+            </button>
+          </div>
+
           {loading ? <p className="trophies-loading">Carregando…</p> : (
             <div className="ranking-list">
               {ranked.map((u, i) => {
-                const count = u.trophies ? Object.keys(u.trophies).length : 0
-                const wins  = u.stats?.totalWins || 0
-                const isMe  = u.uid === user.uid
+                const tc   = trophyCount(u)
+                const w    = wins(u)
+                const sc   = champScore(u)
+                const isMe = u.uid === user.uid
                 const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null
+
+                const primary = rankTab === 'wins'     ? `⚔️ ${w}`
+                              : rankTab === 'trophies' ? `🏆 ${tc}`
+                              :                          `👑 ${sc}`
+
+                const secondary = rankTab === 'wins'
+                  ? `🏆 ${tc} troféu${tc !== 1 ? 's' : ''}`
+                  : rankTab === 'trophies'
+                  ? `⚔️ ${w} vitória${w !== 1 ? 's' : ''}`
+                  : `⚔️ ${w} vitória${w !== 1 ? 's' : ''} · 🏆 ${tc} troféu${tc !== 1 ? 's' : ''}`
 
                 return (
                   <div key={u.uid} className={`rank-row ${isMe ? 'rank-row--me' : ''}`}>
@@ -97,9 +130,9 @@ export default function Trophies({ user, onBack }) {
                         {u.username}
                         {isMe && <span className="rank-row__you"> você</span>}
                       </span>
-                      <span className="rank-row__stats">{wins} vitória{wins !== 1 ? 's' : ''}</span>
+                      <span className="rank-row__stats">{secondary}</span>
                     </div>
-                    <span className="rank-row__trophies">🏆 {count}</span>
+                    <span className="rank-row__trophies">{primary}</span>
                   </div>
                 )
               })}
