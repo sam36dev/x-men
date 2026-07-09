@@ -490,7 +490,8 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     }
   }, [missionWinner?.playerId])
 
-  const pvpWinner = room?.pvpWinner
+  const pvpWinner      = room?.pvpWinner
+  const bossKillWinner = room?.bossKillWinner
 
   if (!room) return <div className="game-loading">Carregando…</div>
 
@@ -654,6 +655,26 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             {pvpWinner.playerName}
           </h1>
           <p className="mission-victory-sub">{isMe ? 'você venceu!' : 'venceu a batalha!'}</p>
+          {isMe && <p className="mission-victory-trophy">+1 vitória registrada!</p>}
+          <button className="mission-victory-btn" onClick={onLeave}>Voltar ao início</button>
+        </div>
+      </div>
+    )
+  }
+
+  if (bossKillWinner) {
+    const isMe = bossKillWinner.playerId === playerId
+    const winnerChar = players.find(p => p.id === bossKillWinner.playerId)
+    const winnerCharData = characters.find(c => c.id === winnerChar?.characterId)
+    return (
+      <div className="mission-victory-overlay">
+        <div className="mission-victory-box">
+          <div className="mission-victory-icon">☠️</div>
+          <h1 className="mission-victory-title" style={{ color: winnerCharData?.color ?? '#FFD700' }}>
+            {bossKillWinner.playerName}
+          </h1>
+          <p className="mission-victory-sub">derrotou 3 bosses!</p>
+          <p className="mission-victory-mission">{isMe ? 'Você venceu o jogo!' : 'venceu o jogo!'}</p>
           {isMe && <p className="mission-victory-trophy">+1 vitória registrada!</p>}
           <button className="mission-victory-btn" onClick={onLeave}>Voltar ao início</button>
         </div>
@@ -882,6 +903,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 )}
               </div>
             )}
+            <div className={`boss-kills-row ${(me.bossKills || 0) >= 3 ? 'boss-kills-row--full' : ''}`}>
+              ☠️ {me.bossKills || 0}/3 bosses
+            </div>
             {isParalyzed && (
               <div className="paralyzed-banner">
                 🔵 Paralizado por {(activeP?.paralyzedUntil ?? 0) - (activeP?.turn ?? 1) + 1} rodada(s)
@@ -1377,6 +1401,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                     {p.missionCompleted && <span className="player-mission__done">✓</span>}
                   </div>
                 )}
+                <div className={`boss-kills-row ${(p.bossKills || 0) >= 3 ? 'boss-kills-row--full' : ''}`}>
+                  ☠️ {p.bossKills || 0}/3 bosses
+                </div>
                 {isHost && (
                   <div className="forge-luck-row">
                     <button className="forge-btn" onClick={() => { setForgeTarget(t => t === p.id ? null : p.id); setLuckTarget(null) }}>

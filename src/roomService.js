@@ -322,6 +322,13 @@ async function _resolveVillainBattle(code, vb) {
           // Missions: go to credited killer (not necessarily last-hit player)
           await _checkMissionProgress(code, killerId, 'villain_kill', { villainId })
           if (isSentinel) await _checkMissionProgress(code, killerId, 'sentinel_kill', { villainId })
+
+          // Boss kill win condition: first player to kill 3 bosses wins
+          try {
+            const bkTx = await runTransaction(ref(db, `rooms/${code}/players/${killerId}/bossKills`), cur => (cur || 0) + 1)
+            const bossKills = bkTx.snapshot.val() ?? 0
+            if (bossKills >= 3) await _triggerBossKillVictory(code, killerId, killerName)
+          } catch (_) {}
         }
       }
     } else if (villainRoll > effectivePlayerRoll) {
@@ -790,6 +797,22 @@ async function _triggerPvpVictory(code, playerId, playerName) {
     pvpWinner: { playerId, playerName },
     status: 'ended',
   })
+}
+
+async function _triggerBossKillVictory(code, playerId, playerName) {
+  const alreadyMission = await get(ref(db, `rooms/${code}/missionWinner`))
+  if (alreadyMission.exists()) return
+  const alreadyBoss = await get(ref(db, `rooms/${code}/bossKillWinner`))
+  if (alreadyBoss.exists()) return
+  await update(ref(db, `rooms/${code}`), {
+    bossKillWinner: { playerId, playerName },
+    status: 'ended',
+  })
+  try {
+    const uidSnap = await get(ref(db, `usernames/${playerName.toLowerCase().replace(/[^a-z0-9_]/g, '')}`))
+    const uid = uidSnap.val()
+    if (uid) await onPlayerWin(uid)
+  } catch (_) {}
 }
 
 function _isCActive(player, char) {
