@@ -360,7 +360,8 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               resolvedLoserId, resolvedDamage,
               effectiveAttackerRoll, effectiveDefenderRoll,
               attackerForgeBonus, defenderForgeBonus,
-              attackerForgeId, defenderForgeId } = prev
+              attackerForgeId, defenderForgeId,
+              psychicTarget, phoenixReflect, paralysisInfo } = prev
       if (fled) {
         setResult({ fled, attackerId, defenderId })
         setMyRoll(null)
@@ -395,6 +396,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
           defenderForgeBonus: prev.defenderForgeBonus ?? 0,
           attackerForgeId: prev.attackerForgeId ?? null,
           defenderForgeId: prev.defenderForgeId ?? null,
+          psychicTarget: psychicTarget ?? null,
+          phoenixReflect: phoenixReflect ?? null,
+          paralysisInfo: paralysisInfo ?? null,
         })
         setMyRoll(null)
         setShaking(true)
