@@ -1323,7 +1323,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                   <div className="player-paralyzed-tag">
                     🔵 Paralizado ({p.paralyzedUntil - (p.turn ?? 1) + 1} rodada(s))
                     {isHost && (
-                      <button className="forge-clear-btn" onClick={() => removeParalysis(roomCode, p.id)}>✕</button>
+                      <button className="paralyze-clear-btn" onClick={() => removeParalysis(roomCode, p.id)}>✕ desbloquear</button>
                     )}
                   </div>
                 )}
