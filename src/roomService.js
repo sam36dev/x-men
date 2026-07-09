@@ -374,19 +374,36 @@ async function _resolveVillainBattle(code, vb) {
         }
       }
 
-      // [A] PSYCHIC_DAMAGE (Jean Grey) — when losing vs villain, deal 3 to random other player
+      // [A] PSYCHIC_DAMAGE (Jean Grey) — when losing vs villain, deal 3 to random player or boss
       if (playerEffect === 'PSYCHIC_DAMAGE' && damage > 0) {
         const allPSnap = await get(ref(db, `rooms/${code}/players`))
         const allPData = allPSnap.val() || {}
-        const targets = Object.entries(allPData).filter(([pid, p]) => pid !== playerId && p.alive && (p.hp ?? 0) > 0)
-        if (targets.length > 0) {
-          const [targetId] = targets[Math.floor(Math.random() * targets.length)]
-          await runTransaction(ref(db, `rooms/${code}/players/${targetId}`), (p) => {
-            if (!p) return null
-            const newHp = Math.max(0, p.hp - 3)
-            return { ...p, hp: newHp, alive: newHp > 0 }
-          })
-          await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
+        const vHpSnap = await get(ref(db, `rooms/${code}/villainHp`))
+        const vHpData = vHpSnap.val() || {}
+        const playerTargets = Object.entries(allPData)
+          .filter(([pid, p]) => pid !== playerId && p.alive && (p.hp ?? 0) > 0)
+          .map(([, p]) => ({ type: 'player', name: p.name }))
+        const villainTargets = Object.entries(vHpData)
+          .filter(([, hp]) => hp > 0)
+          .map(([vid]) => ({ type: 'villain', id: Number(vid), name: villains.find(v => v.id === Number(vid))?.name ?? 'Boss' }))
+        const pool = [...playerTargets, ...villainTargets]
+        if (pool.length > 0) {
+          const target = pool[Math.floor(Math.random() * pool.length)]
+          if (target.type === 'player') {
+            const entry = Object.entries(allPData).find(([, p]) => p.name === target.name)
+            if (entry) {
+              const [tid] = entry
+              await runTransaction(ref(db, `rooms/${code}/players/${tid}`), (p) => {
+                if (!p) return null
+                const newHp = Math.max(0, p.hp - 3)
+                return { ...p, hp: newHp, alive: newHp > 0 }
+              })
+            }
+          } else {
+            await runTransaction(ref(db, `rooms/${code}/villainHp/${target.id}`),
+              (hp) => hp == null ? null : Math.max(0, hp - 3))
+          }
+          await update(ref(db, `rooms/${code}/villainBattle`), { psychicTarget: { name: target.name } })
         }
       }
     }

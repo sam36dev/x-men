@@ -453,7 +453,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         const damage = prev.resolvedDamage ?? Math.abs(effectiveRoll - villainRoll)
         const playerWon = effectiveRoll > villainRoll
         const tied = effectiveRoll === villainRoll
-        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null, playerForgeBonus: prev.playerForgeBonus ?? 0, playerForgeId: prev.playerForgeId ?? null, playerBBonus: prev.playerBBonus ?? 0, playerCBonus: prev.playerCBonus ?? 0, effectivePlayerRoll: effectiveRoll, phoenixReflect: prev.phoenixReflect ?? 0 })
+        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null, playerForgeBonus: prev.playerForgeBonus ?? 0, playerForgeId: prev.playerForgeId ?? null, playerBBonus: prev.playerBBonus ?? 0, playerCBonus: prev.playerCBonus ?? 0, effectivePlayerRoll: effectiveRoll, phoenixReflect: prev.phoenixReflect ?? 0, psychicTarget: prev.psychicTarget ?? null })
         setMyVillainRoll(null)
         setShaking(true)
         setTimeout(() => setShaking(false), 550)
@@ -1038,6 +1038,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 </p>
                 {(villainResult.phoenixReflect ?? 0) > 0 && (
                   <p className="ability-activated">🔥 Chama Fênix — vilão sofreu −{villainResult.phoenixReflect} HP de reflexo!</p>
+                )}
+                {villainResult.psychicTarget && (
+                  <p className="ability-activated">🧠 Dano Psíquico → {villainResult.psychicTarget.name} −3 HP</p>
                 )}
               </>
             )
