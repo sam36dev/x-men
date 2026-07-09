@@ -170,7 +170,6 @@ function AbilityModal({ char, onClose }) {
               <div className="ability-row__content">
                 <span className="ability-row__name">{char.abilityB.name}</span>
                 <span className="ability-row__desc">{char.abilityB.description}</span>
-                <span className="ability-row__note">Declare antes de rolar · 1× por rodada</span>
               </div>
             </div>
           )}
