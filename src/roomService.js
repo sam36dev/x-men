@@ -1188,19 +1188,26 @@ async function _resolveBattle(code, battle) {
 
   // Track cumulative damage dealt to each player for kill credit
   if (loserId && winnerId && damage > 0) {
-    await runTransaction(ref(db, `rooms/${code}/playerDamage/${loserId}/${winnerId}`),
-      (cur) => (cur || 0) + damage)
-
     const loserHpBefore = (loserId === attackerId ? attPlayer : defPlayer)?.hp ?? 100
     const wouldDie = loserHpBefore <= damage && loserCEffect !== 'C_SURVIVE_1'
+
+    try {
+      await runTransaction(ref(db, `rooms/${code}/playerDamage/${loserId}/${winnerId}`),
+        (cur) => (cur || 0) + damage)
+    } catch (_) {}
+
     if (wouldDie) {
-      const dmgSnap = await get(ref(db, `rooms/${code}/playerDamage/${loserId}`))
-      const dmgMap = dmgSnap.val() || {}
-      const entries = Object.entries(dmgMap)
-      const maxDmg = entries.length ? Math.max(...entries.map(([, d]) => d)) : 0
-      const topIds = entries.filter(([, d]) => d === maxDmg).map(([id]) => id)
-      const killerId = topIds.length === 1 ? topIds[0] : winnerId
-      await _checkMissionProgress(code, killerId, 'kill_player', {})
+      try {
+        const dmgSnap = await get(ref(db, `rooms/${code}/playerDamage/${loserId}`))
+        const dmgMap = dmgSnap.val() || {}
+        const entries = Object.entries(dmgMap)
+        const maxDmg = entries.length ? Math.max(...entries.map(([, d]) => d)) : 0
+        const topIds = entries.filter(([, d]) => d === maxDmg).map(([id]) => id)
+        const killerId = topIds.length === 1 ? topIds[0] : winnerId
+        await _checkMissionProgress(code, killerId, 'kill_player', {})
+      } catch (_) {
+        await _checkMissionProgress(code, winnerId, 'kill_player', {})
+      }
     }
   }
 
