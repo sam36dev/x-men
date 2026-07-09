@@ -6,6 +6,7 @@ import {
 import { characters } from './data/characters'
 import { villains } from './data/villains'
 import { MISSIONS } from './data/missions'
+import { onPlayerWin } from './userService'
 
 function _hasLuck(player, effect) {
   return !!(player?.luckCards?.[effect])
@@ -1238,6 +1239,23 @@ async function _resolveBattle(code, battle) {
 
     if (loserExpiredOwner && loserExpiredOwner !== loserNextOwner) {
       await update(ref(db, `rooms/${code}/players/${loserExpiredOwner}`), { abilityDisabled: false })
+    }
+
+    // Award win to winner's user profile when loser is killed (HP → 0)
+    if (winnerId && damage > 0) {
+      const loserHpNow = loserSnap?.hp ?? 100
+      const loserDies = loserHpNow <= damage && loserCEffect !== 'C_SURVIVE_1'
+      if (loserDies) {
+        try {
+          const winnerSnap = winnerId === attackerId ? attPlayer : defPlayer
+          const winnerLookup = winnerSnap?.name?.toLowerCase().replace(/[^a-z0-9_]/g, '')
+          if (winnerLookup) {
+            const uidSnap = await get(ref(db, `usernames/${winnerLookup}`))
+            const winnerUid = uidSnap.val()
+            if (winnerUid) await onPlayerWin(winnerUid)
+          }
+        } catch (_) {}
+      }
     }
   }
 
