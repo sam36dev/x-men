@@ -544,11 +544,13 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
   const activeP    = players.find(p => p.id === activeId) ?? me
   const isParalyzed = !!(activeP?.paralyzedUntil != null && (activeP?.turn ?? 1) <= activeP.paralyzedUntil)
   const activeChar = characters.find(c => c.id === activeP?.characterId) ?? myChar
+  const activeIsTransformed = activeChar?.transformation != null && (activeP?.hp ?? 100) <= (activeChar.transformation.triggersAt ?? 999)
+  const activeBaseDiceType = activeIsTransformed ? (activeChar.transformation.diceType ?? activeChar.diceType ?? 6) : (activeChar?.diceType ?? 6)
   const activeEffectiveDiceType =
     activeP?.luckCards?.dice_d20          ? 20
     : activeP?.luckCards?.dice_d12_until_12 ? 12
     : activeP?.luckCards?.dice_d8           ? 8
-    : (activeChar?.diceType ?? 6)
+    : activeBaseDiceType
 
   function rollDice() {
     if (rolling || myRoll !== null || !activeChar) return
@@ -1267,7 +1269,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                     p.luckCards?.dice_d20          ? 20
                     : p.luckCards?.dice_d12_until_12 ? 12
                     : p.luckCards?.dice_d8           ? 8
-                    : (char?.diceType ?? 6)
+                    : (char?.transformation != null && (p.hp ?? 100) <= (char.transformation.triggersAt ?? 999) ? (char.transformation.diceType ?? char.diceType ?? 6) : (char?.diceType ?? 6))
                   } <span className="player-wins-count">({p.wins || 0})</span>
                 </span>
                 <div className="opp-hp-bar">
