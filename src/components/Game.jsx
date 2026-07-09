@@ -490,6 +490,8 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     }
   }, [missionWinner?.playerId])
 
+  const pvpWinner = room?.pvpWinner
+
   if (!room) return <div className="game-loading">Carregando…</div>
 
   const players = Object.entries(room.players || {}).map(([id, p]) => ({ id, ...p }))
@@ -633,6 +635,26 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
           <p className="mission-victory-sub">cumpriu a missão</p>
           <p className="mission-victory-mission">"{missionWinner.missionName}"</p>
           {isMe && <p className="mission-victory-trophy">🏆 Troféu desbloqueado!</p>}
+          <button className="mission-victory-btn" onClick={onLeave}>Voltar ao início</button>
+        </div>
+      </div>
+    )
+  }
+
+  // PvP last-player-standing victory overlay
+  if (pvpWinner) {
+    const isMe = pvpWinner.playerId === playerId
+    const winnerChar = players.find(p => p.id === pvpWinner.playerId)
+    const winnerCharData = characters.find(c => c.id === winnerChar?.characterId)
+    return (
+      <div className="mission-victory-overlay">
+        <div className="mission-victory-box">
+          <div className="mission-victory-icon">{winnerCharData?.typeIcon ?? '⚔️'}</div>
+          <h1 className="mission-victory-title" style={{ color: winnerCharData?.color ?? '#FFD700' }}>
+            {pvpWinner.playerName}
+          </h1>
+          <p className="mission-victory-sub">{isMe ? 'você venceu!' : 'venceu a batalha!'}</p>
+          {isMe && <p className="mission-victory-trophy">+1 vitória registrada!</p>}
           <button className="mission-victory-btn" onClick={onLeave}>Voltar ao início</button>
         </div>
       </div>

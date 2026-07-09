@@ -779,6 +779,15 @@ async function _triggerMissionVictory(code, playerId, playerName, mission) {
   })
 }
 
+async function _triggerPvpVictory(code, playerId, playerName) {
+  const alreadySnap = await get(ref(db, `rooms/${code}/pvpWinner`))
+  if (alreadySnap.exists()) return
+  await update(ref(db, `rooms/${code}`), {
+    pvpWinner: { playerId, playerName },
+    status: 'ended',
+  })
+}
+
 function _isCActive(player, char) {
   if (!char?.abilityC || !player) return false
   const cond = char.abilityC.condition
@@ -1265,6 +1274,17 @@ async function _resolveBattle(code, battle) {
             const uidSnap = await get(ref(db, `usernames/${winnerLookup}`))
             const winnerUid = uidSnap.val()
             if (winnerUid) await onPlayerWin(winnerUid)
+          }
+        } catch (_) {}
+
+        // If only 1 player remains alive, end the game
+        try {
+          const afterSnap = await get(ref(db, `rooms/${code}/players`))
+          const afterData = afterSnap.val() || {}
+          const aliveEntries = Object.entries(afterData).filter(([, p]) => p.alive)
+          if (aliveEntries.length === 1) {
+            const [survivorId, survivor] = aliveEntries[0]
+            await _triggerPvpVictory(code, survivorId, survivor.name)
           }
         } catch (_) {}
       }

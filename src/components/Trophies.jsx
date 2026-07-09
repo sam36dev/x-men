@@ -24,10 +24,12 @@ export default function Trophies({ user, onBack }) {
   const myCount = Object.keys(myTrophies).length
 
   const ranked = [...users].sort((a, b) => {
+    const aw = a.stats?.totalWins || 0
+    const bw = b.stats?.totalWins || 0
+    if (bw !== aw) return bw - aw
     const ac = a.trophies ? Object.keys(a.trophies).length : 0
     const bc = b.trophies ? Object.keys(b.trophies).length : 0
-    if (bc !== ac) return bc - ac
-    return (b.stats?.totalWins || 0) - (a.stats?.totalWins || 0)
+    return bc - ac
   })
 
   const categories = ['wins', 'villains', 'feats', 'mission']
