@@ -1157,9 +1157,11 @@ async function _resolveBattle(code, battle) {
   } catch (_) {}
 
   const attAbilityName = attActivated && attChar?.ability
-    && !(attEffect === 'HEAL_HALF' && (loserId !== attackerId || damage % 2 !== 0)) ? attChar.ability.name : null
+    && !(attEffect === 'HEAL_HALF' && (loserId !== attackerId || damage % 2 !== 0))
+    && !(attEffect === 'TIED_DAMAGE' && loserId !== null) ? attChar.ability.name : null
   const defAbilityName = defActivated && defChar?.ability
-    && !(defEffect === 'HEAL_HALF' && (loserId !== defenderId || damage % 2 !== 0)) ? defChar.ability.name : null
+    && !(defEffect === 'HEAL_HALF' && (loserId !== defenderId || damage % 2 !== 0))
+    && !(defEffect === 'TIED_DAMAGE' && loserId !== null) ? defChar.ability.name : null
   const attBName = attPreB && attChar?.abilityB?.effect !== 'B_MOVEMENT' ? attChar?.abilityB?.name : null
   const defBName = defPreB && defChar?.abilityB?.effect !== 'B_MOVEMENT' ? defChar?.abilityB?.name : null
   const attCName = attCEffect && attChar?.abilityC ? attChar.abilityC.name : null
