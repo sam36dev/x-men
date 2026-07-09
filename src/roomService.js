@@ -411,8 +411,9 @@ async function _resolveVillainBattle(code, vb) {
       }
     }
 
-    // [A] TIED_DAMAGE (Tempestade — Sem Empate) — on tie vs villain, always deal damage = tied roll
-    if (effectivePlayerRoll === villainRoll && effectivePlayerRoll > 0 && playerEffect === 'TIED_DAMAGE') {
+    // [A] TIED_DAMAGE (Tempestade — Sem Empate) — on tie vs villain, activates by token chance
+    if (effectivePlayerRoll === villainRoll && effectivePlayerRoll > 0 && playerEffect === 'TIED_DAMAGE'
+        && _rollsChance(_abilityChance(playerData, playerChar, []))) {
       damage = effectivePlayerRoll
       await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
       await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
@@ -924,7 +925,7 @@ async function _resolveBattle(code, battle) {
 
   // [C] C_ABSORB_SURE / C_PIERCE_SURE guarantee [A] activation
   // Passive abilities always activate regardless of tokens
-  const PASSIVE_EFFECTS = new Set(['MIN_DAMAGE_3', 'DODGE_TOKEN', 'PSYCHIC_DAMAGE', 'TIED_DAMAGE'])
+  const PASSIVE_EFFECTS = new Set(['MIN_DAMAGE_3', 'DODGE_TOKEN', 'PSYCHIC_DAMAGE'])
   let attActivated = attEffect ? (PASSIVE_EFFECTS.has(attEffect) || _rollsChance(attChance)) : false
   let defActivated = defEffect ? (PASSIVE_EFFECTS.has(defEffect) || _rollsChance(defChance)) : false
   if (attCEffect === 'C_ABSORB_SURE' && attEffect === 'ABSORB') attActivated = true
