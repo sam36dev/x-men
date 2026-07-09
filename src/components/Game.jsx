@@ -493,6 +493,16 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
   const myChar = characters.find(c => c.id === me?.characterId)
   const battle = room.battle
   const isHost = room.hostId === playerId
+
+  const getEffectiveChance = (player) => {
+    const base = Math.min(90, (player.tokens || 0) * 10)
+    if (players.length > 1) {
+      const myWins = player.wins || 0
+      const othersMax = Math.max(0, ...players.filter(p => p.id !== player.id).map(p => p.wins || 0))
+      if (myWins > 0 && myWins > othersMax) return Math.min(90, base + 20)
+    }
+    return base
+  }
   const isInBattle = battle && (battle.attackerId === activeId || battle.defenderId === activeId)
   const isAttacker = battle?.attackerId === activeId
 
@@ -712,7 +722,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             </div>
             <div className="player-tokens">
               <span className="player-tokens__coins"><span className="xtoken" aria-label="token">X</span> ×{me.tokens || 0}</span>
-              {myChar.ability && (me.tokens || 0) > 0 && <span className="player-tokens__chance">{Math.min(90, (me.tokens || 0) * 10)}%</span>}
+              {myChar.ability && getEffectiveChance(me) > 0 && <span className="player-tokens__chance">{getEffectiveChance(me)}%</span>}
               {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
               <div className="player-action-btns">
                 {isHost && (
@@ -1275,7 +1285,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 </div>
                 <div className="player-tokens">
                   <span className="player-tokens__coins"><span className="xtoken" aria-label="token">X</span> ×{p.tokens || 0}</span>
-                  {char?.ability && (p.tokens || 0) > 0 && <span className="player-tokens__chance">{Math.min(90, (p.tokens || 0) * 10)}%</span>}
+                  {char?.ability && getEffectiveChance(p) > 0 && <span className="player-tokens__chance">{getEffectiveChance(p)}%</span>}
                   {isHost && p.alive && (
                     <>
                       <button className="give-token-btn" onClick={() => giveToken(roomCode, p.id)} title="Dar token">+</button>

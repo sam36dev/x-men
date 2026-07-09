@@ -793,7 +793,13 @@ function _isCActive(player, char) {
 }
 
 function _abilityChance(player, char, allPlayers) {
-  return Math.min(90, (player.tokens || 0) * 10)
+  const base = Math.min(90, (player.tokens || 0) * 10)
+  if (allPlayers.length > 1) {
+    const myWins = player.wins || 0
+    const othersMax = Math.max(0, ...allPlayers.filter(p => p.id !== player.id).map(p => p.wins || 0))
+    if (myWins > 0 && myWins > othersMax) return Math.min(90, base + 20)
+  }
+  return base
 }
 
 function _rollsChance(chance) {
