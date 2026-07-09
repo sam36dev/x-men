@@ -305,7 +305,6 @@ async function _resolveVillainBattle(code, vb) {
           // Missions: go to credited killer (not necessarily last-hit player)
           await _checkMissionProgress(code, killerId, 'villain_kill', { villainId })
           if (isSentinel) await _checkMissionProgress(code, killerId, 'sentinel_kill', { villainId })
-          if (villainId === 9) await _checkMissionProgress(code, killerId, 'civilians', {})
         }
       }
     } else if (villainRoll > effectivePlayerRoll) {
@@ -368,6 +367,10 @@ async function _resolveVillainBattle(code, vb) {
     const playerCBonus = playerCEffect === 'C_ROLL_BOOST_4' ? 4 : 0
     await update(ref(db, `rooms/${code}/villainBattle`), { resolvedDamage: damage, playerBBonus, playerCBonus, effectivePlayerRoll })
 
+    // Civilians mission: count each damage point dealt to sentinela civis (villainId=9)
+    if (villainId === 9 && damage > 0 && effectivePlayerRoll > villainRoll)
+      await _checkMissionProgress(code, playerId, 'civilians', {}, damage)
+
     // Mission: survive_apocalypse — every battle vs Apocalypse regardless of outcome
     if (villainId === 2) await _checkMissionProgress(code, playerId, 'survive_apocalypse', {})
 
@@ -412,6 +415,7 @@ export async function leaveRoom(code, playerId) {
 
 export async function giveToken(code, targetPlayerId) {
   await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}/tokens`), (cur) => (cur || 0) + 1)
+  await _checkMissionProgress(code, targetPlayerId, 'token_accumulate', {})
 }
 
 export async function removeToken(code, targetPlayerId) {
@@ -588,7 +592,10 @@ export async function changeTurn(code, playerId, delta) {
     const newTokens = delta > 0 ? (p.tokens || 0) + 1 : (p.tokens || 0)
     return { ...p, turn: newTurn, tokens: newTokens }
   })
-  if (delta > 0) await _checkMissionProgress(code, playerId, 'turns', {})
+  if (delta > 0) {
+    await _checkMissionProgress(code, playerId, 'turns', {})
+    await _checkMissionProgress(code, playerId, 'token_accumulate', {})
+  }
 }
 
 export async function togglePreB(code, playerId) {
@@ -635,14 +642,14 @@ export async function submitRoll(code, playerId, roll, preB, forgeItem) {
   }
 }
 
-async function _checkMissionProgress(code, playerId, eventType, eventData = {}) {
+async function _checkMissionProgress(code, playerId, eventType, eventData = {}, amount = 1) {
   const txResult = await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), player => {
     if (!player || player.missionCompleted) return player
     const mission = MISSIONS.find(m => m.id === player.missionId)
     if (!mission || mission.auto !== eventType) return player
     if (eventType === 'villain_kill' && mission.villainId !== eventData.villainId) return player
     if (eventType === 'sentinel_kill' && (eventData.villainId < 8 || eventData.villainId > 10)) return player
-    const newProgress = (player.missionProgress || 0) + 1
+    const newProgress = (player.missionProgress || 0) + amount
     const completed = newProgress >= mission.goal
     return { ...player, missionProgress: newProgress, missionCompleted: completed }
   })
