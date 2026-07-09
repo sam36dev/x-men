@@ -1711,6 +1711,28 @@
   opacity: 0.3;
   cursor: not-allowed;
 }
+.give-token-btn--domino-plus {
+  background: rgba(0, 200, 100, 0.12);
+  border-color: rgba(0, 220, 110, 0.4);
+  color: #4fffaa;
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+.give-token-btn--domino-plus:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.give-token-btn--domino-minus {
+  background: rgba(220, 50, 50, 0.12);
+  border-color: rgba(220, 60, 60, 0.4);
+  color: #ff7070;
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+.give-token-btn--domino-minus:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
 
 .give-token-btn--trap {
   background: rgba(255, 68, 153, 0.15);

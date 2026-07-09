@@ -573,6 +573,14 @@ export async function healPlayer(code, targetPlayerId, amount = 2) {
   })
 }
 
+export async function dominoHp(code, targetPlayerId, delta) {
+  await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}`), (p) => {
+    if (!p) return null
+    const newHp = Math.max(0, Math.min(100, (p.hp || 0) + delta))
+    return { ...p, hp: newHp, alive: newHp > 0 }
+  })
+}
+
 export async function attackPlayer(code, attackerId, defenderId) {
   const playersSnap = await get(ref(db, `rooms/${code}/players`))
   const playersData = playersSnap.val() || {}
