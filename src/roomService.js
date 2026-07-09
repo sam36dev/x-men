@@ -1115,10 +1115,12 @@ async function _resolveBattle(code, battle) {
     if (loserId && winnerId && winnerBEffect === 'B_PARALYZE') {
       const winnerPlayer = winnerId === attackerId ? attPlayer : defPlayer
       const loserPlayerDataB = loserId === attackerId ? attPlayer : defPlayer
-      const N = Math.max(1, winnerPlayer?.tokens ?? 1)
-      const untilTurn = (loserPlayerDataB?.turn ?? 1) + N - 1
-      await update(ref(db, `rooms/${code}/players/${loserId}`), { paralyzedUntil: untilTurn })
-      await update(battleRef, { paralysisInfo: { name: loserPlayerDataB?.name ?? 'Oponente', turns: N } })
+      const N = Math.abs((winnerPlayer?.tokens ?? 0) - (loserPlayerDataB?.tokens ?? 0))
+      if (N > 0) {
+        const untilTurn = (loserPlayerDataB?.turn ?? 1) + N - 1
+        await update(ref(db, `rooms/${code}/players/${loserId}`), { paralyzedUntil: untilTurn })
+        await update(battleRef, { paralysisInfo: { name: loserPlayerDataB?.name ?? 'Oponente', turns: N } })
+      }
     }
   } catch (_) {}
 
