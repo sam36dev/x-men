@@ -861,6 +861,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             {isParalyzed && (
               <div className="paralyzed-banner">
                 🔵 Paralizado por {(activeP?.paralyzedUntil ?? 0) - (activeP?.turn ?? 1) + 1} rodada(s)
+                {isHost && <button className="paralyze-clear-btn" onClick={() => removeParalysis(roomCode, activeP?.id ?? playerId)}>✕ desbloquear</button>}
               </div>
             )}
             {me?.bomb && (
