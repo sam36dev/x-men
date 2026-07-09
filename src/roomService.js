@@ -370,6 +370,7 @@ async function _resolveVillainBattle(code, vb) {
         if (reflected > 0) {
           await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
             cur => Math.max(0, (cur ?? 0) - reflected))
+          await update(ref(db, `rooms/${code}/villainBattle`), { phoenixReflect: reflected })
         }
       }
 
@@ -1204,6 +1205,7 @@ async function _resolveBattle(code, battle) {
         const newHp = Math.max(0, p.hp - reflected)
         return { ...p, hp: newHp, alive: newHp > 0 }
       })
+      await update(battleRef, { phoenixReflect: reflected })
     }
   }
 

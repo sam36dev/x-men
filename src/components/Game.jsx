@@ -453,7 +453,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         const damage = prev.resolvedDamage ?? Math.abs(effectiveRoll - villainRoll)
         const playerWon = effectiveRoll > villainRoll
         const tied = effectiveRoll === villainRoll
-        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null, playerForgeBonus: prev.playerForgeBonus ?? 0, playerForgeId: prev.playerForgeId ?? null, playerBBonus: prev.playerBBonus ?? 0, playerCBonus: prev.playerCBonus ?? 0, effectivePlayerRoll: effectiveRoll })
+        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null, playerForgeBonus: prev.playerForgeBonus ?? 0, playerForgeId: prev.playerForgeId ?? null, playerBBonus: prev.playerBBonus ?? 0, playerCBonus: prev.playerCBonus ?? 0, effectivePlayerRoll: effectiveRoll, phoenixReflect: prev.phoenixReflect ?? 0 })
         setMyVillainRoll(null)
         setShaking(true)
         setTimeout(() => setShaking(false), 550)
@@ -967,6 +967,12 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             {result?.paralysisInfo && (
               <p className="ability-activated">🔵 {result.paralysisInfo.name} paralizado por {result.paralysisInfo.turns} rodada(s)!</p>
             )}
+            {(result?.phoenixReflect ?? 0) > 0 && iWon && (
+              <p className="ability-activated">🔥 Chama Fênix — você sofreu −{result.phoenixReflect} HP de reflexo!</p>
+            )}
+            {(result?.phoenixReflect ?? 0) > 0 && iLost && (
+              <p className="ability-activated">🔥 Chama Fênix — oponente sofreu −{result.phoenixReflect} HP de reflexo!</p>
+            )}
           </div>
         )
       })()}
@@ -1030,6 +1036,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                     <span className="ability-activated"> ⚡ {villainResult.abilityActivated} ativado!</span>
                   )}
                 </p>
+                {(villainResult.phoenixReflect ?? 0) > 0 && (
+                  <p className="ability-activated">🔥 Chama Fênix — vilão sofreu −{villainResult.phoenixReflect} HP de reflexo!</p>
+                )}
               </>
             )
           })()}
