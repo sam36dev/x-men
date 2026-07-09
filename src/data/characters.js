@@ -34,9 +34,9 @@ export const characters = [
     type: "Elemental", typeIcon: "🌩️", hp: 100, diceType: 6, multiplier: 13,
     color: "#88BBFF", gradient: "linear-gradient(160deg, #001a3d 0%, #000d1a 50%, #000509 100%)",
     team: "X-Men", number: "003",
-    ability:  { name: "Tempestade Perfeita",  description: "Se tirou o valor máximo do dado, dano é dobrado",      effect: "DOUBLE_MAX"   },
-    abilityB: { name: "Controle do Clima",    description: "Trata o dado como D8 (+2 ao resultado)",               effect: "B_UPGRADE"    },
-    abilityC: { name: "Olho da Tempestade",   description: "HP ≤ 50: dado conta como valor máximo do tipo",        effect: "C_MAX_ROLL",  condition: "hp_lte_50" }
+    ability:  { name: "Sem Empate",             description: "Em caso de empate, o oponente sofre dano igual ao valor do dado",  effect: "TIED_DAMAGE"       },
+    abilityB: { name: "Tempestade Inteligente", description: "Escolha o número 6 como resultado do dado nessa batalha",           effect: "B_FORCE_SIX"       },
+    abilityC: { name: "Tempestade Suprema",     description: "HP ≤ 20: todo jogador que completar um turno sofre 3 de dano",      effect: "C_TURN_DAMAGE_3", condition: "hp_lte_20" }
   },
   {
     id: 4,

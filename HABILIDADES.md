@@ -43,11 +43,11 @@
 
 | Slot | Nome | Descrição |
 |------|------|-----------|
-| [A] | Tempestade Perfeita | Se tirou o valor máximo do dado, dano é dobrado |
-| [B] | Controle do Clima | Trata o dado como D8 (+2 ao resultado) |
-| [C] HP ≤ 50 | Olho da Tempestade | HP ≤ 50: dado conta como valor máximo do tipo |
+| [A] | Sem Empate | Em caso de empate, o oponente sofre dano igual ao valor do dado |
+| [B] | Tempestade Inteligente | Escolha o número 6 como resultado do dado nessa batalha |
+| [C] HP ≤ 20 | Tempestade Suprema | HP ≤ 20: todo jogador que completar um turno sofre 3 de dano |
 
-**Effect codes:** `DOUBLE_MAX` / `B_UPGRADE` / `C_MAX_ROLL`
+**Effect codes:** `TIED_DAMAGE` / `B_FORCE_SIX` / `C_TURN_DAMAGE_3`
 
 ---
 
@@ -145,5 +145,4 @@ Empate = nenhum dano
 
 - **[B]** bloqueado após uso até o host avançar o turno (`+`)
 - **[A]** sorteado automaticamente na resolução da batalha
-- Wolverine usa **D10** automaticamente quando HP ≤ 30
 - Jean Grey usa **D12** automaticamente quando HP ≤ 20 (transforma em Fênix)

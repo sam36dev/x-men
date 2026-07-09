@@ -219,6 +219,7 @@ async function _resolveVillainBattle(code, vb) {
     if (playerBEffect === 'B_PLUS_2' || playerBEffect === 'B_UPGRADE') effectivePlayerRoll += 2
     if (playerBEffect === 'B_DOUBLE_ROLL') effectivePlayerRoll *= 2
     if (playerBEffect === 'B_NINJA') effectivePlayerRoll += 3
+    if (playerBEffect === 'B_FORCE_SIX') effectivePlayerRoll = 6
 
     const playerBBonus = effectivePlayerRoll - rollAfterC
 
@@ -360,6 +361,18 @@ async function _resolveVillainBattle(code, vb) {
           await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
             cur => Math.max(0, (cur ?? 0) - reflected))
         }
+      }
+    }
+
+    // [A] TIED_DAMAGE (Tempestade — Sem Empate) — on tie vs villain, deal damage = tied roll
+    if (effectivePlayerRoll === villainRoll && effectivePlayerRoll > 0) {
+      const tiedActivated = playerEffect === 'TIED_DAMAGE'
+        && _rollsChance(_abilityChance(playerData, playerChar, []))
+      if (tiedActivated) {
+        damage = effectivePlayerRoll
+        await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
+        await runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
+          (cur) => Math.max(0, (cur ?? 0) - damage))
       }
     }
 
@@ -603,6 +616,24 @@ export async function changeTurn(code, playerId, delta) {
   if (delta > 0) {
     await _checkMissionProgress(code, playerId, 'turns', {})
     await _checkMissionProgress(code, playerId, 'token_accumulate', {})
+
+    // [C] C_TURN_DAMAGE_3 (Tempestade Suprema HP ≤ 20) — player who completed turn takes 3 damage
+    const allSnap = await get(ref(db, `rooms/${code}/players`))
+    const allPlayersData = allSnap.val() || {}
+    const stormEntry = Object.entries(allPlayersData).find(([, p]) => {
+      const char = characters.find(c => c.id === p.characterId)
+      return char?.abilityC?.effect === 'C_TURN_DAMAGE_3' && p.alive && (p.hp ?? 100) <= 20 && p.cActive
+    })
+    if (stormEntry) {
+      const [stormPlayerId] = stormEntry
+      if (stormPlayerId !== playerId) {
+        await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+          if (!p || !p.alive) return p
+          const newHp = Math.max(0, (p.hp || 0) - 3)
+          return { ...p, hp: newHp, alive: newHp > 0 }
+        })
+      }
+    }
   }
 }
 
@@ -786,6 +817,8 @@ async function _resolveBattle(code, battle) {
     if (txDefB === 'B_NINJA')   ed += 3
     if (txDefB === 'B_WEAKEN')  ea = Math.max(1, ea - 2)
     if (txDefB === 'B_FORCE_ONE') ea = 1
+    if (txAttB === 'B_FORCE_SIX') ea = 6
+    if (txDefB === 'B_FORCE_SIX') ed = 6
     const txLoserId = ea > ed ? cur.defenderId : ea < ed ? cur.attackerId : ''
     return {
       ...cur, resolved: true,
@@ -907,6 +940,7 @@ async function _resolveBattle(code, battle) {
   if (attBEffect === 'B_NINJA')       attackerRoll += 3
   if (attBEffect === 'B_WEAKEN')      defenderRoll = Math.max(1, defenderRoll - 2)
   if (attBEffect === 'B_FORCE_ONE')   defenderRoll = 1
+  if (attBEffect === 'B_FORCE_SIX')  attackerRoll = 6
 
   if (defBEffect === 'B_PLUS_2')      defenderRoll += 2
   if (defBEffect === 'B_UPGRADE')     defenderRoll += 2
@@ -914,6 +948,7 @@ async function _resolveBattle(code, battle) {
   if (defBEffect === 'B_NINJA')       defenderRoll += 3
   if (defBEffect === 'B_WEAKEN')      attackerRoll = Math.max(1, attackerRoll - 2)
   if (defBEffect === 'B_FORCE_ONE')   attackerRoll = 1
+  if (defBEffect === 'B_FORCE_SIX')  defenderRoll = 6
 
   // [A] Step 2: Pre-roll modifiers
   if (activeAttEffect === 'SNEAK') attackerRoll += 3
@@ -1001,6 +1036,26 @@ async function _resolveBattle(code, battle) {
     if (!highCardActive && loserEffect === 'DODGE_TOKEN' && (loserPlayerData?.tokens ?? 0) >= 1) {
       damage = 0
       await update(ref(db, `rooms/${code}/players/${loserId}`), { tokens: (loserPlayerData.tokens || 1) - 1 })
+    }
+  }
+
+  // [A] TIED_DAMAGE (Tempestade — Sem Empate) — on tie, opponent takes damage = tied roll value
+  let tiedDamageVictimId = null
+  if (loserId === null && attackerRoll > 0) {
+    const tiedRoll = attackerRoll
+    if (attActivated && attEffect === 'TIED_DAMAGE') {
+      damage = tiedRoll
+      tiedDamageVictimId = defenderId
+    } else if (defActivated && defEffect === 'TIED_DAMAGE') {
+      damage = tiedRoll
+      tiedDamageVictimId = attackerId
+    }
+    if (tiedDamageVictimId && damage > 0) {
+      await runTransaction(ref(db, `rooms/${code}/players/${tiedDamageVictimId}`), (p) => {
+        if (!p) return null
+        const newHp = Math.max(0, p.hp - damage)
+        return { ...p, hp: newHp, alive: newHp > 0 }
+      })
     }
   }
 
