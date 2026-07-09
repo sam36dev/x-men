@@ -203,17 +203,24 @@ async function _resolveVillainBattle(code, vb) {
     const playerCEffect = !_hasLuck(playerData, 'disable_abilities') && !playerData?.abilityDisabled
       ? (_isCActive(playerData, playerChar) ? (playerChar?.abilityC?.effect ?? null) : null) : null
 
-    // [B] effect for villain battle
+    // [B] effects for villain battle
     const playerPreB = vb.playerPreB ?? false
     const playerBEffect = !_hasLuck(playerData, 'disable_abilities') && playerPreB
       ? (playerChar?.abilityB?.effect ?? null) : null
-    const playerBBonus = playerBEffect === 'B_PLUS_2' ? 2 : 0
 
-    // Apply C and B roll modifiers before damage calc
+    // Apply C roll modifiers first
     let effectivePlayerRoll = playerRoll
     if (playerCEffect === 'C_MAX_ROLL') effectivePlayerRoll = playerChar?.diceType ?? 6
     if (playerCEffect === 'C_ROLL_BOOST_4') effectivePlayerRoll = playerRoll + 4
-    effectivePlayerRoll += playerBBonus
+
+    const rollAfterC = effectivePlayerRoll
+
+    // Apply B roll modifiers
+    if (playerBEffect === 'B_PLUS_2' || playerBEffect === 'B_UPGRADE') effectivePlayerRoll += 2
+    if (playerBEffect === 'B_DOUBLE_ROLL') effectivePlayerRoll *= 2
+    if (playerBEffect === 'B_NINJA') effectivePlayerRoll += 3
+
+    const playerBBonus = effectivePlayerRoll - rollAfterC
 
     damage = Math.abs(effectivePlayerRoll - villainRoll)
 
