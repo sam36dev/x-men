@@ -266,7 +266,9 @@ function LocalPlayerCard({ p, roomCode, battle, villainBattle, players, villains
           {isInVillain && (
             <div className="local-battle-row">
               <span>⚔️ vs {activeVillain?.name}</span>
-              {villainBattle.playerRoll == null && myVillainRoll === null ? (
+              {villainBattle.jubileu ? (
+                <span className="local-roll-val">🎆</span>
+              ) : villainBattle.playerRoll == null && myVillainRoll === null ? (
                 <button className="local-roll-btn" onClick={rollVillain} disabled={villainRolling}>
                   🎲 {villainRolling ? '…' : 'Rolar'}
                 </button>
@@ -1216,7 +1218,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
       {/* Villain battle panel */}
       {isInVillainBattle && villainBattle && (
         <div className="battle-panel">
-          <h3 className="battle-panel__title">⚔️ Enfrentando {activeVillain?.name}!</h3>
+          <h3 className="battle-panel__title">
+            {villainBattle.jubileu ? '🎆 Jubileu em Ação!' : `⚔️ Enfrentando ${activeVillain?.name}!`}
+          </h3>
           <div className="battle-cards">
             <div className="battle-char battle-char--att" style={{ '--cc': activeChar?.color }}>
               <div className="battle-char__img-wrap">
@@ -1234,50 +1238,57 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               <span className="battle-char__name" style={{ color: activeVillain?.color }}>{activeVillain?.name}</span>
             </div>
           </div>
-          <div className="battle-panel__row">
-            <div className="battle-panel__side">
-              <span className="battle-panel__label">{activeP?.name ?? 'Você'} · D{activeEffectiveDiceType}</span>
-              <DiceFace
-                value={villainBattle.playerRoll ?? myVillainRoll}
-                diceType={activeEffectiveDiceType}
-                color={activeChar?.color ?? '#FFD700'}
-                rolling={villainRolling}
-              />
-              {villainBattle.playerRoll == null && myVillainRoll === null && !villainRolling && (
-                <button className="battle-roll-btn" style={{ '--c': activeChar?.color }} onClick={rollDiceVillain}>
-                  🎲 Rolar
-                </button>
-              )}
+          {villainBattle.jubileu ? (
+            <div className="jubileu-result">
+              <span className="jubileu-result__icon">🎆</span>
+              <span className="jubileu-result__text">{activeVillain?.name} perdeu 3 HP!</span>
             </div>
-            <span className="battle-panel__vs">VS</span>
-            <div className="battle-panel__side">
-              <span className="battle-panel__label">
-                {activeVillain?.name} · D{activeVillain?.diceType}
-                {villainBattle.villainRoll2 != null && ' (2 dados)'}
-              </span>
-              <div className="villain-dice-pair">
+          ) : (
+            <div className="battle-panel__row">
+              <div className="battle-panel__side">
+                <span className="battle-panel__label">{activeP?.name ?? 'Você'} · D{activeEffectiveDiceType}</span>
                 <DiceFace
-                  value={villainRolling ? null : (villainDiceDisplay ?? villainBattle.villainRoll ?? null)}
-                  diceType={activeVillain?.diceType ?? 6}
-                  color={activeVillain?.color ?? '#888'}
+                  value={villainBattle.playerRoll ?? myVillainRoll}
+                  diceType={activeEffectiveDiceType}
+                  color={activeChar?.color ?? '#FFD700'}
                   rolling={villainRolling}
-                  selected={!villainRolling && villainBattle.villainRoll != null && villainBattle.villainRoll2 != null}
                 />
-                {villainBattle.villainRoll2 != null && (
+                {villainBattle.playerRoll == null && myVillainRoll === null && !villainRolling && (
+                  <button className="battle-roll-btn" style={{ '--c': activeChar?.color }} onClick={rollDiceVillain}>
+                    🎲 Rolar
+                  </button>
+                )}
+              </div>
+              <span className="battle-panel__vs">VS</span>
+              <div className="battle-panel__side">
+                <span className="battle-panel__label">
+                  {activeVillain?.name} · D{activeVillain?.diceType}
+                  {villainBattle.villainRoll2 != null && ' (2 dados)'}
+                </span>
+                <div className="villain-dice-pair">
                   <DiceFace
-                    value={villainRolling ? null : (villainDiceDisplay2 ?? villainBattle.villainRoll2 ?? null)}
+                    value={villainRolling ? null : (villainDiceDisplay ?? villainBattle.villainRoll ?? null)}
                     diceType={activeVillain?.diceType ?? 6}
                     color={activeVillain?.color ?? '#888'}
                     rolling={villainRolling}
-                    selected={false}
+                    selected={!villainRolling && villainBattle.villainRoll != null && villainBattle.villainRoll2 != null}
                   />
+                  {villainBattle.villainRoll2 != null && (
+                    <DiceFace
+                      value={villainRolling ? null : (villainDiceDisplay2 ?? villainBattle.villainRoll2 ?? null)}
+                      diceType={activeVillain?.diceType ?? 6}
+                      color={activeVillain?.color ?? '#888'}
+                      rolling={villainRolling}
+                      selected={false}
+                    />
+                  )}
+                </div>
+                {villainBattle.villainRoll == null && !villainRolling && (
+                  <span className="battle-panel__waiting">aguardando…</span>
                 )}
               </div>
-              {villainBattle.villainRoll == null && !villainRolling && (
-                <span className="battle-panel__waiting">aguardando…</span>
-              )}
             </div>
-          </div>
+          )}
         </div>
       )}
 

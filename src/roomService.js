@@ -115,14 +115,23 @@ export async function attackVillain(code, playerId, villainId) {
   ])
   const hp = hpSnap.val()
   if (hp == null || hp <= 0) return
-  const characterId = playerSnap.val()?.characterId ?? null
+  const playerData = playerSnap.val()
+  const characterId = playerData?.characterId ?? null
+  const isSentinel = villainId >= 8 && villainId <= 10
+
+  if (_hasLuck(playerData, 'sentinel_wins') && isSentinel) {
+    await set(ref(db, `rooms/${code}/villainBattle`), {
+      playerId, villainId, characterId,
+      playerRoll: 3, villainRoll: 0,
+      jubileu: true, resolved: true,
+    })
+    await _resolveVillainBattle(code, { playerId, villainId, characterId, playerRoll: 3, villainRoll: 0 })
+    return
+  }
+
   await set(ref(db, `rooms/${code}/villainBattle`), {
-    playerId,
-    villainId,
-    characterId,
-    playerRoll: null,
-    villainRoll: null,
-    resolved: false,
+    playerId, villainId, characterId,
+    playerRoll: null, villainRoll: null, resolved: false,
   })
 }
 

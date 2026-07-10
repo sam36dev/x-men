@@ -2472,6 +2472,35 @@
   background: rgba(255, 204, 0, 0.22);
 }
 
+/* ── Jubileu em Ação ── */
+.jubileu-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.2rem 0 0.4rem;
+}
+
+.jubileu-result__icon {
+  font-size: 3rem;
+  animation: jubileu-pop 0.4s ease-out;
+}
+
+.jubileu-result__text {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #FFD700;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+@keyframes jubileu-pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 /* ── Vampira [C] Toque Vampírico steal prompt ── */
 .vampira-steal-prompt {
   background: linear-gradient(160deg, #1a0010 0%, #0d0008 100%);
