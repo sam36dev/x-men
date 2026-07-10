@@ -182,8 +182,8 @@ async function _resolveVillainBattle(code, vb) {
           if (villainId === 9) await runTransaction(ref(db, `rooms/${code}/players/${playerId}/tokens`), cur => (cur || 0) + 1)
           await _checkMissionProgress(code, playerId, 'villain_kill', { villainId })
           await _checkMissionProgress(code, playerId, 'sentinel_kill', { villainId })
-          if (villainId === 9) await _checkMissionProgress(code, playerId, 'civilians', {})
         }
+        if (villainId === 9) await _checkMissionProgress(code, playerId, 'civilians', {}, damage)
       }
       await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), p => {
         if (!p) return null
