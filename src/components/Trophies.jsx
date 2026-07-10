@@ -8,6 +8,7 @@ const CATEGORY_LABELS = {
   mission: '🎯 Missões',
   villains:'☠️ Vilões',
   wins:    '⚔️ Vitórias',
+  special: '🃏 Especiais',
 }
 
 const SECRET_TROPHIES = new Set(['beat_all_villains'])
@@ -44,7 +45,7 @@ export default function Trophies({ user, onBack }) {
 
   const ranked = rankTab === 'wins' ? byWins : rankTab === 'trophies' ? byTrophies : byChampion
 
-  const categories = ['feats', 'mission', 'villains', 'wins']
+  const categories = ['feats', 'mission', 'villains', 'wins', 'special']
 
   return (
     <div className="trophies-page">

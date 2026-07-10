@@ -53,13 +53,13 @@ export async function getUserProfile(uid) {
 }
 
 // Awards a trophy if not already earned. Returns true if newly awarded.
-export async function awardTrophy(uid, trophyId) {
+export async function awardTrophy(uid, trophyId, silent = false) {
   if (!uid || !trophyId) return false
   const tRef = ref(db, `users/${uid}/trophies/${trophyId}`)
   const snap = await get(tRef)
   if (snap.exists()) return false
   await set(tRef, Date.now())
-  window.dispatchEvent(new CustomEvent('trophy-unlocked', { detail: { trophyId } }))
+  if (!silent) window.dispatchEvent(new CustomEvent('trophy-unlocked', { detail: { trophyId } }))
   return true
 }
 
@@ -125,9 +125,16 @@ export async function backfillVillainTrophies(uid) {
   )
 }
 
-// Fetch all users for ranking
+// Fetch all users for ranking (excludes admins)
 export async function getAllUsers() {
   const snap = await get(ref(db, 'users'))
   if (!snap.exists()) return []
-  return Object.entries(snap.val()).map(([uid, data]) => ({ uid, ...data }))
+  return Object.entries(snap.val())
+    .filter(([, data]) => !data.isAdmin)
+    .map(([uid, data]) => ({ uid, ...data }))
+}
+
+// Award a trophy to another user (for admin use — silent, no toast on admin's screen)
+export async function awardTrophyTo(targetUid, trophyId) {
+  return awardTrophy(targetUid, trophyId, true)
 }

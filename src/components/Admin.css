@@ -1,0 +1,181 @@
+.admin-page {
+  min-height: 100dvh;
+  background: radial-gradient(ellipse at top, #0d1e3d 0%, #070e1a 65%);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(7, 14, 26, 0.92);
+  border-bottom: 1px solid rgba(21, 101, 192, 0.25);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.admin-topbar__title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #FFCC00;
+  letter-spacing: 0.08em;
+  flex: 1;
+}
+
+.admin-topbar__user {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.05em;
+}
+
+.admin-logout {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.5);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+}
+.admin-logout:hover {
+  border-color: rgba(255,80,80,0.5);
+  color: #ff6060;
+}
+
+.admin-content {
+  padding: 1rem;
+  flex: 1;
+}
+
+.admin-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.admin-section-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: rgba(21, 101, 192, 0.9);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.admin-refresh {
+  background: none;
+  border: 1px solid rgba(21,101,192,0.35);
+  border-radius: 6px;
+  color: rgba(21,101,192,0.8);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+}
+.admin-refresh:active { opacity: 0.6; }
+
+.admin-loading,
+.admin-empty {
+  text-align: center;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.25);
+  padding: 2rem;
+  letter-spacing: 0.06em;
+}
+
+.admin-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.admin-player {
+  background: rgba(10, 25, 60, 0.5);
+  border: 1px solid rgba(21, 101, 192, 0.2);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-player__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.admin-player__name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.03em;
+}
+
+.admin-player__stats {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.05em;
+}
+
+.admin-player__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-end;
+}
+
+.admin-trophy-action {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-award-btn {
+  background: rgba(255, 204, 0, 0.1);
+  border: 1.5px solid rgba(255, 204, 0, 0.5);
+  border-radius: 8px;
+  color: #FFCC00;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.admin-award-btn:active:not(:disabled) {
+  background: rgba(255, 204, 0, 0.25);
+}
+.admin-award-btn--done {
+  background: rgba(0, 200, 80, 0.08);
+  border-color: rgba(0, 200, 80, 0.35);
+  color: #44ff88;
+  cursor: default;
+  opacity: 0.7;
+}
+
+.admin-feedback {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}

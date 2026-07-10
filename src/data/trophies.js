@@ -37,6 +37,9 @@ export const TROPHIES = [
   { id: 'mission_12', icon: '🤖', name: 'Não permita 3 Sentinelas no tabuleiro',        desc: '', category: 'mission' },
   { id: 'mission_13', icon: '🪱', name: 'Vença Omega Red',                              desc: '', category: 'mission' },
   { id: 'mission_14', icon: '⚙️', name: 'Vença 2 Sentinelas',                           desc: '', category: 'mission' },
+
+  // Especial — concedido manualmente pelos admins
+  { id: 'gambit_game', icon: '🃏', name: 'Gambit Game', desc: 'Venceu o Gambit Game', category: 'special' },
 ]
 
 // Mapeamento villainId → trophyId
