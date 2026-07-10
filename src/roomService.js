@@ -794,6 +794,8 @@ async function _triggerMissionVictory(code, playerId, playerName, mission) {
     missionWinner: { playerId, playerName, missionId: mission.id, missionName: mission.name },
     status: 'ended',
   })
+  // Count as a win (mission victory = game victory)
+  try { await onPlayerWin(playerId) } catch (_) {}
   // If mission is a villain kill, award the villain trophy (idempotent — won't double-count stats)
   if (mission.auto === 'villain_kill' && mission.villainId) {
     const trophyId = VILLAIN_TROPHIES[mission.villainId]
@@ -819,11 +821,7 @@ async function _triggerBossKillVictory(code, playerId, playerName) {
     bossKillWinner: { playerId, playerName },
     status: 'ended',
   })
-  try {
-    const uidSnap = await get(ref(db, `usernames/${playerName.toLowerCase().replace(/[^a-z0-9_]/g, '')}`))
-    const uid = uidSnap.val()
-    if (uid) await onPlayerWin(uid)
-  } catch (_) {}
+  try { await onPlayerWin(playerId) } catch (_) {}
 }
 
 function _isCActive(player, char) {
