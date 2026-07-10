@@ -98,6 +98,19 @@ export async function onVillainDefeated(uid, villainId) {
   return awarded
 }
 
+const ALL_CHAR_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+export async function awardCharacterWinTrophy(uid, characterId) {
+  if (!uid || !characterId) return
+  const trophyId = `win_char_${characterId}`
+  await awardTrophy(uid, trophyId)
+  // Check if all character trophies earned → award win_all_chars
+  const checks = await Promise.all(
+    ALL_CHAR_IDS.map(id => get(ref(db, `users/${uid}/trophies/win_char_${id}`)).then(s => s.exists()))
+  )
+  if (checks.every(Boolean)) await awardTrophy(uid, 'win_all_chars')
+}
+
 // Call on first game join
 export async function onFirstGame(uid) {
   return await awardTrophy(uid, 'first_game') ? ['first_game'] : []

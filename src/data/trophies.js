@@ -1,9 +1,22 @@
 export const TROPHIES = [
   // Vitórias
-  { id: 'first_win',       icon: '🏆', name: 'Primeiros Passos',      desc: 'Venceu sua primeira batalha',          category: 'wins'    },
-  { id: 'win_5',           icon: '⚔️', name: 'Veterano X',            desc: '5 vitórias acumuladas',                category: 'wins'    },
-  { id: 'win_25',          icon: '🌟', name: 'Força dos X-Men',        desc: '25 vitórias acumuladas',               category: 'wins'    },
-  { id: 'win_50',          icon: '💎', name: 'Lenda',                  desc: '50 vitórias acumuladas',               category: 'wins'    },
+  { id: 'first_win',       icon: '🏆', name: 'Primeiros Passos',      desc: 'Vença sua primeira partida',           category: 'wins'    },
+  { id: 'win_5',           icon: '⚔️', name: 'Veterano X',            desc: 'Vença 5 partidas',                     category: 'wins'    },
+  { id: 'win_25',          icon: '🌟', name: 'Força dos X-Men',        desc: 'Vença 25 partidas',                    category: 'wins'    },
+  { id: 'win_50',          icon: '💎', name: 'Lenda',                  desc: 'Vença 50 partidas',                    category: 'wins'    },
+
+  // Vitórias por personagem
+  { id: 'win_char_1',  icon: '🐺', name: 'Garra Afiada',      desc: 'Vença uma partida jogando com Wolverine',     category: 'wins' },
+  { id: 'win_char_2',  icon: '🔴', name: 'Olho de Mira',      desc: 'Vença uma partida jogando com Ciclope',       category: 'wins' },
+  { id: 'win_char_3',  icon: '⛈️', name: 'Tempestade Perfeita', desc: 'Vença uma partida jogando com Tempestade',  category: 'wins' },
+  { id: 'win_char_4',  icon: '🔥', name: 'Fênix Ressurgida',   desc: 'Vença uma partida jogando com Jean Grey',    category: 'wins' },
+  { id: 'win_char_5',  icon: '🧠', name: 'Mente Suprema',      desc: 'Vença uma partida jogando com Professor X',  category: 'wins' },
+  { id: 'win_char_6',  icon: '🃏', name: 'Carta Vencedora',    desc: 'Vença uma partida jogando com Gambit',       category: 'wins' },
+  { id: 'win_char_7',  icon: '💋', name: 'Toque Fatal',        desc: 'Vença uma partida jogando com Vampira',      category: 'wins' },
+  { id: 'win_char_8',  icon: '🌑', name: 'Nas Sombras',        desc: 'Vença uma partida jogando com Noturno',      category: 'wins' },
+  { id: 'win_char_9',  icon: '🛡️', name: 'Muralha de Aço',     desc: 'Vença uma partida jogando com Colosso',     category: 'wins' },
+  { id: 'win_char_10', icon: '🗡️', name: 'Lâmina da Mente',   desc: 'Vença uma partida jogando com Psylocke',     category: 'wins' },
+  { id: 'win_all_chars', icon: '👥', name: 'X-Men Completo',   desc: 'Vença pelo menos uma partida com cada personagem jogável', category: 'wins' },
 
   // Vilões
   { id: 'beat_sabretooth', icon: '🦷', name: 'Predador Caçado',        desc: 'Derrotou Dente de Sabre',              category: 'villains' },

@@ -6,7 +6,7 @@ import {
 import { characters } from './data/characters'
 import { villains } from './data/villains'
 import { MISSIONS } from './data/missions'
-import { onPlayerWin, onVillainDefeated, awardTrophy } from './userService'
+import { onPlayerWin, onVillainDefeated, awardTrophy, awardCharacterWinTrophy } from './userService'
 import { VILLAIN_TROPHIES } from './data/trophies'
 
 function _hasLuck(player, effect) {
@@ -787,6 +787,14 @@ export async function completeMission(code, playerId) {
   await _triggerMissionVictory(code, playerId, player.name, mission)
 }
 
+async function _grantCharWin(code, playerId) {
+  try {
+    const snap = await get(ref(db, `rooms/${code}/players/${playerId}/characterId`))
+    const charId = snap.val()
+    if (charId) await awardCharacterWinTrophy(playerId, charId)
+  } catch (_) {}
+}
+
 async function _triggerMissionVictory(code, playerId, playerName, mission) {
   const alreadySnap = await get(ref(db, `rooms/${code}/missionWinner`))
   if (alreadySnap.exists()) return // another player already won
@@ -796,6 +804,7 @@ async function _triggerMissionVictory(code, playerId, playerName, mission) {
   })
   // Count as a win (mission victory = game victory)
   try { await onPlayerWin(playerId) } catch (_) {}
+  await _grantCharWin(code, playerId)
   // If mission is a villain kill, award the villain trophy (idempotent — won't double-count stats)
   if (mission.auto === 'villain_kill' && mission.villainId) {
     const trophyId = VILLAIN_TROPHIES[mission.villainId]
@@ -810,6 +819,7 @@ async function _triggerPvpVictory(code, playerId, playerName) {
     pvpWinner: { playerId, playerName },
     status: 'ended',
   })
+  await _grantCharWin(code, playerId)
 }
 
 async function _triggerBossKillVictory(code, playerId, playerName) {
@@ -822,6 +832,7 @@ async function _triggerBossKillVictory(code, playerId, playerName) {
     status: 'ended',
   })
   try { await onPlayerWin(playerId) } catch (_) {}
+  await _grantCharWin(code, playerId)
 }
 
 function _isCActive(player, char) {
