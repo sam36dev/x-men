@@ -579,7 +579,8 @@ export async function detonateBomb(code, playerId, villainId, xmenVictimId) {
       runTransaction(ref(db, `rooms/${code}/players/${xmenVictimId}`), (p) => {
         if (!p) return null
         const newHp = Math.max(0, (p.hp ?? 100) - 5)
-        return { ...p, hp: newHp, alive: newHp > 0 }
+        const killedBy = newHp === 0 ? { type: 'villain', name: villains.find(v => v.id === villainId)?.name ?? 'Vilão' } : (p.killedBy ?? null)
+        return { ...p, hp: newHp, alive: newHp > 0, killedBy }
       }),
       update(ref(db, `rooms/${code}/players/${playerId}`), { bomb: null }),
     ])
@@ -1379,6 +1380,8 @@ async function _resolveBattle(code, battle) {
         const topIds = entries.filter(([, d]) => d === maxDmg).map(([id]) => id)
         const killerId = topIds.length === 1 ? topIds[0] : winnerId
         await _checkMissionProgress(code, killerId, 'kill_player', {})
+        // Award kill_xmen trophy — killerId is already the Firebase Auth UID
+        try { await awardTrophy(killerId, 'kill_xmen') } catch (_) {}
       } catch (_) {
         await _checkMissionProgress(code, winnerId, 'kill_player', {})
       }

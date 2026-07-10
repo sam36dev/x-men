@@ -36,6 +36,7 @@ export const TROPHIES = [
   { id: 'comeback',        icon: '🔥', name: 'De Volta',               desc: 'Venceu com HP ≤ 20 após estar perdendo',category: 'feats'  },
   { id: 'bomb_apocalipse', icon: '💣', name: 'Bomba no Apocalipse',    desc: 'Detonou a bomba no Apocalipse',         category: 'feats'  },
   { id: 'bomb_magneto',   icon: '💣', name: 'Bomba no Magneto',       desc: 'Detonou a bomba no Magneto',            category: 'feats'  },
+  { id: 'kill_xmen',      icon: '💀', name: 'Eliminador',             desc: 'Eliminou um X-Men em batalha PvP',      category: 'feats'  },
 
   // Missões
   { id: 'mission_1',  icon: '🧲', name: 'Vença Magneto',                                desc: 'Cumpra a missão de derrotar Magneto no tabuleiro',                       category: 'mission' },
