@@ -5,7 +5,7 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth'
-import { ref, set, get, runTransaction } from 'firebase/database'
+import { ref, set, get, remove, runTransaction } from 'firebase/database'
 import { VILLAIN_TROPHIES } from './data/trophies'
 
 // Converts username → fake email used by Firebase Auth internally
@@ -134,7 +134,17 @@ export async function getAllUsers() {
     .map(([uid, data]) => ({ uid, ...data }))
 }
 
-// Award a trophy to another user (for admin use — silent, no toast on admin's screen)
+// Award a trophy to another user (admin — silent, no toast on admin's screen)
 export async function awardTrophyTo(targetUid, trophyId) {
   return awardTrophy(targetUid, trophyId, true)
+}
+
+// Remove a trophy from a user (admin only)
+export async function revokeTrophy(targetUid, trophyId) {
+  if (!targetUid || !trophyId) return false
+  const tRef = ref(db, `users/${targetUid}/trophies/${trophyId}`)
+  const snap = await get(tRef)
+  if (!snap.exists()) return false
+  await remove(tRef)
+  return true
 }
