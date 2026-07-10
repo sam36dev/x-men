@@ -1210,8 +1210,12 @@ async function _resolveBattle(code, battle) {
     ? defChar.ability.name : null
   const attBName = attPreB && attChar?.abilityB?.effect !== 'B_MOVEMENT' ? attChar?.abilityB?.name : null
   const defBName = defPreB && defChar?.abilityB?.effect !== 'B_MOVEMENT' ? defChar?.abilityB?.name : null
-  const attCName = attCEffect && attChar?.abilityC ? attChar.abilityC.name : null
-  const defCName = defCEffect && defChar?.abilityC ? defChar.abilityC.name : null
+  const attCName = attCEffect && attChar?.abilityC
+    && !(attCEffect === 'C_REDIRECT_HALF' && (damage % 2 !== 0 || loserId !== attackerId))
+    ? attChar.abilityC.name : null
+  const defCName = defCEffect && defChar?.abilityC
+    && !(defCEffect === 'C_REDIRECT_HALF' && (damage % 2 !== 0 || loserId !== defenderId))
+    ? defChar.abilityC.name : null
 
   await update(battleRef, {
     attAbility: attAbilityName,
