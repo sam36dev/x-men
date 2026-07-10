@@ -6,7 +6,7 @@ import {
 import { characters } from './data/characters'
 import { villains } from './data/villains'
 import { MISSIONS } from './data/missions'
-import { onPlayerWin } from './userService'
+import { onPlayerWin, onVillainDefeated } from './userService'
 
 function _hasLuck(player, effect) {
   return !!(player?.luckCards?.[effect])
@@ -182,6 +182,7 @@ async function _resolveVillainBattle(code, vb) {
           if (villainId === 9) await runTransaction(ref(db, `rooms/${code}/players/${playerId}/tokens`), cur => (cur || 0) + 1)
           await _checkMissionProgress(code, playerId, 'villain_kill', { villainId })
           await _checkMissionProgress(code, playerId, 'sentinel_kill', { villainId })
+          try { await onVillainDefeated(playerId, villainId) } catch (_) {}
         }
         if (villainId === 9) await _checkMissionProgress(code, playerId, 'civilians', {}, damage)
       }
@@ -322,6 +323,7 @@ async function _resolveVillainBattle(code, vb) {
           // Missions: go to credited killer (not necessarily last-hit player)
           await _checkMissionProgress(code, killerId, 'villain_kill', { villainId })
           if (isSentinel) await _checkMissionProgress(code, killerId, 'sentinel_kill', { villainId })
+          try { await onVillainDefeated(killerId, villainId) } catch (_) {}
 
           // Boss kill win condition: first player to kill 3 bosses wins
           try {
