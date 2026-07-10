@@ -673,7 +673,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
           <h1 className="mission-victory-title" style={{ color: winnerCharData?.color ?? '#FFD700' }}>
             {bossKillWinner.playerName}
           </h1>
-          <p className="mission-victory-sub">derrotou 3 bosses!</p>
+          <p className="mission-victory-sub">derrotou 3 Vilões!</p>
           <p className="mission-victory-mission">{isMe ? 'Você venceu o jogo!' : 'venceu o jogo!'}</p>
           {isMe && <p className="mission-victory-trophy">+1 vitória registrada!</p>}
           <button className="mission-victory-btn" onClick={onLeave}>Voltar ao início</button>
@@ -900,7 +900,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               </div>
             )}
             <div className={`boss-kills-row ${(me.bossKills || 0) >= 3 ? 'boss-kills-row--full' : ''}`}>
-              ☠️ {me.bossKills || 0}/3 bosses
+              ☠️ {me.bossKills || 0}/3 Vilões
             </div>
             {isParalyzed && (
               <div className="paralyzed-banner">
@@ -1401,7 +1401,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                   </div>
                 )}
                 <div className={`boss-kills-row ${(p.bossKills || 0) >= 3 ? 'boss-kills-row--full' : ''}`}>
-                  ☠️ {p.bossKills || 0}/3 bosses
+                  ☠️ {p.bossKills || 0}/3 Vilões
                 </div>
                 {isHost && (
                   <div className="forge-luck-row">
