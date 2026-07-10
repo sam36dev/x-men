@@ -5,7 +5,7 @@ import { selectCharacter, startGame, leaveRoom } from '../roomService'
 import { characters } from '../data/characters'
 import './Lobby.css'
 
-const PROFESSOR_X_ID = 6
+const PROFESSOR_X_ID = 5
 const PROFESSOR_X_TROPHY_REQ = 10
 
 function ConfirmModal({ onConfirm, onCancel }) {
