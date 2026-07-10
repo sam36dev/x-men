@@ -14,10 +14,11 @@ const CATEGORY_LABELS = {
 const SECRET_TROPHIES = new Set(['beat_all_villains'])
 
 export default function Trophies({ user, onBack }) {
-  const [tab,     setTab]     = useState('mine')
-  const [rankTab, setRankTab] = useState('wins')
-  const [users,   setUsers]   = useState([])
-  const [loading, setLoading] = useState(true)
+  const [tab,           setTab]           = useState('mine')
+  const [rankTab,       setRankTab]       = useState('wins')
+  const [users,         setUsers]         = useState([])
+  const [loading,       setLoading]       = useState(true)
+  const [selectedTrophy, setSelectedTrophy] = useState(null)
 
   useEffect(() => {
     getAllUsers().then(all => { setUsers(all); setLoading(false) })
@@ -76,11 +77,13 @@ export default function Trophies({ user, onBack }) {
                     const earned = !!myTrophies[t.id]
                     const secret = SECRET_TROPHIES.has(t.id)
                     return (
-                      <div key={t.id} className={`trophy-card ${earned ? 'trophy-card--earned' : 'trophy-card--locked'} ${secret && !earned ? 'trophy-card--secret' : ''}`}>
+                      <div
+                        key={t.id}
+                        className={`trophy-card ${earned ? 'trophy-card--earned' : 'trophy-card--locked'} ${secret && !earned ? 'trophy-card--secret' : ''}`}
+                        onClick={() => !secret && setSelectedTrophy({ ...t, earned })}
+                      >
                         <span className="trophy-card__icon">{earned ? t.icon : secret ? '❓' : '🔒'}</span>
                         <span className="trophy-card__name">{earned || !secret ? t.name : '???'}</span>
-                        {!secret && t.category !== 'mission' && <span className="trophy-card__desc">{earned ? t.desc : ''}</span>}
-                        {secret && earned && <span className="trophy-card__desc">{t.desc}</span>}
                       </div>
                     )
                   })}
@@ -146,6 +149,28 @@ export default function Trophies({ user, onBack }) {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Trophy detail modal */}
+      {selectedTrophy && (
+        <div className="trophy-modal-backdrop" onClick={() => setSelectedTrophy(null)}>
+          <div className="trophy-modal" onClick={e => e.stopPropagation()}>
+            <div className="trophy-modal__icon">
+              {selectedTrophy.earned ? selectedTrophy.icon : '🔒'}
+            </div>
+            <h3 className="trophy-modal__name">{selectedTrophy.name}</h3>
+            <span className={`trophy-modal__status ${selectedTrophy.earned ? 'trophy-modal__status--earned' : ''}`}>
+              {selectedTrophy.earned ? '✓ Conquistado' : 'Bloqueado'}
+            </span>
+            {selectedTrophy.desc && (
+              <p className="trophy-modal__desc">
+                <span className="trophy-modal__desc-label">Como ganhar:</span>
+                {' '}{selectedTrophy.desc}
+              </p>
+            )}
+            <button className="trophy-modal__close" onClick={() => setSelectedTrophy(null)}>Fechar</button>
+          </div>
         </div>
       )}
     </div>
