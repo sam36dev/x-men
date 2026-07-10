@@ -968,7 +968,7 @@ async function _resolveBattle(code, battle) {
   // [C] C_ABSORB_SURE / C_PIERCE_SURE guarantee [A] activation
   // Passive abilities always activate regardless of tokens (DODGE_TOKEN uses probability, not passive)
   // HEAL_HALF is condition-based (even damage + loser), not probability-based
-  const PASSIVE_EFFECTS = new Set(['MIN_DAMAGE_3', 'PSYCHIC_DAMAGE', 'HEAL_HALF'])
+  const PASSIVE_EFFECTS = new Set(['MIN_DAMAGE_3', 'HEAL_HALF'])
   let attActivated = attEffect ? (PASSIVE_EFFECTS.has(attEffect) || _rollsChance(attChance)) : false
   let defActivated = defEffect ? (PASSIVE_EFFECTS.has(defEffect) || _rollsChance(defChance)) : false
   if (attCEffect === 'C_ABSORB_SURE' && attEffect === 'ABSORB') attActivated = true
