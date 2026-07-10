@@ -59,6 +59,7 @@ export async function awardTrophy(uid, trophyId) {
   const snap = await get(tRef)
   if (snap.exists()) return false
   await set(tRef, Date.now())
+  window.dispatchEvent(new CustomEvent('trophy-unlocked', { detail: { trophyId } }))
   return true
 }
 

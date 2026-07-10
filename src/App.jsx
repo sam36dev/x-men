@@ -3,6 +3,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
 import { logout, backfillVillainTrophies } from './userService'
 import Auth from './components/Auth'
+import TrophyToast from './components/TrophyToast'
 import Home from './components/Home'
 import Lobby from './components/Lobby'
 import Game from './components/Game'
@@ -128,6 +129,7 @@ export default function App() {
           onBack={() => setSelectedCard(null)}
         />
       )}
+      <TrophyToast />
     </div>
   )
 }
