@@ -193,6 +193,19 @@
   cursor: not-allowed;
 }
 
+.lobby-char-btn--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: rgba(255, 204, 0, 0.2) !important;
+}
+
+.lobby-char-btn__locked-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 0.9rem;
+}
+
 .lobby-char-btn__img-wrap {
   width: 100%;
   aspect-ratio: 1;

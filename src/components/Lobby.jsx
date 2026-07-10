@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
-import { ref, onValue, off } from 'firebase/database'
+import { ref, onValue, off, get } from 'firebase/database'
 import { db } from '../firebase'
 import { selectCharacter, startGame, leaveRoom } from '../roomService'
 import { characters } from '../data/characters'
 import './Lobby.css'
+
+const PROFESSOR_X_ID = 6
+const PROFESSOR_X_TROPHY_REQ = 10
 
 function ConfirmModal({ onConfirm, onCancel }) {
   return (
@@ -22,6 +25,14 @@ function ConfirmModal({ onConfirm, onCancel }) {
 export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
   const [room, setRoom] = useState(null)
   const [confirmLeave, setConfirmLeave] = useState(false)
+  const [trophyCount, setTrophyCount] = useState(0)
+
+  useEffect(() => {
+    if (!playerId) return
+    get(ref(db, `users/${playerId}/trophies`)).then(snap => {
+      setTrophyCount(snap.exists() ? Object.keys(snap.val()).length : 0)
+    }).catch(() => {})
+  }, [playerId])
 
   useEffect(() => {
     const r = ref(db, `rooms/${roomCode}`)
@@ -92,7 +103,7 @@ export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
             <button
               className="lobby-random-btn"
               onClick={() => {
-                const available = characters.filter(c => !takenIds.includes(c.id))
+                const available = characters.filter(c => !takenIds.includes(c.id) && !(c.id === PROFESSOR_X_ID && trophyCount < PROFESSOR_X_TROPHY_REQ))
                 if (available.length === 0) return
                 const pick = available[Math.floor(Math.random() * available.length)]
                 selectCharacter(roomCode, playerId, pick.id)
@@ -104,13 +115,16 @@ export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
           <div className="lobby-char-grid">
             {characters.map(char => {
               const taken = takenIds.includes(char.id)
+              const locked = char.id === PROFESSOR_X_ID && trophyCount < PROFESSOR_X_TROPHY_REQ
+              const disabled = taken || locked
               return (
                 <button
                   key={char.id}
-                  className={`lobby-char-btn ${taken ? 'lobby-char-btn--taken' : ''}`}
+                  className={`lobby-char-btn ${taken ? 'lobby-char-btn--taken' : ''} ${locked ? 'lobby-char-btn--locked' : ''}`}
                   style={{ '--accent': char.color }}
-                  onClick={() => !taken && selectCharacter(roomCode, playerId, char.id)}
-                  disabled={taken}
+                  onClick={() => !disabled && selectCharacter(roomCode, playerId, char.id)}
+                  disabled={disabled}
+                  title={locked ? `🔒 Requer ${PROFESSOR_X_TROPHY_REQ} troféus (você tem ${trophyCount})` : undefined}
                 >
                   <div className="lobby-char-btn__img-wrap">
                     <img
@@ -118,11 +132,12 @@ export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
                       alt={char.name}
                       onError={e => { e.target.style.display = 'none' }}
                     />
-                    <span className="lobby-char-btn__fallback">{char.name.charAt(0)}</span>
+                    <span className="lobby-char-btn__fallback">{locked ? '🔒' : char.name.charAt(0)}</span>
                   </div>
                   <span className="lobby-char-btn__name">{char.name}</span>
-                  <span className="lobby-char-btn__dice">D{char.diceType}</span>
+                  <span className="lobby-char-btn__dice">{locked ? `🏆 ${trophyCount}/${PROFESSOR_X_TROPHY_REQ}` : `D${char.diceType}`}</span>
                   {taken && <span className="lobby-char-btn__taken-badge">●</span>}
+                  {locked && <span className="lobby-char-btn__locked-badge">🔒</span>}
                 </button>
               )
             })}
