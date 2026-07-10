@@ -4,11 +4,13 @@ import { TROPHIES } from '../data/trophies'
 import './Trophies.css'
 
 const CATEGORY_LABELS = {
-  wins:    '⚔️ Vitórias',
-  villains:'☠️ Vilões',
   feats:   '⚡ Feitos',
   mission: '🎯 Missões',
+  villains:'☠️ Vilões',
+  wins:    '⚔️ Vitórias',
 }
+
+const SECRET_TROPHIES = new Set(['beat_all_villains'])
 
 export default function Trophies({ user, onBack }) {
   const [tab,     setTab]     = useState('mine')
@@ -42,7 +44,7 @@ export default function Trophies({ user, onBack }) {
 
   const ranked = rankTab === 'wins' ? byWins : rankTab === 'trophies' ? byTrophies : byChampion
 
-  const categories = ['wins', 'villains', 'feats', 'mission']
+  const categories = ['feats', 'mission', 'villains', 'wins']
 
   return (
     <div className="trophies-page">
@@ -71,11 +73,13 @@ export default function Trophies({ user, onBack }) {
                 <div className="trophy-grid">
                   {TROPHIES.filter(t => t.category === cat).map(t => {
                     const earned = !!myTrophies[t.id]
+                    const secret = SECRET_TROPHIES.has(t.id)
                     return (
-                      <div key={t.id} className={`trophy-card ${earned ? 'trophy-card--earned' : 'trophy-card--locked'}`}>
-                        <span className="trophy-card__icon">{earned ? t.icon : '🔒'}</span>
+                      <div key={t.id} className={`trophy-card ${earned ? 'trophy-card--earned' : 'trophy-card--locked'} ${secret && !earned ? 'trophy-card--secret' : ''}`}>
+                        <span className="trophy-card__icon">{earned ? t.icon : secret ? '❓' : '🔒'}</span>
                         <span className="trophy-card__name">{earned ? t.name : '???'}</span>
-                        {t.category !== 'mission' && <span className="trophy-card__desc">{t.desc}</span>}
+                        {t.category !== 'mission' && !secret && <span className="trophy-card__desc">{earned ? t.desc : ''}</span>}
+                        {secret && earned && <span className="trophy-card__desc">{t.desc}</span>}
                       </div>
                     )
                   })}

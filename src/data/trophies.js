@@ -13,7 +13,7 @@ export const TROPHIES = [
   { id: 'beat_sinister',   icon: '🧬', name: 'Experimento Encerrado',  desc: 'Derrotou Sr. Sinistro',                category: 'villains' },
   { id: 'beat_magneto',    icon: '🧲', name: 'Campo Neutralizado',     desc: 'Derrotou Magneto',                     category: 'villains' },
   { id: 'beat_apocalypse', icon: '☠️', name: 'Sobrevivente',           desc: 'Derrotou Apocalipse',                  category: 'villains' },
-  { id: 'beat_all_villains',icon:'👑', name: 'X-Men Supremo',          desc: 'Derrotou todos os vilões',             category: 'villains' },
+  { id: 'beat_all_villains',icon:'👑', name: 'X-Men Supremo',          desc: 'Derrotou todos os vilões',             category: 'feats'   },
 
   // Feitos em batalha
   { id: 'first_game',      icon: '🎮', name: 'Bem-vindo aos X-Men',    desc: 'Jogou sua primeira partida',           category: 'feats'   },
