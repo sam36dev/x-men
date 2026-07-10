@@ -489,13 +489,39 @@ export async function leaveRoom(code, playerId) {
 }
 
 export async function giveToken(code, targetPlayerId) {
-  await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}/tokens`), (cur) => (cur || 0) + 1)
-  await _checkMissionProgress(code, targetPlayerId, 'token_accumulate', {})
+  const txResult = await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}`), p => {
+    if (!p) return null
+    const newTokens = (p.tokens || 0) + 1
+    const update = { ...p, tokens: newTokens }
+    if (!p.missionCompleted) {
+      const mission = MISSIONS.find(m => m.id === p.missionId)
+      if (mission?.auto === 'token_accumulate') {
+        update.missionProgress = newTokens
+        update.missionCompleted = newTokens >= mission.goal
+      }
+    }
+    return update
+  })
+  const updated = txResult.snapshot.val()
+  if (updated?.missionCompleted) {
+    const mission = MISSIONS.find(m => m.id === updated.missionId)
+    await _triggerMissionVictory(code, targetPlayerId, updated.name, mission)
+  }
 }
 
 export async function removeToken(code, targetPlayerId) {
-  await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}/tokens`), (cur) => Math.max(0, (cur || 0) - 1))
-  await _checkMissionProgress(code, targetPlayerId, 'token_accumulate', {})
+  await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}`), p => {
+    if (!p) return null
+    const newTokens = Math.max(0, (p.tokens || 0) - 1)
+    const update = { ...p, tokens: newTokens }
+    if (!p.missionCompleted) {
+      const mission = MISSIONS.find(m => m.id === p.missionId)
+      if (mission?.auto === 'token_accumulate') {
+        update.missionProgress = newTokens
+      }
+    }
+    return update
+  })
 }
 
 export async function clearBattle(code) {
