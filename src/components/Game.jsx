@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, dominoHp, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, incrementMissionProgress, selectCharacter, addLocalPlayer, removeParalysis, decrementForgeCharge, incrementPlayerWins, resetBattleState, addTrapCard, triggerTrapCard } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, dominoHp, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, incrementMissionProgress, selectCharacter, addLocalPlayer, removeParalysis, decrementForgeCharge, incrementPlayerWins, resetBattleState, addTrapCard, triggerTrapCard, vampiraStealAbility } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import { MISSIONS } from '../data/missions'
@@ -337,6 +337,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
   const isTester = user?.displayName === 'tester'
   const activeId = isTester && activeControllerId ? activeControllerId : playerId
   const [showAbility, setShowAbility] = useState(false)
+  const [pendingVampiraSteal, setPendingVampiraSteal] = useState(null) // { opponentId, opponentAbility, opponentName }
   const [trapTarget, setTrapTarget] = useState(false)
   const [bombDetonate, setBombDetonate] = useState(null) // { playerId, playerName }
   const prevBattleRef = useRef(null)
@@ -353,6 +354,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     const prev = prevBattleRef.current
     const cur = room?.battle
     prevBattleRef.current = cur
+
+    // Clear steal prompt when a new battle starts
+    if (cur && !prev) setPendingVampiraSteal(null)
 
     if (prev && prev.resolved && !cur) {
       const { attackerId, defenderId, attackerRoll, defenderRoll,
@@ -402,6 +406,19 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
           paralysisInfo: paralysisInfo ?? null,
         })
         setMyRoll(null)
+
+        // Vampira [C] — show optional steal prompt if she won
+        if (loserId !== null && winnerId === playerId) {
+          const myCharId = attackerId === playerId ? prev.attackerCharId : prev.defenderCharId
+          if (myCharId === 7) {
+            const oppId = attackerId === playerId ? defenderId : attackerId
+            const oppCharId = attackerId === playerId ? prev.defenderCharId : prev.attackerCharId
+            const oppChar = characters.find(c => c.id === oppCharId)
+            if (oppChar?.ability) {
+              setPendingVampiraSteal({ opponentId: oppId, opponentAbility: oppChar.ability, opponentName: oppChar.name })
+            }
+          }
+        }
         setShaking(true)
         setTimeout(() => setShaking(false), 550)
         setTimeout(() => setResult(null), 8000)
@@ -797,23 +814,29 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             <div className="player-tokens">
               <span className="player-tokens__coins"><span className="xtoken" aria-label="token">X</span> ×{me.tokens || 0}</span>
               {myChar.ability && getEffectiveChance(me) > 0 && <span className="player-tokens__chance">{getEffectiveChance(me)}%</span>}
-              {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
-              <div className="player-action-btns">
-                <button className="give-token-btn" onClick={() => giveToken(roomCode, me.id)} title="Dar token">+</button>
-                <button className="give-token-btn give-token-btn--remove" onClick={() => removeToken(roomCode, me.id)} title="Gastar token" disabled={(me.tokens || 0) === 0}>−</button>
-                <button className="give-token-btn give-token-btn--heal" onClick={() => healPlayer(roomCode, me.id)} title="+2 HP" disabled={me.hp >= 100}>🔥</button>
-                <button className="give-token-btn give-token-btn--domino-plus" onClick={() => dominoHp(roomCode, me.id, 10)} title="Domino +10 HP" disabled={me.hp >= 100}>+10</button>
-                <button className="give-token-btn give-token-btn--domino-minus" onClick={() => dominoHp(roomCode, me.id, -10)} title="Domino −10 HP" disabled={(me.hp || 0) <= 0}>−10</button>
-                {myChar?.id === 6 && (me.trapCards || 0) > 0 && (
-                  <button
-                    className="give-token-btn give-token-btn--trap"
-                    onClick={() => setTrapTarget(true)}
-                    title={`Detonar Carta Explosiva (${me.trapCards})`}
-                  >
-                    🃏{me.trapCards > 1 && <span className="trap-mini-count">{me.trapCards}</span>}
-                  </button>
-                )}
-              </div>
+              {myChar.ability && (
+                <span className="player-tokens__ability">
+                  {myChar.id === 7 && me.absorbedAbility ? me.absorbedAbility.name : myChar.ability.name}
+                </span>
+              )}
+              {isHost && (
+                <>
+                  <button className="give-token-btn" onClick={() => giveToken(roomCode, me.id)} title="Dar token">+</button>
+                  <button className="give-token-btn give-token-btn--remove" onClick={() => removeToken(roomCode, me.id)} title="Gastar token" disabled={(me.tokens || 0) === 0}>−</button>
+                  <button className="give-token-btn give-token-btn--heal" onClick={() => healPlayer(roomCode, me.id)} title="+2 HP" disabled={me.hp >= 100}>🔥</button>
+                  <button className="give-token-btn give-token-btn--domino-plus" onClick={() => dominoHp(roomCode, me.id, 10)} title="Domino +10 HP" disabled={me.hp >= 100}>+10</button>
+                  <button className="give-token-btn give-token-btn--domino-minus" onClick={() => dominoHp(roomCode, me.id, -10)} title="Domino −10 HP" disabled={(me.hp || 0) <= 0}>−10</button>
+                </>
+              )}
+              {myChar?.id === 6 && (me.trapCards || 0) > 0 && (
+                <button
+                  className="give-token-btn give-token-btn--trap"
+                  onClick={() => setTrapTarget(true)}
+                  title={`Detonar Carta Explosiva (${me.trapCards})`}
+                >
+                  🃏{me.trapCards > 1 && <span className="trap-mini-count">{me.trapCards}</span>}
+                </button>
+              )}
             </div>
             <div className="player-turn-row">
               <span className="player-turn-label">TURNO</span>
@@ -839,6 +862,10 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 disabled={
                   myChar.id === 6
                     ? (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1) || !!me.luckCards?.disable_abilities
+                    : myChar.id === 7
+                    ? (battle?.attackerId === playerId) || // Vampira can't flee when she's the one attacking
+                      (!me.preB && (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1)) ||
+                      !!me.luckCards?.disable_abilities
                     : !!isInBattle || (!me.preB && (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1)) || !!me.luckCards?.disable_abilities
                 }
               >
@@ -858,11 +885,20 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                   : isCConditionMet(me, myChar, players) && <span className="player-c-active">ATIVO</span>}
               </div>
             )}
+            {myChar.id === 7 && me.absorbedAbility && (
+              <div className="player-stolen-row">
+                <span className="player-stolen-label">💫 Copiado:</span>
+                <span className="player-stolen-name">{me.absorbedAbility.name}</span>
+              </div>
+            )}
             {myChar.id === 7 && me.stolenAbility && (
               <div className="player-stolen-row">
                 <span className="player-stolen-label">🩸 Roubado:</span>
                 <span className="player-stolen-name">{me.stolenAbility.name}</span>
                 <span className="player-stolen-charges">{me.stolenAbility.rounds}🔄</span>
+                {me.stolenAbility.queue != null && Object.keys(me.stolenAbility.queue).length > 0 && (
+                  <span className="player-stolen-charges">+{Object.keys(me.stolenAbility.queue).length} fila</span>
+                )}
               </div>
             )}
             {me.abilityDisabled && (
@@ -1072,6 +1108,34 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         </div>
       )}
 
+      {/* Vampira [C] Toque Vampírico — optional steal prompt */}
+      {pendingVampiraSteal && myChar?.id === 7 && me?.alive && (
+        <div className="vampira-steal-prompt">
+          <div className="vampira-steal-prompt__header">
+            <span>🩸 Toque Vampírico disponível</span>
+            <button className="vampira-steal-prompt__close" onClick={() => setPendingVampiraSteal(null)}>✕</button>
+          </div>
+          <div className="vampira-steal-prompt__body">
+            <span className="vampira-steal-prompt__ability">{pendingVampiraSteal.opponentAbility.name}</span>
+            <span className="vampira-steal-prompt__cost">Custo: 2 tokens + 3 HP → 3 batalhas</span>
+            {me.stolenAbility && (
+              <span className="vampira-steal-prompt__queue">
+                {me.stolenAbility.ownerId === pendingVampiraSteal.opponentId
+                  ? `Mesmo alvo: acumula (+3 rodadas ao atual ${me.stolenAbility.rounds}🔄)`
+                  : `Vai para fila · atual: ${me.stolenAbility.name} (${me.stolenAbility.rounds}🔄)`}
+              </span>
+            )}
+          </div>
+          <button
+            className="vampira-steal-prompt__btn"
+            disabled={(me.tokens || 0) < 2 || !!me.luckCards?.disable_abilities}
+            onClick={() => vampiraStealAbility(roomCode, playerId, pendingVampiraSteal.opponentId, pendingVampiraSteal.opponentAbility)}
+          >
+            🩸 Roubar ({me.tokens || 0} tokens disponíveis)
+          </button>
+        </div>
+      )}
+
       {/* Villain result banner */}
       {villainResult && villainResult.vPlayerId === playerId && (
         <div className={`game-result ${villainResult.playerWon ? 'game-result--win' : villainResult.tied ? 'game-result--tie' : 'game-result--lose'}`}>
@@ -1277,7 +1341,10 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                     <button
                       className={`host-b-btn ${side.player?.preB ? 'host-b-btn--on' : ''}`}
                       onClick={() => togglePreB(roomCode, side.pid)}
-                      disabled={!side.player?.preB && (side.player?.preBUsedOnTurn ?? 0) === (side.player?.turn ?? 1)}
+                      disabled={
+                        (side.char?.id === 7 && battle?.attackerId === side.pid) || // Vampira can't flee as attacker
+                        (!side.player?.preB && (side.player?.preBUsedOnTurn ?? 0) === (side.player?.turn ?? 1))
+                      }
                     >
                       {side.player?.preB ? '✓ ' : ''}{side.char.abilityB.name}
                     </button>
@@ -1380,6 +1447,12 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                       {cConditionLabel(char.abilityC.condition)}
                     </span>
                     {isCConditionMet(p, char, players) && <span className="player-c-active">ATIVO</span>}
+                  </div>
+                )}
+                {char?.id === 7 && p.absorbedAbility && (
+                  <div className="player-stolen-row">
+                    <span className="player-stolen-label">💫 Copiado:</span>
+                    <span className="player-stolen-name">{p.absorbedAbility.name}</span>
                   </div>
                 )}
                 {char?.id === 7 && p.stolenAbility && (

@@ -87,6 +87,9 @@ export async function startGame(code) {
     playerResets[`players/${pid}/forgeItem`]         = null
     playerResets[`players/${pid}/trapCards`]         = 0
     playerResets[`players/${pid}/luckCards`]         = null
+    playerResets[`players/${pid}/stolenAbility`]     = null
+    playerResets[`players/${pid}/absorbedAbility`]   = null
+    playerResets[`players/${pid}/absorbedFrom`]      = null
     const mission = MISSIONS[Math.floor(Math.random() * MISSIONS.length)]
     playerResets[`players/${pid}/missionId`]         = mission.id
     playerResets[`players/${pid}/missionProgress`]   = 0
@@ -875,6 +878,28 @@ export async function triggerTrapCard(code, playerId, targetId) {
   await runTransaction(ref(db, `rooms/${code}/players/${playerId}/trapCards`), (cur) => Math.max(0, (cur || 0) - 1))
 }
 
+// [C] Toque Vampírico — optional steal after winning: costs 2 tokens + 3 HP, grants 3 battle rounds of stolen [A]
+export async function vampiraStealAbility(code, vampiraId, opponentId, opponentAbility) {
+  if (!opponentAbility?.effect) return
+  const vampTx = await runTransaction(ref(db, `rooms/${code}/players/${vampiraId}`), p => {
+    if (!p) return undefined
+    if ((p.tokens || 0) < 2) return undefined  // not enough tokens — abort
+    const newHp = Math.max(0, (p.hp || 0) - 3)
+    const entry = { effect: opponentAbility.effect, name: opponentAbility.name, ownerId: opponentId }
+    let sa = p.stolenAbility ?? null
+    if (!sa) {
+      sa = { ...entry, rounds: 3, queue: null }
+    } else if (sa.ownerId === opponentId) {
+      sa = { ...sa, rounds: sa.rounds + 3 }  // same owner: stack rounds
+    } else {
+      sa = { ...sa, queue: [..._toArr(sa.queue), entry] }  // different owner: enqueue
+    }
+    return { ...p, tokens: (p.tokens || 0) - 2, hp: newHp, alive: newHp > 0, stolenAbility: sa }
+  })
+  if (!vampTx.committed) return
+  await update(ref(db, `rooms/${code}/players/${opponentId}`), { abilityDisabled: true })
+}
+
 export async function resetBattleState(code, playerId, usedPreB, turn) {
   const patch = { preB: false, cActive: false }
   if (usedPreB) patch.preBUsedOnTurn = turn
@@ -960,11 +985,11 @@ async function _resolveBattle(code, battle) {
   // Vampira Voo — pre-declared [B] means she flees, no damage dealt to either side
   const attPreB = battle.attackerPreB ?? false
   const defPreB = battle.defenderPreB ?? false
-  if ((attPreB && attChar?.id === 7) || (defPreB && defChar?.id === 7)) {
-    const fleeId = (attPreB && attChar?.id === 7) ? attackerId : defenderId
-    await update(battleRef, { fled: fleeId })
-    await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false, ...(attPreB ? { preBUsedOnTurn: attPlayer.turn ?? 1 } : {}) })
-    await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, ...(defPreB ? { preBUsedOnTurn: defPlayer.turn ?? 1 } : {}) })
+  // [B] Voo — Vampira only flees when she is the DEFENDER (someone attacked her)
+  if (defPreB && defChar?.id === 7) {
+    await update(battleRef, { fled: defenderId })
+    await update(ref(db, `rooms/${code}/players/${attackerId}`), { preB: false })
+    await update(ref(db, `rooms/${code}/players/${defenderId}`), { preB: false, preBUsedOnTurn: defPlayer.turn ?? 1 })
     setTimeout(() => remove(ref(db, `rooms/${code}/battle`)), 3500)
     return
   }
@@ -973,8 +998,11 @@ async function _resolveBattle(code, battle) {
   const defChance = defPlayer ? _abilityChance(defPlayer, defChar, allPlayers) : 0
 
   // abilityDisabled = true means Vampira currently holds this player's [A] ability
-  let attEffect = attPlayer?.abilityDisabled ? null : (attChar?.ability?.effect ?? null)
-  let defEffect = defPlayer?.abilityDisabled ? null : (defChar?.ability?.effect ?? null)
+  // Vampira's [A] is her currently absorbed ability (not the base ABSORB_COPY character entry)
+  let attEffect = attPlayer?.abilityDisabled ? null
+    : (attChar?.id === 7 ? (attPlayer?.absorbedAbility?.effect ?? null) : (attChar?.ability?.effect ?? null))
+  let defEffect = defPlayer?.abilityDisabled ? null
+    : (defChar?.id === 7 ? (defPlayer?.absorbedAbility?.effect ?? null) : (defChar?.ability?.effect ?? null))
 
   // Sanguessuga: disable all abilities for affected player
   if (_hasLuck(attPlayer, 'disable_abilities')) attEffect = null
@@ -1000,9 +1028,7 @@ async function _resolveBattle(code, battle) {
   let activeAttEffect = attActivated ? attEffect : null
   let activeDefEffect = defActivated ? defEffect : null
 
-  // [A] Step 1: ABSORB — Vampira copies opponent's effect
-  if (activeAttEffect === 'ABSORB') activeAttEffect = activeDefEffect !== 'ABSORB' ? activeDefEffect : null
-  if (activeDefEffect === 'ABSORB') activeDefEffect = activeAttEffect !== 'ABSORB' ? activeAttEffect : null
+  // [A] ABSORB_COPY is resolved post-battle (not within the same battle roll)
 
   // [C] C_MIND_SHIELD — nullify opponent's [A] effect
   if (attCEffect === 'C_MIND_SHIELD') activeDefEffect = null
@@ -1221,14 +1247,14 @@ async function _resolveBattle(code, battle) {
     && !(attEffect === 'TIED_DAMAGE'     && loserId !== null)
     && !(attEffect === 'PSYCHIC_DAMAGE'  && loserId !== attackerId)
     && !(attEffect === 'DODGE_TOKEN'     && (loserId !== attackerId || (attPlayer?.tokens ?? 0) < 1 || _highCard))
-    ? attChar.ability.name : null
+    ? (attChar.id === 7 && attPlayer?.absorbedAbility?.name ? attPlayer.absorbedAbility.name : attChar.ability.name) : null
   const defAbilityName = defActivated && defChar?.ability
     && !(defEffect === 'HEAL_HALF'       && (loserId !== defenderId || damage % 2 !== 0))
     && !(defEffect === 'TIED_DAMAGE'     && loserId !== null)
     && !(defEffect === 'PSYCHIC_DAMAGE'  && loserId !== defenderId)
     && !(defEffect === 'DODGE_TOKEN'     && (loserId !== defenderId || (defPlayer?.tokens ?? 0) < 1 || _highCard))
     && !(defEffect === 'SNEAK')
-    ? defChar.ability.name : null
+    ? (defChar.id === 7 && defPlayer?.absorbedAbility?.name ? defPlayer.absorbedAbility.name : defChar.ability.name) : null
   const attBName = attPreB && attChar?.abilityB?.effect !== 'B_MOVEMENT' ? attChar?.abilityB?.name : null
   const defBName = defPreB && defChar?.abilityB?.effect !== 'B_MOVEMENT' ? defChar?.abilityB?.name : null
   const attCName = attCEffect && attChar?.abilityC
@@ -1252,9 +1278,7 @@ async function _resolveBattle(code, battle) {
     defenderCBonus: defCEffect === 'C_ROLL_BOOST_4' ? 4 : 0,
   })
 
-  // Vampira Toque Vampírico flags
-  const doAttSteal = attChar?.id === 7 && winnerId === attackerId && damage >= 4 && defChar?.ability
-  const doDefSteal = defChar?.id === 7 && winnerId === defenderId && damage >= 4 && attChar?.ability
+  // Vampira tracking
   const isVampiraAtt = attChar?.id === 7
   const isVampiraDef = defChar?.id === 7
 
@@ -1382,9 +1406,6 @@ async function _resolveBattle(code, battle) {
   if (winnerId) {
     const vampiraWon = winnerId === attackerId ? isVampiraAtt : isVampiraDef
     const winnerStolenUsed = vampiraWon ? (winnerId === attackerId ? attStolenEff : defStolenEff) : null
-    const doWinnerSteal = winnerId === attackerId ? doAttSteal : doDefSteal
-    const opponentId = winnerId === attackerId ? defenderId : attackerId
-    const opponentAbility = winnerId === attackerId ? defChar?.ability : attChar?.ability
     const winnerSnap = winnerId === attackerId ? attPlayer : defPlayer
     const prevSAWin = winnerSnap?.stolenAbility ?? null
     const winnerWillExpire = !!(winnerStolenUsed && prevSAWin && prevSAWin.rounds - 1 <= 0)
@@ -1393,29 +1414,31 @@ async function _resolveBattle(code, battle) {
 
     await runTransaction(ref(db, `rooms/${code}/players/${winnerId}`), (p) => {
       if (!p) return null
-      if (vampiraWon) {
-        // Step 1: advance rounds (expire → queue or clear)
-        let sa = winnerStolenUsed ? _advanceSA(p.stolenAbility) : (p.stolenAbility ?? null)
-        // Step 2: add steal
-        if (doWinnerSteal && opponentAbility) {
-          const entry = { effect: opponentAbility.effect, name: opponentAbility.name, ownerId: opponentId }
-          if (!sa) {
-            sa = { ...entry, rounds: 3, queue: null }
-          } else {
-            sa = { ...sa, queue: [..._toArr(sa.queue), entry] }
-          }
-        }
-        return { ...p, consecutiveLosses: 0, stolenAbility: sa }
+      if (vampiraWon && winnerStolenUsed) {
+        // Advance [C] stolenAbility rounds (expire → next in queue or clear)
+        return { ...p, consecutiveLosses: 0, stolenAbility: _advanceSA(p.stolenAbility) }
       }
       return { ...p, consecutiveLosses: 0 }
     })
 
-    if (vampiraWon) {
-      if (winnerExpiredOwner && winnerExpiredOwner !== winnerNextOwner) {
-        await update(ref(db, `rooms/${code}/players/${winnerExpiredOwner}`), { abilityDisabled: false })
-      }
-      if (doWinnerSteal) {
-        await update(ref(db, `rooms/${code}/players/${opponentId}`), { abilityDisabled: true })
+    if (vampiraWon && winnerExpiredOwner && winnerExpiredOwner !== winnerNextOwner) {
+      await update(ref(db, `rooms/${code}/players/${winnerExpiredOwner}`), { abilityDisabled: false })
+    }
+
+    // [A] ABSORB_COPY — after winning, copy opponent's [A] (once per opponent, requires token chance)
+    if ((isVampiraAtt && winnerId === attackerId) || (isVampiraDef && winnerId === defenderId)) {
+      const vampId = winnerId
+      const vampPlayer = winnerId === attackerId ? attPlayer : defPlayer
+      const oppAbility = winnerId === attackerId ? defChar?.ability : attChar?.ability
+      const oppId = winnerId === attackerId ? defenderId : attackerId
+      const vampChance = winnerId === attackerId ? attChance : defChance
+      const alreadyCopied = !!(vampPlayer?.absorbedFrom?.[oppId])
+      if (!alreadyCopied && oppAbility && oppAbility.effect !== 'ABSORB_COPY' && _rollsChance(vampChance)) {
+        await runTransaction(ref(db, `rooms/${code}/players/${vampId}`), p => {
+          if (!p) return null
+          const absorbedFrom = { ...(p.absorbedFrom ?? {}), [oppId]: true }
+          return { ...p, absorbedAbility: { effect: oppAbility.effect, name: oppAbility.name }, absorbedFrom }
+        })
       }
     }
   }

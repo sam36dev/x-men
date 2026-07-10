@@ -111,11 +111,8 @@ export default function Home({ playerId, playerName, user, onLogout, onEnterRoom
       </div>
 
       <div className="home-links">
-        <button className="home-cards-link" onClick={onViewTrophies}>
+        <button className="home-btn home-btn--trophies" onClick={onViewTrophies}>
           🏆 Ver troféus e ranking
-        </button>
-        <button className="home-cards-link" onClick={onViewCards}>
-          🃏 Ver cartas dos personagens
         </button>
       </div>
     </div>

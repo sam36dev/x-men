@@ -92,9 +92,9 @@ export const characters = [
     type: "Absorção", typeIcon: "💫", hp: 100, diceType: 6, multiplier: 11,
     color: "#44CC88", gradient: "linear-gradient(160deg, #001a0a 0%, #000d05 50%, #000703 100%)",
     team: "X-Men", number: "007",
-    ability:  { name: "Absorção de Poder",    description: "Copia e aplica o efeito do oponente como se fosse seu", effect: "ABSORB"      },
-    abilityB: { name: "Voo",                  description: "Foge da batalha sem sofrer dano (declare antes de rolar).", effect: "B_MOVEMENT"   },
-    abilityC: { name: "Toque Vampírico",      description: "Vencer com 4+ dano: rouba [A] do oponente por 3 rodadas. Dono perde a habilidade enquanto roubada. Pode encadear roubos.", effect: "C_STEAL_ABILITY", condition: "always" }
+    ability:  { name: "Absorção de Poder",    description: "Ao vencer (requer % de ativação): copia o [A] do oponente. Apenas uma vez por oponente. Substitui a cópia anterior.", effect: "ABSORB_COPY" },
+    abilityB: { name: "Voo",                  description: "Ao ser atacada: foge da batalha sem sofrer dano. Uma vez por turno.", effect: "B_MOVEMENT"   },
+    abilityC: { name: "Toque Vampírico",      description: "Após vencer: pague 2 tokens + 3 HP para roubar o [A] do oponente por 3 batalhas. Mesmo oponente acumula rodadas; outro entra na fila. Cada roubo é opcional.", effect: "C_STEAL_OPT", condition: "always" }
   },
   {
     id: 8,
