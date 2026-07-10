@@ -703,11 +703,18 @@ export async function changeTurn(code, playerId, delta) {
     if (!p) return null
     const newTurn = Math.max(1, (p.turn || 1) + delta)
     const newTokens = delta > 0 ? (p.tokens || 0) + 1 : (p.tokens || 0)
-    return { ...p, turn: newTurn, tokens: newTokens }
+    const upd = { ...p, turn: newTurn, tokens: newTokens }
+    if (delta > 0 && !p.missionCompleted) {
+      const mission = MISSIONS.find(m => m.id === p.missionId)
+      if (mission?.auto === 'token_accumulate') {
+        upd.missionProgress = newTokens
+        upd.missionCompleted = newTokens >= mission.goal
+      }
+    }
+    return upd
   })
   if (delta > 0) {
     await _checkMissionProgress(code, playerId, 'turns', {})
-    await _checkMissionProgress(code, playerId, 'token_accumulate', {})
 
     // [C] C_TURN_DAMAGE_3 (Tempestade Suprema HP ≤ 20) — player who completed turn takes 3 damage
     const allSnap = await get(ref(db, `rooms/${code}/players`))

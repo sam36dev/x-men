@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ref, onValue, off } from 'firebase/database'
+import { ref, onValue, off, update } from 'firebase/database'
 import { db } from '../firebase'
 import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, dominoHp, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, incrementMissionProgress, selectCharacter, addLocalPlayer, removeParalysis, decrementForgeCharge, incrementPlayerWins, resetBattleState, addTrapCard, triggerTrapCard, vampiraStealAbility } from '../roomService'
 import { characters } from '../data/characters'
@@ -510,6 +510,20 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
 
   const pvpWinner      = room?.pvpWinner
   const bossKillWinner = room?.bossKillWinner
+
+  // Auto-sync token_accumulate mission progress to current token count
+  const myTokens = room?.players?.[playerId]?.tokens ?? 0
+  const myMissionId = room?.players?.[playerId]?.missionId
+  const myMissionProgress = room?.players?.[playerId]?.missionProgress ?? 0
+  const myMissionCompleted = room?.players?.[playerId]?.missionCompleted
+  useEffect(() => {
+    if (myMissionCompleted) return
+    const mission = MISSIONS.find(m => m.id === myMissionId)
+    if (!mission || mission.auto !== 'token_accumulate') return
+    if (myMissionProgress !== myTokens) {
+      update(ref(db, `rooms/${roomCode}/players/${playerId}`), { missionProgress: myTokens })
+    }
+  }, [myTokens, myMissionId, myMissionProgress, myMissionCompleted])
 
   if (!room) return <div className="game-loading">Carregando…</div>
 
