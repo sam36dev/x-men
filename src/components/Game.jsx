@@ -91,9 +91,9 @@ function cConditionLabel(condition) {
   return labels[condition] ?? condition
 }
 
-function BombModal({ target, villainList, onConfirm, onClose }) {
+function BombModal({ target, villainList, playerList, onConfirm, onClose }) {
   const [selectedVillain, setSelectedVillain] = useState(null)
-  const [xmenPresent, setXmenPresent] = useState(false)
+  const [selectedXmen, setSelectedXmen] = useState(null) // null = nenhum
   return (
     <div className="ability-overlay" onClick={onClose}>
       <div className="ability-modal bomb-modal" onClick={e => e.stopPropagation()}>
@@ -115,20 +115,37 @@ function BombModal({ target, villainList, onConfirm, onClose }) {
               </button>
             ))}
           </div>
-          <label className="bomb-modal__toggle">
-            <input type="checkbox" checked={xmenPresent} onChange={e => setXmenPresent(e.target.checked)} />
-            <span>X-Men presente na casa?</span>
-          </label>
-          {xmenPresent && (
-            <p className="bomb-modal__note">Boss −5 HP · {target.playerName} −5 HP</p>
-          )}
-          {!xmenPresent && selectedVillain && (
-            <p className="bomb-modal__note">Boss −10 HP</p>
+          <p className="bomb-modal__label" style={{ marginTop: '0.75rem' }}>X-Men presente na casa?</p>
+          <div className="bomb-modal__villains">
+            <button
+              className={`bomb-modal__villain-btn ${selectedXmen === null ? 'bomb-modal__villain-btn--sel' : ''}`}
+              style={{ '--vc': '#555' }}
+              onClick={() => setSelectedXmen(null)}
+            >
+              🚫 Nenhum
+            </button>
+            {playerList.map(p => (
+              <button
+                key={p.id}
+                className={`bomb-modal__villain-btn ${selectedXmen?.id === p.id ? 'bomb-modal__villain-btn--sel' : ''}`}
+                style={{ '--vc': p.charColor ?? '#FFD700' }}
+                onClick={() => setSelectedXmen(p)}
+              >
+                {p.charIcon ?? '⚡'} {p.name}
+              </button>
+            ))}
+          </div>
+          {selectedVillain && (
+            <p className="bomb-modal__note">
+              {selectedXmen
+                ? `Boss −5 HP · ${selectedXmen.name} −5 HP`
+                : 'Boss −10 HP'}
+            </p>
           )}
           <button
             className="bomb-modal__confirm"
             disabled={!selectedVillain}
-            onClick={() => { onConfirm(selectedVillain.id, xmenPresent); onClose() }}
+            onClick={() => { onConfirm(selectedVillain.id, selectedXmen?.id ?? null); onClose() }}
           >
             💥 Confirmar Explosão
           </button>
@@ -781,7 +798,11 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         <BombModal
           target={bombDetonate}
           villainList={villains.filter(v => (villainHp[v.id] ?? v.hp) > 0)}
-          onConfirm={(villainId, xmenPresent) => detonateBomb(roomCode, bombDetonate.playerId, villainId, xmenPresent)}
+          playerList={players.filter(p => p.alive && p.id !== bombDetonate.playerId).map(p => {
+            const ch = characters.find(c => c.id === p.characterId)
+            return { id: p.id, name: p.name, charColor: ch?.color, charIcon: ch?.typeIcon }
+          })}
+          onConfirm={(villainId, xmenVictimId) => detonateBomb(roomCode, bombDetonate.playerId, villainId, xmenVictimId)}
           onClose={() => setBombDetonate(null)}
         />
       )}

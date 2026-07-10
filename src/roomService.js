@@ -568,18 +568,17 @@ export async function tickBomb(code, playerId) {
   )
 }
 
-export async function detonateBomb(code, playerId, villainId, xmenPresent) {
-  const villain = villains.find(v => v.id === villainId)
-  const maxHp = villain?.hp ?? 999
-  if (xmenPresent) {
+export async function detonateBomb(code, playerId, villainId, xmenVictimId) {
+  if (xmenVictimId) {
     await Promise.all([
       runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
         (cur) => Math.max(0, (cur ?? 0) - 5)),
-      runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+      runTransaction(ref(db, `rooms/${code}/players/${xmenVictimId}`), (p) => {
         if (!p) return null
         const newHp = Math.max(0, (p.hp ?? 100) - 5)
-        return { ...p, hp: newHp, alive: newHp > 0, bomb: null }
+        return { ...p, hp: newHp, alive: newHp > 0 }
       }),
+      update(ref(db, `rooms/${code}/players/${playerId}`), { bomb: null }),
     ])
   } else {
     await Promise.all([
