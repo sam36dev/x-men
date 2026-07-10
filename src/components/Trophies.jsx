@@ -78,8 +78,8 @@ export default function Trophies({ user, onBack }) {
                     return (
                       <div key={t.id} className={`trophy-card ${earned ? 'trophy-card--earned' : 'trophy-card--locked'} ${secret && !earned ? 'trophy-card--secret' : ''}`}>
                         <span className="trophy-card__icon">{earned ? t.icon : secret ? '❓' : '🔒'}</span>
-                        <span className="trophy-card__name">{earned ? t.name : '???'}</span>
-                        {t.category !== 'mission' && !secret && <span className="trophy-card__desc">{earned ? t.desc : ''}</span>}
+                        <span className="trophy-card__name">{earned || !secret ? t.name : '???'}</span>
+                        {!secret && t.category !== 'mission' && <span className="trophy-card__desc">{earned ? t.desc : ''}</span>}
                         {secret && earned && <span className="trophy-card__desc">{t.desc}</span>}
                       </div>
                     )
