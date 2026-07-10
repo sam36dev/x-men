@@ -365,7 +365,8 @@ async function _resolveVillainBattle(code, vb) {
           let newHp = Math.max(0, p.hp - damage + healed)
           // [C] C_SURVIVE_1 (Colosso HP ≤ 20): survive with 1 HP instead of dying
           if (playerCEffect === 'C_SURVIVE_1' && newHp === 0) newHp = 1
-          return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1 }
+          const killedBy = newHp === 0 ? { type: 'villain', name: villain?.name ?? 'Vilão' } : (p.killedBy ?? null)
+          return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1, killedBy }
         })
 
         // Omega Red (id=7): heals half of damage dealt
@@ -548,6 +549,9 @@ export async function detonateBomb(code, playerId, villainId, xmenPresent) {
       update(ref(db, `rooms/${code}/players/${playerId}`), { bomb: null }),
     ])
   }
+  // Award bomb trophy for Magneto (id=1) or Apocalipse (id=2)
+  if (villainId === 1) try { await awardTrophy(playerId, 'bomb_magneto') } catch (_) {}
+  if (villainId === 2) try { await awardTrophy(playerId, 'bomb_apocalipse') } catch (_) {}
 }
 
 export async function giveForgeItem(code, playerId, item) {
@@ -1293,14 +1297,16 @@ async function _resolveBattle(code, battle) {
     const loserExpiredOwner = loserWillExpire ? prevSALose.ownerId : null
     const loserNextOwner = loserWillExpire ? (_toArr(prevSALose.queue)[0]?.ownerId ?? null) : null
 
+    const killerName = (winnerId === attackerId ? attPlayer : defPlayer)?.name ?? null
     await runTransaction(ref(db, `rooms/${code}/players/${loserId}`), (p) => {
       if (!p) return null
       let newHp = damage > 0 ? Math.max(0, p.hp - damage) : p.hp
       if (loserCEffect === 'C_SURVIVE_1' && newHp === 0) newHp = 1
+      const killedBy = newHp === 0 && killerName ? { type: 'player', name: killerName } : (p.killedBy ?? null)
       if (vampiraLost && loserStolenUsed) {
-        return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1, stolenAbility: _advanceSA(p.stolenAbility) }
+        return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1, stolenAbility: _advanceSA(p.stolenAbility), killedBy }
       }
-      return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1 }
+      return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1, killedBy }
     })
 
     if (loserExpiredOwner && loserExpiredOwner !== loserNextOwner) {

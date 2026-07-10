@@ -21,6 +21,8 @@ export const TROPHIES = [
   { id: 'c_ability',       icon: '⚡', name: 'Poder Desperto',          desc: 'Ativou uma habilidade [C]',            category: 'feats'   },
   { id: 'max_damage',      icon: '💥', name: 'Dano Crítico',            desc: 'Causou 15 ou mais de dano em batalha', category: 'feats'   },
   { id: 'comeback',        icon: '🔥', name: 'De Volta',               desc: 'Venceu com HP ≤ 20 após estar perdendo',category: 'feats'  },
+  { id: 'bomb_apocalipse', icon: '💣', name: 'Bomba no Apocalipse',    desc: 'Detonou a bomba no Apocalipse',         category: 'feats'  },
+  { id: 'bomb_magneto',   icon: '💣', name: 'Bomba no Magneto',       desc: 'Detonou a bomba no Magneto',            category: 'feats'  },
 
   // Missões
   { id: 'mission_1',  icon: '🧲', name: 'Vença Magneto',                                desc: '', category: 'mission' },

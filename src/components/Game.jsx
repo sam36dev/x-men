@@ -321,6 +321,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
   const [result, setResult] = useState(null)
   const [confirmLeave, setConfirmLeave] = useState(false)
   const [shaking, setShaking] = useState(false)
+  const [deathDismissed, setDeathDismissed] = useState(false)
   const [oppRolling, setOppRolling] = useState(false)
   const [oppDisplayRoll, setOppDisplayRoll] = useState(null)
   const [myVillainRoll, setMyVillainRoll] = useState(null)
@@ -677,6 +678,30 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
           <p className="mission-victory-mission">{isMe ? 'Você venceu o jogo!' : 'venceu o jogo!'}</p>
           {isMe && <p className="mission-victory-trophy">+1 vitória registrada!</p>}
           <button className="mission-victory-btn" onClick={onLeave}>Voltar ao início</button>
+        </div>
+      </div>
+    )
+  }
+
+  // Death screen — shown only to the player who just died (dismissed = watching mode)
+  if (me && !me.alive && me.killedBy && !deathDismissed) {
+    const { type, name } = me.killedBy
+    return (
+      <div className="death-overlay">
+        <div className="death-box">
+          <div className="death-icon">💀</div>
+          <h1 className="death-title">Você foi eliminado</h1>
+          <p className="death-by">
+            {type === 'villain' ? `pelo vilão ${name}` : `por ${name}`}
+          </p>
+          <div className="death-btns">
+            <button className="death-btn death-btn--watch" onClick={() => setDeathDismissed(true)}>
+              👁 Continuar assistindo
+            </button>
+            <button className="death-btn death-btn--leave" onClick={onLeave}>
+              ← Sair
+            </button>
+          </div>
         </div>
       </div>
     )
