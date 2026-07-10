@@ -352,9 +352,7 @@ async function _resolveVillainBattle(code, vb) {
       }
 
       if (damage > 0) {
-        const healHalfActivated = playerEffect === 'HEAL_HALF'
-          && damage % 2 === 0
-          && _rollsChance(_abilityChance(playerData, playerChar, []))
+        const healHalfActivated = playerEffect === 'HEAL_HALF' && damage % 2 === 0
         if (healHalfActivated)
           await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
         await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
@@ -434,7 +432,8 @@ async function _resolveVillainBattle(code, vb) {
 
     // Store resolved damage + effective roll + bonuses so the client shows correct values
     const playerCBonus = playerCEffect === 'C_ROLL_BOOST_4' ? 4 : 0
-    await update(ref(db, `rooms/${code}/villainBattle`), { resolvedDamage: damage, playerBBonus, playerCBonus, effectivePlayerRoll })
+    const playerBName = playerPreB && playerChar?.abilityB?.effect !== 'B_MOVEMENT' ? (playerChar?.abilityB?.name ?? null) : null
+    await update(ref(db, `rooms/${code}/villainBattle`), { resolvedDamage: damage, playerBBonus, playerCBonus, effectivePlayerRoll, playerBName })
 
     // Civilians mission: count each damage point dealt to sentinela civis (villainId=9)
     if (villainId === 9 && damage > 0 && effectivePlayerRoll > villainRoll)
@@ -968,7 +967,8 @@ async function _resolveBattle(code, battle) {
 
   // [C] C_ABSORB_SURE / C_PIERCE_SURE guarantee [A] activation
   // Passive abilities always activate regardless of tokens (DODGE_TOKEN uses probability, not passive)
-  const PASSIVE_EFFECTS = new Set(['MIN_DAMAGE_3', 'PSYCHIC_DAMAGE'])
+  // HEAL_HALF is condition-based (even damage + loser), not probability-based
+  const PASSIVE_EFFECTS = new Set(['MIN_DAMAGE_3', 'PSYCHIC_DAMAGE', 'HEAL_HALF'])
   let attActivated = attEffect ? (PASSIVE_EFFECTS.has(attEffect) || _rollsChance(attChance)) : false
   let defActivated = defEffect ? (PASSIVE_EFFECTS.has(defEffect) || _rollsChance(defChance)) : false
   if (attCEffect === 'C_ABSORB_SURE' && attEffect === 'ABSORB') attActivated = true

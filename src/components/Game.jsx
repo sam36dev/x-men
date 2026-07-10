@@ -403,7 +403,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         setMyRoll(null)
         setShaking(true)
         setTimeout(() => setShaking(false), 550)
-        setTimeout(() => setResult(null), 5000)
+        setTimeout(() => setResult(null), 8000)
       }
     }
     if (!cur) setMyRoll(null)
@@ -457,11 +457,11 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         const damage = prev.resolvedDamage ?? Math.abs(effectiveRoll - villainRoll)
         const playerWon = effectiveRoll > villainRoll
         const tied = effectiveRoll === villainRoll
-        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null, playerForgeBonus: prev.playerForgeBonus ?? 0, playerForgeId: prev.playerForgeId ?? null, playerBBonus: prev.playerBBonus ?? 0, playerCBonus: prev.playerCBonus ?? 0, effectivePlayerRoll: effectiveRoll, phoenixReflect: prev.phoenixReflect ?? 0, psychicTarget: prev.psychicTarget ?? null })
+        setVillainResult({ playerRoll, villainRoll, villainRoll2: prev.villainRoll2 ?? null, damage, playerWon, tied, villainId, vPlayerId, absorbed: prev.absorbed ?? false, abilityActivated: prev.abilityActivated ?? null, playerBName: prev.playerBName ?? null, playerForgeBonus: prev.playerForgeBonus ?? 0, playerForgeId: prev.playerForgeId ?? null, playerBBonus: prev.playerBBonus ?? 0, playerCBonus: prev.playerCBonus ?? 0, effectivePlayerRoll: effectiveRoll, phoenixReflect: prev.phoenixReflect ?? 0, psychicTarget: prev.psychicTarget ?? null })
         setMyVillainRoll(null)
         setShaking(true)
         setTimeout(() => setShaking(false), 550)
-        setTimeout(() => setVillainResult(null), 5000)
+        setTimeout(() => setVillainResult(null), 8000)
 
         // Client-side: reset preB state and add trap card if Gambit used [B]
         if (vPlayerId === playerId) {
@@ -1097,6 +1097,9 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                   )}
                   {villainResult.abilityActivated && (
                     <span className="ability-activated"> ⚡ {villainResult.abilityActivated} ativado!</span>
+                  )}
+                  {villainResult.playerBName && (
+                    <span className="ability-activated"> ⚡ {villainResult.playerBName} ativado!</span>
                   )}
                 </p>
                 {(villainResult.phoenixReflect ?? 0) > 0 && (
