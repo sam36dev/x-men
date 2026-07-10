@@ -386,7 +386,7 @@ async function _resolveVillainBattle(code, vb) {
       }
 
       // [A] PSYCHIC_DAMAGE (Jean Grey) — when losing vs villain, deal 3 to random player or boss
-      if (playerEffect === 'PSYCHIC_DAMAGE' && damage > 0) {
+      if (playerEffect === 'PSYCHIC_DAMAGE' && damage > 0 && _rollsChance(playerAChance)) {
         const allPSnap = await get(ref(db, `rooms/${code}/players`))
         const allPData = allPSnap.val() || {}
         const vHpSnap = await get(ref(db, `rooms/${code}/villainHp`))
