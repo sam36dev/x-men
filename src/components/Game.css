@@ -709,8 +709,9 @@
   font-family: 'Oswald', sans-serif;
   font-size: 0.7rem;
   font-weight: 400;
-  color: rgba(255,255,255,0.5);
+  color: #FFCC00;
   letter-spacing: 0.03em;
+  margin-left: 0.3rem;
 }
 
 .villain-card__diff {
