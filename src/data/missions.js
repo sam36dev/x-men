@@ -6,6 +6,7 @@ export const MISSIONS = [
   { id: 5,  name: 'Vença Juggernaut',                             goal: 1,  auto: 'villain_kill',       villainId: 4 },
   { id: 6,  name: 'Complete 10 voltas',                           goal: 10, auto: 'turns'                            },
   { id: 7,  name: 'Salve 20 civis',                               goal: 20, auto: 'civilians'                        },
+  { id: 17, name: 'Salve 30 civis',                               goal: 30, auto: 'civilians'                        },
   { id: 8,  name: 'Mate um X-Men',                                goal: 1,  auto: 'kill_player'                      },
   { id: 9,  name: 'Sobreviva a 5 lutas contra Apocalypse',        goal: 5,  auto: 'survive_apocalypse'               },
   { id: 10, name: 'Recrute 4 X-Men',                              goal: 4,  auto: null                               },
