@@ -599,6 +599,21 @@ export async function detonateBomb(code, playerId, villainId, xmenVictimId) {
   if (villainId === 2) try { await awardTrophy(playerId, 'bomb_apocalipse') } catch (_) {}
 }
 
+// Fix stale game state: mark hp<=0 players as dead, then check last survivor
+export async function repairGameState(code) {
+  const snap = await get(ref(db, `rooms/${code}/players`))
+  const data = snap.val() || {}
+  const fixes = {}
+  Object.entries(data).forEach(([pid, p]) => {
+    if ((p.hp ?? 100) <= 0 && p.alive) {
+      fixes[`players/${pid}/alive`] = false
+      if (!p.killedBy) fixes[`players/${pid}/killedBy`] = { type: 'villain', name: 'Batalha' }
+    }
+  })
+  if (Object.keys(fixes).length) await update(ref(db, `rooms/${code}`), fixes)
+  await _checkLastPlayerStanding(code)
+}
+
 export async function giveForgeItem(code, playerId, item) {
   const stored = item.id === 5 ? item : { ...item, charges: 5 }
   await update(ref(db, `rooms/${code}/players/${playerId}`), { forgeItem: stored })

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off, update } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, dominoHp, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, incrementMissionProgress, selectCharacter, addLocalPlayer, removeParalysis, decrementForgeCharge, incrementPlayerWins, resetBattleState, addTrapCard, triggerTrapCard, vampiraStealAbility } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, dominoHp, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, incrementMissionProgress, selectCharacter, addLocalPlayer, removeParalysis, decrementForgeCharge, incrementPlayerWins, resetBattleState, addTrapCard, triggerTrapCard, vampiraStealAbility, repairGameState } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import { MISSIONS } from '../data/missions'
@@ -529,6 +529,14 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
 
   const pvpWinner      = room?.pvpWinner
   const bossKillWinner = room?.bossKillWinner
+
+  // Host auto-repair: fix players with hp<=0 still marked alive, then check last survivor
+  const isHostVal = room?.hostId === playerId
+  const hasWinner = !!(room?.pvpWinner || room?.bossKillWinner || room?.missionWinner)
+  useEffect(() => {
+    if (!isHostVal || hasWinner || room?.status !== 'playing') return
+    repairGameState(roomCode).catch(() => {})
+  }, [isHostVal, hasWinner, room?.status])
 
   // Auto-sync token_accumulate mission progress to current token count
   const myTokens = room?.players?.[playerId]?.tokens ?? 0
