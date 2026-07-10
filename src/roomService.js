@@ -6,7 +6,8 @@ import {
 import { characters } from './data/characters'
 import { villains } from './data/villains'
 import { MISSIONS } from './data/missions'
-import { onPlayerWin, onVillainDefeated } from './userService'
+import { onPlayerWin, onVillainDefeated, awardTrophy } from './userService'
+import { VILLAIN_TROPHIES } from './data/trophies'
 
 function _hasLuck(player, effect) {
   return !!(player?.luckCards?.[effect])
@@ -789,6 +790,11 @@ async function _triggerMissionVictory(code, playerId, playerName, mission) {
     missionWinner: { playerId, playerName, missionId: mission.id, missionName: mission.name },
     status: 'ended',
   })
+  // If mission is a villain kill, award the villain trophy (idempotent — won't double-count stats)
+  if (mission.auto === 'villain_kill' && mission.villainId) {
+    const trophyId = VILLAIN_TROPHIES[mission.villainId]
+    if (trophyId) try { await awardTrophy(playerId, trophyId) } catch (_) {}
+  }
 }
 
 async function _triggerPvpVictory(code, playerId, playerName) {
