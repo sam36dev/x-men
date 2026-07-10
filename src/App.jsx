@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
-import { logout } from './userService'
+import { logout, backfillVillainTrophies } from './userService'
 import Auth from './components/Auth'
 import Home from './components/Home'
 import Lobby from './components/Lobby'
@@ -37,7 +37,10 @@ export default function App() {
   // Listen to Firebase Auth state
   useEffect(() => {
     if (!auth) { setUser(null); return }
-    return onAuthStateChanged(auth, u => setUser(u ?? null))
+    return onAuthStateChanged(auth, u => {
+      setUser(u ?? null)
+      if (u) backfillVillainTrophies(u.uid).catch(() => {})
+    })
   }, [])
 
   // Browser back/forward

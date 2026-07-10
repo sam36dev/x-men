@@ -102,6 +102,28 @@ export async function onFirstGame(uid) {
   return await awardTrophy(uid, 'first_game') ? ['first_game'] : []
 }
 
+// Retroactively award villain trophies for users who completed villain-kill missions
+// before this feature existed. Safe to call on every login (awardTrophy is idempotent).
+const MISSION_TO_VILLAIN_TROPHY = {
+  mission_1:  'beat_magneto',
+  mission_2:  'beat_mystique',
+  mission_3:  'beat_sabretooth',
+  mission_4:  'beat_apocalypse',
+  mission_5:  'beat_juggernaut',
+  mission_13: 'beat_omega_red',
+}
+export async function backfillVillainTrophies(uid) {
+  if (!uid) return
+  const snap = await get(ref(db, `users/${uid}/trophies`))
+  if (!snap.exists()) return
+  const trophies = snap.val()
+  await Promise.all(
+    Object.keys(MISSION_TO_VILLAIN_TROPHY)
+      .filter(mId => trophies[mId] && !trophies[MISSION_TO_VILLAIN_TROPHY[mId]])
+      .map(mId => awardTrophy(uid, MISSION_TO_VILLAIN_TROPHY[mId]))
+  )
+}
+
 // Fetch all users for ranking
 export async function getAllUsers() {
   const snap = await get(ref(db, 'users'))
