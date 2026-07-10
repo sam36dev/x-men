@@ -111,7 +111,7 @@ function BombModal({ target, villainList, onConfirm, onClose }) {
                 style={{ '--vc': v.color }}
                 onClick={() => setSelectedVillain(v)}
               >
-                {v.typeIcon} {v.name}
+                {v.typeIcon} {v.name} <span style={{ opacity: 0.6, fontSize: '0.75em' }}>D{v.diceType}</span>
               </button>
             ))}
           </div>
@@ -303,7 +303,7 @@ function LocalPlayerCard({ p, roomCode, battle, villainBattle, players, villains
               {villains.filter(v => (villainHp[v.id] ?? v.hp) > 0).map(v => (
                 <button key={v.id} className="local-attack-btn" style={{ '--c': v.color }}
                   onClick={() => attackVillain(roomCode, p.id, v.id)}>
-                  ⚔️ {v.name}
+                  ⚔️ {v.name} <span style={{ opacity: 0.6, fontSize: '0.8em' }}>D{v.diceType}</span>
                 </button>
               ))}
             </div>
@@ -1516,7 +1516,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                 </div>
                 <div className="villain-card__info">
                   <div className="villain-card__header">
-                    <span className="villain-card__name">{v.name}</span>
+                    <span className="villain-card__name">{v.name} <span className="villain-card__dice">D{v.diceType}</span></span>
                     {(isLocked || defeated) && (
                       <span className="villain-card__diff">
                         {isLocked ? '🔒 Bloqueado' : (

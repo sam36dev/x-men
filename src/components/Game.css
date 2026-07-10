@@ -705,6 +705,14 @@
   line-height: 1;
 }
 
+.villain-card__dice {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.03em;
+}
+
 .villain-card__diff {
   font-family: 'Oswald', sans-serif;
   font-size: 0.5rem;
