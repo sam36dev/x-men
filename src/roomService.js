@@ -370,7 +370,7 @@ async function _resolveVillainBattle(code, vb) {
         const healHalfActivated = playerEffect === 'HEAL_HALF' && damage % 2 === 0
         if (healHalfActivated)
           await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
-        await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+        const villainDmgTx = await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
           if (!p) return null
           // HEAL_HALF (Wolverine): recover half damage only if damage is even
           const healed = healHalfActivated ? damage / 2 : 0
@@ -380,6 +380,9 @@ async function _resolveVillainBattle(code, vb) {
           const killedBy = newHp === 0 ? { type: 'villain', name: villain?.name ?? 'Vilão' } : (p.killedBy ?? null)
           return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1, killedBy }
         })
+        if (villainDmgTx.snapshot.val()?.alive === false) {
+          try { await _checkLastPlayerStanding(code) } catch (_) {}
+        }
 
         // Omega Red (id=7): heals half of damage dealt
         if (villain?.id === 7) {
@@ -570,7 +573,7 @@ export async function tickBomb(code, playerId) {
 
 export async function detonateBomb(code, playerId, villainId, xmenVictimId) {
   if (xmenVictimId) {
-    await Promise.all([
+    const [, bombVictimTx] = await Promise.all([
       runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
         (cur) => Math.max(0, (cur ?? 0) - 5)),
       runTransaction(ref(db, `rooms/${code}/players/${xmenVictimId}`), (p) => {
@@ -580,6 +583,9 @@ export async function detonateBomb(code, playerId, villainId, xmenVictimId) {
       }),
       update(ref(db, `rooms/${code}/players/${playerId}`), { bomb: null }),
     ])
+    if (bombVictimTx.snapshot.val()?.alive === false) {
+      try { await _checkLastPlayerStanding(code) } catch (_) {}
+    }
   } else {
     await Promise.all([
       runTransaction(ref(db, `rooms/${code}/villainHp/${villainId}`),
@@ -613,13 +619,17 @@ export async function applyLuckCard(code, playerId, card) {
         return { ...p, hp: Math.min(100, (p.hp || 0) + card.value), alive: true }
       })
       break
-    case 'damage':
-      await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), p => {
+    case 'damage': {
+      const dmgTx = await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), p => {
         if (!p) return null
         const newHp = Math.max(0, (p.hp || 0) - card.value)
         return { ...p, hp: newHp, alive: newHp > 0 }
       })
+      if (dmgTx.snapshot.val()?.alive === false) {
+        try { await _checkLastPlayerStanding(code) } catch (_) {}
+      }
       break
+    }
     case 'aoe_damage': {
       const [playerSnap, villainHpSnap, unlockedSnap] = await Promise.all([
         get(ref(db, `rooms/${code}/players`)),
@@ -653,6 +663,7 @@ export async function applyLuckCard(code, playerId, card) {
           ),
       ]
       await Promise.all(ops)
+      try { await _checkLastPlayerStanding(code) } catch (_) {}
       break
     }
     case 'token':
@@ -856,6 +867,16 @@ async function _triggerMissionVictory(code, playerId, playerName, mission) {
   if (mission.auto === 'villain_kill' && mission.villainId) {
     const trophyId = VILLAIN_TROPHIES[mission.villainId]
     if (trophyId) try { await awardTrophy(playerId, trophyId) } catch (_) {}
+  }
+}
+
+async function _checkLastPlayerStanding(code) {
+  const snap = await get(ref(db, `rooms/${code}/players`))
+  const data = snap.val() || {}
+  const alive = Object.entries(data).filter(([, p]) => p.alive)
+  if (alive.length === 1) {
+    const [survivorId, survivor] = alive[0]
+    await _triggerPvpVictory(code, survivorId, survivor.name)
   }
 }
 
@@ -1406,15 +1427,7 @@ async function _resolveBattle(code, battle) {
         } catch (_) {}
 
         // If only 1 player remains alive, end the game
-        try {
-          const afterSnap = await get(ref(db, `rooms/${code}/players`))
-          const afterData = afterSnap.val() || {}
-          const aliveEntries = Object.entries(afterData).filter(([, p]) => p.alive)
-          if (aliveEntries.length === 1) {
-            const [survivorId, survivor] = aliveEntries[0]
-            await _triggerPvpVictory(code, survivorId, survivor.name)
-          }
-        } catch (_) {}
+        try { await _checkLastPlayerStanding(code) } catch (_) {}
       }
     }
   }
