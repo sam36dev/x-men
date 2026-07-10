@@ -1361,7 +1361,10 @@ async function _resolveBattle(code, battle) {
     return null
   }
 
-  // Track cumulative damage dealt to each player for kill credit
+  // Track cumulative damage + resolve kill credit (most damage wins, not last hit)
+  let resolvedKillerId = winnerId  // fallback to last-hit winner
+  let resolvedKillerName = (winnerId === attackerId ? attPlayer : defPlayer)?.name ?? null
+
   if (loserId && winnerId && damage > 0) {
     const loserHpBefore = (loserId === attackerId ? attPlayer : defPlayer)?.hp ?? 100
     const wouldDie = loserHpBefore <= damage && loserCEffect !== 'C_SURVIVE_1'
@@ -1378,10 +1381,12 @@ async function _resolveBattle(code, battle) {
         const entries = Object.entries(dmgMap)
         const maxDmg = entries.length ? Math.max(...entries.map(([, d]) => d)) : 0
         const topIds = entries.filter(([, d]) => d === maxDmg).map(([id]) => id)
-        const killerId = topIds.length === 1 ? topIds[0] : winnerId
-        await _checkMissionProgress(code, killerId, 'kill_player', {})
-        // Award kill_xmen trophy — killerId is already the Firebase Auth UID
-        try { await awardTrophy(killerId, 'kill_xmen') } catch (_) {}
+        resolvedKillerId = topIds.length === 1 ? topIds[0] : winnerId
+        // Resolve killer name from players snapshot
+        const killerData = allPlayers.find(p => p.id === resolvedKillerId)
+        if (killerData?.name) resolvedKillerName = killerData.name
+        await _checkMissionProgress(code, resolvedKillerId, 'kill_player', {})
+        try { await awardTrophy(resolvedKillerId, 'kill_xmen') } catch (_) {}
       } catch (_) {
         await _checkMissionProgress(code, winnerId, 'kill_player', {})
       }
@@ -1398,12 +1403,11 @@ async function _resolveBattle(code, battle) {
     const loserExpiredOwner = loserWillExpire ? prevSALose.ownerId : null
     const loserNextOwner = loserWillExpire ? (_toArr(prevSALose.queue)[0]?.ownerId ?? null) : null
 
-    const killerName = (winnerId === attackerId ? attPlayer : defPlayer)?.name ?? null
     await runTransaction(ref(db, `rooms/${code}/players/${loserId}`), (p) => {
       if (!p) return null
       let newHp = damage > 0 ? Math.max(0, p.hp - damage) : p.hp
       if (loserCEffect === 'C_SURVIVE_1' && newHp === 0) newHp = 1
-      const killedBy = newHp === 0 && killerName ? { type: 'player', name: killerName } : (p.killedBy ?? null)
+      const killedBy = newHp === 0 && resolvedKillerName ? { type: 'player', name: resolvedKillerName } : (p.killedBy ?? null)
       if (vampiraLost && loserStolenUsed) {
         return { ...p, hp: newHp, alive: newHp > 0, consecutiveLosses: (p.consecutiveLosses || 0) + 1, stolenAbility: _advanceSA(p.stolenAbility), killedBy }
       }
