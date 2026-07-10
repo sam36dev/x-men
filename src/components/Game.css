@@ -1577,7 +1577,7 @@
 .player-action-btns {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 1rem;
   margin-left: 0.3rem;
 }
 

@@ -774,15 +774,11 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
               {myChar.ability && getEffectiveChance(me) > 0 && <span className="player-tokens__chance">{getEffectiveChance(me)}%</span>}
               {myChar.ability && <span className="player-tokens__ability">{myChar.ability.name}</span>}
               <div className="player-action-btns">
-                {isHost && (
-                  <>
-                    <button className="give-token-btn" onClick={() => giveToken(roomCode, me.id)} title="Dar token">+</button>
-                    <button className="give-token-btn give-token-btn--remove" onClick={() => removeToken(roomCode, me.id)} title="Gastar token" disabled={(me.tokens || 0) === 0}>−</button>
-                    <button className="give-token-btn give-token-btn--heal" onClick={() => healPlayer(roomCode, me.id)} title="+2 HP" disabled={me.hp >= 100}>🔥</button>
-                    <button className="give-token-btn give-token-btn--domino-plus" onClick={() => dominoHp(roomCode, me.id, 10)} title="Domino +10 HP" disabled={me.hp >= 100}>+10</button>
-                    <button className="give-token-btn give-token-btn--domino-minus" onClick={() => dominoHp(roomCode, me.id, -10)} title="Domino −10 HP" disabled={(me.hp || 0) <= 0}>−10</button>
-                  </>
-                )}
+                <button className="give-token-btn" onClick={() => giveToken(roomCode, me.id)} title="Dar token">+</button>
+                <button className="give-token-btn give-token-btn--remove" onClick={() => removeToken(roomCode, me.id)} title="Gastar token" disabled={(me.tokens || 0) === 0}>−</button>
+                <button className="give-token-btn give-token-btn--heal" onClick={() => healPlayer(roomCode, me.id)} title="+2 HP" disabled={me.hp >= 100}>🔥</button>
+                <button className="give-token-btn give-token-btn--domino-plus" onClick={() => dominoHp(roomCode, me.id, 10)} title="Domino +10 HP" disabled={me.hp >= 100}>+10</button>
+                <button className="give-token-btn give-token-btn--domino-minus" onClick={() => dominoHp(roomCode, me.id, -10)} title="Domino −10 HP" disabled={(me.hp || 0) <= 0}>−10</button>
                 {myChar?.id === 6 && (me.trapCards || 0) > 0 && (
                   <button
                     className="give-token-btn give-token-btn--trap"
