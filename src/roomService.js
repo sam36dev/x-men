@@ -495,6 +495,7 @@ export async function giveToken(code, targetPlayerId) {
 
 export async function removeToken(code, targetPlayerId) {
   await runTransaction(ref(db, `rooms/${code}/players/${targetPlayerId}/tokens`), (cur) => Math.max(0, (cur || 0) - 1))
+  await _checkMissionProgress(code, targetPlayerId, 'token_accumulate', {})
 }
 
 export async function clearBattle(code) {
@@ -753,7 +754,9 @@ async function _checkMissionProgress(code, playerId, eventType, eventData = {}, 
     if (!mission || mission.auto !== eventType) return player
     if (eventType === 'villain_kill' && mission.villainId !== eventData.villainId) return player
     if (eventType === 'sentinel_kill' && (eventData.villainId < 8 || eventData.villainId > 10)) return player
-    const newProgress = (player.missionProgress || 0) + amount
+    const newProgress = eventType === 'token_accumulate'
+      ? (player.tokens || 0)
+      : (player.missionProgress || 0) + amount
     const completed = newProgress >= mission.goal
     return { ...player, missionProgress: newProgress, missionCompleted: completed }
   })
