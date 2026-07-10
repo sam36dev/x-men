@@ -29,7 +29,7 @@ export async function register(username, password) {
   await set(ref(db, `users/${user.uid}`), {
     username: clean,
     createdAt: Date.now(),
-    stats: { totalWins: 0, totalGames: 0, villainsDefeated: 0 },
+    stats: { totalWins: 0, mpWins: 0, totalGames: 0, villainsDefeated: 0 },
   })
   await set(ref(db, `usernames/${clean.toLowerCase()}`), user.uid)
 
@@ -61,6 +61,12 @@ export async function awardTrophy(uid, trophyId, silent = false) {
   await set(tRef, Date.now())
   if (!silent) window.dispatchEvent(new CustomEvent('trophy-unlocked', { detail: { trophyId } }))
   return true
+}
+
+// Increment in-game battle wins (PvP or villain) — "vitorias MP"
+export async function onMpWin(uid) {
+  if (!uid) return
+  await runTransaction(ref(db, `users/${uid}/stats/mpWins`), (cur) => (cur || 0) + 1)
 }
 
 // Call after each player win — checks and awards win-streak trophies

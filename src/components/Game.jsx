@@ -5,7 +5,7 @@ import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import { MISSIONS } from '../data/missions'
-import { awardTrophy } from '../userService'
+import { awardTrophy, onMpWin } from '../userService'
 import './Game.css'
 
 function ConfirmModal({ onConfirm, onCancel }) {
@@ -400,7 +400,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         const winnerId = loserId === null ? null : (loserId === attackerId ? defenderId : attackerId)
 
         // Client-side: each player updates their own wins/forge charges/preB state
-        if (winnerId === playerId) incrementPlayerWins(roomCode, playerId)
+        if (winnerId === playerId) { incrementPlayerWins(roomCode, playerId); onMpWin(playerId).catch(() => {}) }
         const myForgeId = attackerId === playerId ? attackerForgeId
                         : defenderId === playerId ? defenderForgeId : null
         if (myForgeId && myForgeId !== 5) decrementForgeCharge(roomCode, playerId)

@@ -29,19 +29,20 @@ export default function Trophies({ user, onBack }) {
   const myCount = Object.keys(myTrophies).length
 
   const trophyCount = u => u.trophies ? Object.keys(u.trophies).length : 0
-  const wins        = u => u.stats?.totalWins || 0
+  const mpWins      = u => u.stats?.mpWins     || 0
+  const totalWins   = u => u.stats?.totalWins  || 0
 
   const byWins = [...users].sort((a, b) => {
-    const d = wins(b) - wins(a)
+    const d = mpWins(b) - mpWins(a)
     return d !== 0 ? d : trophyCount(b) - trophyCount(a)
   })
 
   const byTrophies = [...users].sort((a, b) => {
     const d = trophyCount(b) - trophyCount(a)
-    return d !== 0 ? d : wins(b) - wins(a)
+    return d !== 0 ? d : mpWins(b) - mpWins(a)
   })
 
-  const champScore = u => wins(u) * 2 + trophyCount(u)
+  const champScore = u => totalWins(u) * 2 + trophyCount(u)
   const byChampion = [...users].sort((a, b) => champScore(b) - champScore(a))
 
   const ranked = rankTab === 'wins' ? byWins : rankTab === 'trophies' ? byTrophies : byChampion
@@ -99,7 +100,7 @@ export default function Trophies({ user, onBack }) {
         <div className="trophies-content">
           <div className="rank-subtabs">
             <button className={`rank-subtab ${rankTab === 'wins'     ? 'rank-subtab--active' : ''}`} onClick={() => setRankTab('wins')}>
-              ⚔️ Vitórias
+              ⚔️ Vitórias MP
             </button>
             <button className={`rank-subtab ${rankTab === 'trophies' ? 'rank-subtab--active' : ''}`} onClick={() => setRankTab('trophies')}>
               🏆 Troféus
@@ -113,20 +114,21 @@ export default function Trophies({ user, onBack }) {
             <div className="ranking-list">
               {ranked.map((u, i) => {
                 const tc   = trophyCount(u)
-                const w    = wins(u)
+                const mp   = mpWins(u)
+                const tw   = totalWins(u)
                 const sc   = champScore(u)
                 const isMe = u.uid === user.uid
                 const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null
 
-                const primary = rankTab === 'wins'     ? `⚔️ ${w}`
+                const primary = rankTab === 'wins'     ? `⚔️ ${mp}`
                               : rankTab === 'trophies' ? `🏆 ${tc}`
-                              :                          `👑 ${sc}`
+                              :                          `👑 ${tw}`
 
                 const secondary = rankTab === 'wins'
                   ? `🏆 ${tc} troféu${tc !== 1 ? 's' : ''}`
                   : rankTab === 'trophies'
-                  ? `⚔️ ${w} vitória${w !== 1 ? 's' : ''}`
-                  : `⚔️ ${w} vitória${w !== 1 ? 's' : ''} · 🏆 ${tc} troféu${tc !== 1 ? 's' : ''}`
+                  ? `⚔️ ${mp} vitória${mp !== 1 ? 's' : ''} MP`
+                  : `⚔️ ${mp} MP · 🏆 ${tc} troféu${tc !== 1 ? 's' : ''}`
 
                 return (
                   <div key={u.uid} className={`rank-row ${isMe ? 'rank-row--me' : ''}`}>

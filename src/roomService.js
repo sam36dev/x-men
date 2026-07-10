@@ -6,7 +6,7 @@ import {
 import { characters } from './data/characters'
 import { villains } from './data/villains'
 import { MISSIONS } from './data/missions'
-import { onPlayerWin, onVillainDefeated, awardTrophy, awardCharacterWinTrophy } from './userService'
+import { onPlayerWin, onMpWin, onVillainDefeated, awardTrophy, awardCharacterWinTrophy } from './userService'
 import { VILLAIN_TROPHIES } from './data/trophies'
 
 function _hasLuck(player, effect) {
@@ -203,6 +203,7 @@ async function _resolveVillainBattle(code, vb) {
         if (!p) return null
         return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
       })
+      try { await onMpWin(playerId) } catch (_) {}
       await runTransaction(ref(db, `rooms/${code}/players/${playerId}/luckCards/sentinel_wins`), card => {
         if (!card) return null
         const n = (card.charges || 0) - 1
@@ -286,6 +287,7 @@ async function _resolveVillainBattle(code, vb) {
           if (!p) return null
           return { ...p, wins: (p.wins || 0) + 1, consecutiveLosses: 0 }
         })
+        try { await onMpWin(playerId) } catch (_) {}
 
         if (newVillainHp === 0) {
           // Credit kill to highest-damage player; tie-break: prefer player with matching mission
