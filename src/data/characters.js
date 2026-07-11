@@ -113,7 +113,7 @@ export const characters = [
     id: 9,
     name: "Colosso",
     alias: "Piotr Rasputin",
-    image: "https://upload.wikimedia.org/wikipedia/en/thumb/2/26/Colossus-AvX_Consequences.jpg/500px-Colossus-AvX_Consequences.jpg",
+    image: "/images/colosso.webp",
     powers: ["Pele de Aço Orgânico", "Super Força", "Invulnerabilidade Total", "Resistência Extrema"],
     type: "Físico", typeIcon: "🛡️", hp: 100, diceType: 6, multiplier: 15,
     color: "#AAAACC", gradient: "linear-gradient(160deg, #1a1a22 0%, #0d0d10 50%, #07070a 100%)",
