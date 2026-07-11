@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ref, onValue, off, update } from 'firebase/database'
 import { db } from '../firebase'
-import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, dominoHp, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, incrementMissionProgress, selectCharacter, addLocalPlayer, removeParalysis, decrementForgeCharge, incrementPlayerWins, resetBattleState, addTrapCard, triggerTrapCard, vampiraStealAbility, repairGameState } from '../roomService'
+import { attackPlayer, submitRoll, leaveRoom, giveToken, removeToken, healPlayer, dominoHp, clearBattle, togglePreB, toggleCAbility, changeTurn, attackVillain, submitVillainRoll, unlockVillain, healVillain, giveForgeItem, clearForgeItem, assignBomb, removeBomb, tickBomb, detonateBomb, applyLuckCard, clearLuckCard, completeMission, incrementMissionProgress, selectCharacter, addLocalPlayer, removeParalysis, decrementForgeCharge, incrementPlayerWins, resetBattleState, addTrapCard, triggerTrapCard, vampiraStealAbility, repairGameState, teleportForward } from '../roomService'
 import { characters } from '../data/characters'
 import { villains } from '../data/villains'
 import { MISSIONS } from '../data/missions'
@@ -77,6 +77,7 @@ function isCConditionMet(player, char, allPlayers) {
       const maxWins = Math.max(...allPlayers.map(p => p.wins || 0))
       return maxWins > 0 && (player.wins || 0) === maxWins
     }
+    case 'has_forge_sword': return player.forgeItem?.id === 3
     case 'always': return true
     default: return false
   }
@@ -87,6 +88,7 @@ function cConditionLabel(condition) {
     hp_lte_20: 'HP ≤ 20', hp_lte_30: 'HP ≤ 30', hp_lte_35: 'HP ≤ 35',
     hp_lte_40: 'HP ≤ 40', hp_lte_50: 'HP ≤ 50', hp_gte_70: 'HP ≥ 70',
     losses_2: '2 derrotas seguidas', leader: 'Líder da partida', always: 'Sempre ativa',
+    has_forge_sword: 'Com a Espada do Forge',
   }
   return labels[condition] ?? condition
 }
@@ -599,6 +601,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     me?.luckCards?.dice_d20          ? 20
     : me?.luckCards?.dice_d12_until_12 ? 12
     : me?.luckCards?.dice_d8           ? 8
+    : (myChar?.id === 8 && me?.forgeItem?.id === 3) ? 12
     : baseDiceType
 
   // Active controlled player (tester feature)
@@ -611,6 +614,7 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
     activeP?.luckCards?.dice_d20          ? 20
     : activeP?.luckCards?.dice_d12_until_12 ? 12
     : activeP?.luckCards?.dice_d8           ? 8
+    : (activeChar?.id === 8 && activeP?.forgeItem?.id === 3) ? 12
     : activeBaseDiceType
 
   function rollDice() {
@@ -893,11 +897,13 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             </div>
             {myChar?.abilityB && (myChar.abilityB.effect !== 'B_MOVEMENT' || myChar.id === 7) && (
               <button
-                className={`my-b-btn ${myChar.id !== 6 && me.preB ? 'my-b-btn--on' : ''}`}
+                className={`my-b-btn ${myChar.id !== 6 && myChar.abilityB?.effect !== 'B_TOKEN_MOVE' && me.preB ? 'my-b-btn--on' : ''}`}
                 onClick={() => {
                   if (myChar.id === 6) {
                     addTrapCard(roomCode, playerId)
                     resetBattleState(roomCode, playerId, true, me?.turn ?? 1)
+                  } else if (myChar.abilityB?.effect === 'B_TOKEN_MOVE') {
+                    teleportForward(roomCode, playerId, me?.tokens ?? 0)
                   } else {
                     togglePreB(roomCode, playerId)
                   }
@@ -906,15 +912,17 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
                   myChar.id === 6
                     ? (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1) || !!me.luckCards?.disable_abilities
                     : myChar.id === 7
-                    ? (battle?.attackerId === playerId) || // Vampira can't flee when she's the one attacking
+                    ? (battle?.attackerId === playerId) ||
                       (!me.preB && (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1)) ||
                       !!me.luckCards?.disable_abilities
+                    : myChar.abilityB?.effect === 'B_TOKEN_MOVE'
+                    ? (me.tokens ?? 0) < 1 || !!isInBattle || !!me.luckCards?.disable_abilities
                     : !!isInBattle || (!me.preB && (me.preBUsedOnTurn ?? 0) === (me.turn ?? 1)) || !!me.luckCards?.disable_abilities
                 }
               >
                 <span className="my-b-btn__tag">[B]</span>
                 <span className="my-b-btn__name">{myChar.abilityB.name}</span>
-                {myChar.id !== 6 && me.preB && <span className="my-b-btn__check">✓</span>}
+                {myChar.id !== 6 && myChar.abilityB?.effect !== 'B_TOKEN_MOVE' && me.preB && <span className="my-b-btn__check">✓</span>}
               </button>
             )}
             {myChar.abilityC && (

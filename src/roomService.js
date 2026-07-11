@@ -243,12 +243,10 @@ async function _resolveVillainBattle(code, vb) {
 
     // [A] and [B] effects that modify rolls vs villain
     const playerAChance = _abilityChance(playerData, playerChar, [])
-    const sneakActivated  = playerEffect === 'SNEAK'   && _rollsChance(playerAChance)
     const weakenActivated = playerEffect === 'WEAKEN'  && _rollsChance(playerAChance)
-    if (sneakActivated)  effectivePlayerRoll += 3
     if (weakenActivated) villainRoll = Math.max(1, villainRoll - 2)
     if (playerBEffect === 'B_FORCE_ONE') villainRoll = 1
-    if (sneakActivated || weakenActivated)
+    if (weakenActivated)
       await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
 
     damage = Math.abs(effectivePlayerRoll - villainRoll)
@@ -358,8 +356,11 @@ async function _resolveVillainBattle(code, vb) {
       // Escudo do Capitão (forge id=4): halves incoming damage
       if (playerForgeId === 4) damage = Math.floor(damage / 2)
 
-      // [C] C_DODGE_50 (Noturno HP ≤ 30): 50% chance to take 0 damage
-      if (playerCEffect === 'C_DODGE_50' && Math.random() < 0.5) damage = 0
+      // [A] DODGE_A (Noturno): token-based activation + 50% dodge
+      if (playerEffect === 'DODGE_A' && _rollsChance(playerAChance) && Math.random() < 0.5) {
+        damage = 0
+        await update(ref(db, `rooms/${code}/villainBattle`), { abilityActivated: playerChar?.ability?.name ?? null })
+      }
 
       // [A] DODGE_TOKEN (Gambit): spend 1 token to take 0 damage (probability-based, skipped when C_HIGH_CARD forces fixed damage)
       if (playerCEffect !== 'C_HIGH_CARD' && playerEffect === 'DODGE_TOKEN' && (playerData?.tokens ?? 0) >= 1 && _rollsChance(playerAChance)) {
@@ -453,7 +454,7 @@ async function _resolveVillainBattle(code, vb) {
 
     // Store resolved damage + effective roll + bonuses so the client shows correct values
     const playerCBonus = playerCEffect === 'C_ROLL_BOOST_4' ? 4 : 0
-    const playerBName = playerPreB && playerChar?.abilityB?.effect !== 'B_MOVEMENT' ? (playerChar?.abilityB?.name ?? null) : null
+    const playerBName = playerPreB && playerChar?.abilityB?.effect !== 'B_MOVEMENT' && playerChar?.abilityB?.effect !== 'B_TOKEN_MOVE' ? (playerChar?.abilityB?.name ?? null) : null
     await update(ref(db, `rooms/${code}/villainBattle`), { resolvedDamage: damage, playerBBonus, playerCBonus, effectivePlayerRoll, playerBName })
 
     // Civilians mission: count each damage point dealt to sentinela civis (villainId=9)
@@ -999,6 +1000,14 @@ export async function decrementForgeCharge(code, playerId) {
   })
 }
 
+export async function teleportForward(code, playerId, steps) {
+  if (!steps || steps < 1) return
+  await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
+    if (!p || (p.tokens ?? 0) < 1) return p
+    return { ...p, turn: (p.turn ?? 1) + steps, tokens: Math.max(0, (p.tokens ?? 0) - 1) }
+  })
+}
+
 export async function incrementPlayerWins(code, playerId) {
   await runTransaction(ref(db, `rooms/${code}/players/${playerId}`), (p) => {
     if (!p) return p
@@ -1148,7 +1157,6 @@ async function _resolveBattle(code, battle) {
   // Vampira [C] Toque Vampírico — stolen [A] active for N rounds, auto-applies each battle
   const attStolenEff = attChar?.id === 7 && (attPlayer?.stolenAbility?.rounds ?? 0) > 0 ? attPlayer.stolenAbility.effect : null
   const defStolenEff = defChar?.id === 7 && (defPlayer?.stolenAbility?.rounds ?? 0) > 0 ? defPlayer.stolenAbility.effect : null
-  if (attStolenEff === 'SNEAK')  attackerRoll += 3
   if (attStolenEff === 'WEAKEN') defenderRoll = Math.max(1, defenderRoll - 2)
   if (defStolenEff === 'WEAKEN') attackerRoll = Math.max(1, attackerRoll - 2)
 
@@ -1170,7 +1178,6 @@ async function _resolveBattle(code, battle) {
   if (defBEffect === 'B_FORCE_SIX')  defenderRoll = 6
 
   // [A] Step 2: Pre-roll modifiers
-  if (activeAttEffect === 'SNEAK') attackerRoll += 3
   if (activeAttEffect === 'WEAKEN') defenderRoll = Math.max(1, defenderRoll - 2)
   if (activeDefEffect === 'WEAKEN') attackerRoll = Math.max(1, attackerRoll - 2)
 
@@ -1243,8 +1250,12 @@ async function _resolveBattle(code, battle) {
       if (loserForgeId === 4) damage = Math.floor(damage / 2)
     }
 
-    // [C] C_DODGE_50 — 50% chance loser takes no damage
-    if (loserCEffect === 'C_DODGE_50' && Math.random() < 0.5) damage = 0
+    // [A] DODGE_A (Noturno) — loser: token-based activation + 50% dodge
+    if (loserEffect === 'DODGE_A') {
+      const loserPData = loserId === attackerId ? attPlayer : defPlayer
+      const loserCData = loserId === attackerId ? attChar : defChar
+      if (_rollsChance(_abilityChance(loserPData, loserCData, allPlayers)) && Math.random() < 0.5) damage = 0
+    }
 
     // [C] C_HIGH_CARD (Gambit HP ≤ 20) — damage fixed at 5, overrides everything
     if (attCEffect === 'C_HIGH_CARD' || defCEffect === 'C_HIGH_CARD') damage = 5
@@ -1338,10 +1349,10 @@ async function _resolveBattle(code, battle) {
     && !(defEffect === 'TIED_DAMAGE'     && loserId !== null)
     && !(defEffect === 'PSYCHIC_DAMAGE'  && loserId !== defenderId)
     && !(defEffect === 'DODGE_TOKEN'     && (loserId !== defenderId || (defPlayer?.tokens ?? 0) < 1 || _highCard))
-    && !(defEffect === 'SNEAK')
+    && !(defEffect === 'DODGE_A'         && loserId !== defenderId)
     ? (defChar.id === 7 && defPlayer?.absorbedAbility?.name ? defPlayer.absorbedAbility.name : defChar.ability.name) : null
-  const attBName = attPreB && attChar?.abilityB?.effect !== 'B_MOVEMENT' ? attChar?.abilityB?.name : null
-  const defBName = defPreB && defChar?.abilityB?.effect !== 'B_MOVEMENT' ? defChar?.abilityB?.name : null
+  const attBName = attPreB && attChar?.abilityB?.effect !== 'B_MOVEMENT' && attChar?.abilityB?.effect !== 'B_TOKEN_MOVE' ? attChar?.abilityB?.name : null
+  const defBName = defPreB && defChar?.abilityB?.effect !== 'B_MOVEMENT' && defChar?.abilityB?.effect !== 'B_TOKEN_MOVE' ? defChar?.abilityB?.name : null
   const attCName = attCEffect && attChar?.abilityC
     && !(attCEffect === 'C_REDIRECT_HALF' && (damage % 2 !== 0 || loserId !== attackerId))
     ? attChar.abilityC.name : null

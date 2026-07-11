@@ -105,9 +105,9 @@ export const characters = [
     type: "Mutação", typeIcon: "🌑", hp: 100, diceType: 6, multiplier: 10,
     color: "#6688FF", gradient: "linear-gradient(160deg, #000d1a 0%, #000608 50%, #000304 100%)",
     team: "X-Men", number: "008",
-    ability:  { name: "Ataque Furtivo",       description: "Se for o atacante, +3 no resultado do dado",           effect: "SNEAK"        },
-    abilityB: { name: "Bamf!",                description: "Teleporta para qualquer casa (efeito físico)",          effect: "B_MOVEMENT"   },
-    abilityC: { name: "Esquiva Total",        description: "HP ≤ 30: 50% de chance de esquivar e não receber dano", effect: "C_DODGE_50",  condition: "hp_lte_30" }
+    ability:  { name: "Esquiva Noturna",   description: "Chance (tokens): 50% de desviar de um ataque e não sofrer dano",     effect: "DODGE_A"      },
+    abilityB: { name: "Bamf!",             description: "Teleporta N casas à frente (N = seus tokens). Custa 1 token.",        effect: "B_TOKEN_MOVE" },
+    abilityC: { name: "Espada de Noturno", description: "Com a Espada do Noturno (Forge): usa D12 enquanto tiver a espada",   effect: "C_SWORD_D12", condition: "has_forge_sword" }
   },
   {
     id: 9,
