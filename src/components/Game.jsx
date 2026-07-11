@@ -163,7 +163,6 @@ function AbilityModal({ char, onClose }) {
         <div className="ability-modal__header" style={{ background: char.gradient }}>
           <div className="ability-modal__img-wrap">
             <img src={char.image} alt={char.name} onError={e => { e.target.style.display = 'none' }} />
-            <span className="ability-modal__fallback">{char.name.charAt(0)}</span>
           </div>
           <div>
             <div className="ability-modal__name" style={{ color: char.color }}>{char.name}</div>
@@ -835,7 +834,6 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
         <div className="game-mycard" style={{ '--accent': transformedChar.color }}>
           <div className="game-mycard__img-wrap" onClick={() => setShowAbility(true)} style={{ cursor: 'pointer' }} title="Ver habilidades">
             <img src={myChar.image} alt={myChar.name} onError={e => { e.target.style.display = 'none' }} />
-            <span className="game-mycard__fallback">{myChar.name.charAt(0)}</span>
             <span className="game-mycard__ability-hint">📖</span>
           </div>
           <div className="game-mycard__info">
@@ -1254,7 +1252,6 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             <div className="battle-char battle-char--att" style={{ '--cc': activeChar?.color }}>
               <div className="battle-char__img-wrap">
                 <img src={activeChar?.image} alt={activeChar?.name} onError={e => { e.target.style.display = 'none' }} />
-                <span className="battle-char__fallback">{activeChar?.name?.charAt(0)}</span>
               </div>
               <span className="battle-char__name" style={{ color: activeChar?.color }}>{activeChar?.name}</span>
             </div>
@@ -1333,7 +1330,6 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             <div className="battle-char battle-char--att" style={{ '--cc': activeChar?.color }}>
               <div className="battle-char__img-wrap">
                 <img src={activeChar?.image} alt={activeChar?.name} onError={e => { e.target.style.display = 'none' }} />
-                <span className="battle-char__fallback">{activeChar?.name?.charAt(0)}</span>
               </div>
               <span className="battle-char__name" style={{ color: activeChar?.color }}>{activeChar?.name}</span>
             </div>
@@ -1343,7 +1339,6 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             <div className="battle-char battle-char--def" style={{ '--cc': battleOpponentChar?.color }}>
               <div className="battle-char__img-wrap">
                 <img src={battleOpponentChar?.image} alt={battleOpponentChar?.name} onError={e => { e.target.style.display = 'none' }} />
-                <span className="battle-char__fallback">{battleOpponentChar?.name?.charAt(0)}</span>
               </div>
               <span className="battle-char__name" style={{ color: battleOpponentChar?.color }}>{battleOpponentChar?.name}</span>
             </div>
@@ -1451,7 +1446,6 @@ export default function Game({ roomCode, playerId, user, onLeave }) {
             <div key={p.id} className={`opponent-row ${isTester && activeId === p.id ? 'opponent-row--active' : ''}`}>
               <div className="opponent-row__img-wrap">
                 <img src={char?.image} alt={char?.name} onError={e => { e.target.style.display = 'none' }} />
-                <span className="opponent-row__fallback" style={{ color: char?.color }}>{char?.name?.charAt(0)}</span>
               </div>
               <div className="opponent-row__info">
                 <span className="opponent-row__name">{p.name}</span>

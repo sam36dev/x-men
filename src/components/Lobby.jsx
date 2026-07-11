@@ -132,7 +132,7 @@ export default function Lobby({ roomCode, playerId, onGameStart, onLeave }) {
                       alt={char.name}
                       onError={e => { e.target.style.display = 'none' }}
                     />
-                    <span className="lobby-char-btn__fallback">{locked ? '🔒' : char.name.charAt(0)}</span>
+                    {locked && <span className="lobby-char-btn__fallback">🔒</span>}
                   </div>
                   <span className="lobby-char-btn__name">{char.name}</span>
                   <span className="lobby-char-btn__dice">{locked ? `🏆 ${trophyCount}/${PROFESSOR_X_TROPHY_REQ}` : `D${char.diceType}`}</span>
