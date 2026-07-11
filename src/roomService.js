@@ -891,7 +891,9 @@ async function _triggerMissionVictory(code, playerId, playerName, mission) {
 async function _checkLastPlayerStanding(code) {
   const snap = await get(ref(db, `rooms/${code}/players`))
   const data = snap.val() || {}
-  const alive = Object.entries(data).filter(([, p]) => p.alive)
+  const all = Object.entries(data)
+  if (all.length < 2) return  // solo game — never end by last-standing
+  const alive = all.filter(([, p]) => p.alive)
   if (alive.length === 1) {
     const [survivorId, survivor] = alive[0]
     await _triggerPvpVictory(code, survivorId, survivor.name)
