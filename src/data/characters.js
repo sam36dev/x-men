@@ -100,7 +100,7 @@ export const characters = [
     id: 8,
     name: "Noturno",
     alias: "Kurt Wagner",
-    image: "/images/noturno.jpg",
+    image: "/images/noturno.png",
     powers: ["Teletransporte", "Escalar Paredes", "Invisibilidade Noturna", "Cauda Preênsil"],
     type: "Mutação", typeIcon: "🌑", hp: 100, diceType: 6, multiplier: 10,
     color: "#6688FF", gradient: "linear-gradient(160deg, #000d1a 0%, #000608 50%, #000304 100%)",
