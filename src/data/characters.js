@@ -126,7 +126,7 @@ export const characters = [
     id: 10,
     name: "Psylocke",
     alias: "Betsy Braddock",
-    image: "/images/psylocke.webp",
+    image: "/images/psylocke.png",
     powers: ["Lâmina Psíquica", "Telepatia", "Artes Marciais Ninja", "Projeção Psíquica"],
     type: "Psíquico", typeIcon: "🗡️", hp: 100, diceType: 6, multiplier: 12,
     color: "#CC44FF", gradient: "linear-gradient(160deg, #1a0030 0%, #0d0018 50%, #07000c 100%)",
